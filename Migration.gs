@@ -111,15 +111,22 @@ function migrateLeads() {
 
 function postBulk_(path, data) {
   try {
-    const res = UrlFetchApp.fetch(RAILWAY_URL + path, {
+    // Clean up slashes to avoid double //
+    const baseUrl = RAILWAY_URL.replace(/\/+$/, '');
+    const cleanPath = path.replace(/^\/+/, '');
+    const finalUrl = baseUrl + '/' + cleanPath;
+
+    const res = UrlFetchApp.fetch(finalUrl, {
       method: 'POST',
       contentType: 'application/json',
       headers: { 'X-Api-Key': API_KEY },
       payload: JSON.stringify(data),
       muteHttpExceptions: true
     });
+    
+    const responseText = res.getContentText();
     if (res.getResponseCode() !== 200) {
-      Logger.log(`❌ Error en ${path}: ${res.getContentText()}`);
+      Logger.log(`❌ Error en ${path}: ${responseText}`);
     }
   } catch (e) {
     Logger.log(`❌ Excepción en ${path}: ${e.message}`);

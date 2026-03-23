@@ -98,33 +98,39 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate):
 # ─── POST /api/leads/bulk  ─────────────────────────────
 @router.post("/bulk", dependencies=[Depends(verify_apps_script_key)])
 def bulk_create_leads(leads: list[LeadOut]):
-    """Bulk import leads. Used for migration."""
+    """Bulk import leads."""
     if not leads: return {"success": True, "count": 0}
     
-    # We use a raw SQL for performance
     query = """
     INSERT INTO leads (
         message_id, nombre, linea, plan, estado, agente, agente_original,
         fecha_gmail, fecha_asignacion, resultado, rellamar_en,
-        reagendar_tipo, nocontacto_intentos, created_at, updated_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-    ON CONFLICT (message_id) DO NOTHING
+        reagendar_tipo, nocontacto_intentos, sla_asignacion
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    ON CONFLICT (message_id) DO UPDATE SET
+        estado = EXCLUDED.estado,
+        resultado = EXCLUDED.resultado,
+        updated_at = now()
     """
     params = [
         (
             l.message_id, l.nombre, l.linea, l.plan, l.estado, l.agente, l.agente_original,
             l.fecha_gmail, l.fecha_asignacion, l.resultado, l.rellamar_en,
-            l.reagendar_tipo, l.nocontacto_intentos, l.created_at or datetime.now(), l.updated_at or datetime.now()
+            l.reagendar_tipo, l.nocontacto_intentos, l.sla_asignacion
         )
         for l in leads
     ]
     
-    conn = database.get_conn()
+    import database as db
+    conn = db.get_conn()
     try:
         with conn.cursor() as cur:
             cur.executemany(query, params)
             conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
     finally:
-        database.release_conn(conn)
+        db.release_conn(conn)
         
     return {"success": True, "count": len(leads)}

@@ -105,6 +105,9 @@ def bulk_create_agents(agents: list[AgentOut]):
         with conn.cursor() as cur:
             cur.executemany(query, params)
             conn.commit()
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
     finally:
         db.release_conn(conn)
         

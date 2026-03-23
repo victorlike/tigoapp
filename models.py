@@ -25,23 +25,23 @@ class LeadStatusUpdate(BaseModel):
 
 
 class LeadOut(BaseModel):
-    id: str
+    id: Optional[str] = None
     message_id: str
-    nombre: Optional[str]
-    linea: Optional[str]
-    plan: Optional[str]
-    estado: str
-    agente: Optional[str]
-    agente_original: Optional[str]
-    fecha_gmail: Optional[datetime]
-    fecha_asignacion: Optional[datetime]
-    resultado: Optional[str]
-    rellamar_en: Optional[datetime]
-    reagendar_tipo: Optional[str]
-    nocontacto_intentos: int
-    sla_asignacion: Optional[int]
-    created_at: datetime
-    updated_at: datetime
+    nombre: Optional[str] = None
+    linea: Optional[str] = None
+    plan: Optional[str] = None
+    estado: str = "NUEVO"
+    agente: Optional[str] = None
+    agente_original: Optional[str] = None
+    fecha_gmail: Optional[datetime] = None
+    fecha_asignacion: Optional[datetime] = None
+    resultado: Optional[str] = None
+    rellamar_en: Optional[datetime] = None
+    reagendar_tipo: Optional[str] = None
+    nocontacto_intentos: int = 0
+    sla_asignacion: Optional[int] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 # ─── AGENTS ─────────────────────────────────────────────
@@ -51,11 +51,11 @@ class AgentStatusUpdate(BaseModel):
 
 class AgentOut(BaseModel):
     email: str
-    estado: str
-    last_seen: Optional[datetime]
-    max_leads: int
-    last_assigned: Optional[datetime]
-    updated_at: Optional[datetime]
+    estado: str = "OFFLINE"
+    last_seen: Optional[datetime] = None
+    max_leads: int = 1
+    last_assigned: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 # ─── FOLLOWUPS ──────────────────────────────────────────
@@ -67,8 +67,8 @@ class FollowupOut(BaseModel):
     rellamar_en: Optional[datetime]
     agente_original: Optional[str]
     reagendar_tipo: Optional[str]
-    nocontacto_intentos: int
-    due_now: bool
+    nocontacto_intentos: int = 0
+    due_now: bool = False
 
 
 # ─── SALES ──────────────────────────────────────────────
