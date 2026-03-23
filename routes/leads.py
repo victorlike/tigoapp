@@ -95,10 +95,36 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate):
     return {"success": True}
 
 
-# ─── GET /api/leads/{message_id}  ──────────────────────
-@router.get("/{message_id}")
-def get_lead(message_id: str):
-    lead = fetchone("SELECT * FROM leads WHERE message_id = %s", (message_id,))
-    if not lead:
-        raise HTTPException(404, "Lead not found")
-    return {"success": True, "lead": lead}
+# ─── POST /api/leads/bulk  ─────────────────────────────
+@router.post("/bulk", dependencies=[Depends(verify_apps_script_key)])
+def bulk_create_leads(leads: list[LeadOut]):
+    """Bulk import leads. Used for migration."""
+    if not leads: return {"success": True, "count": 0}
+    
+    # We use a raw SQL for performance
+    query = """
+    INSERT INTO leads (
+        message_id, nombre, linea, plan, estado, agente, agente_original,
+        fecha_gmail, fecha_asignacion, resultado, rellamar_en,
+        reagendar_tipo, nocontacto_intentos, created_at, updated_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    ON CONFLICT (message_id) DO NOTHING
+    """
+    params = [
+        (
+            l.message_id, l.nombre, l.linea, l.plan, l.estado, l.agente, l.agente_original,
+            l.fecha_gmail, l.fecha_asignacion, l.resultado, l.rellamar_en,
+            l.reagendar_tipo, l.nocontacto_intentos, l.created_at or datetime.now(), l.updated_at or datetime.now()
+        )
+        for l in leads
+    ]
+    
+    conn = database.get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.executemany(query, params)
+            conn.commit()
+    finally:
+        database.release_conn(conn)
+        
+    return {"success": True, "count": len(leads)}

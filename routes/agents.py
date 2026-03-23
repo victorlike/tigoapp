@@ -77,6 +77,39 @@ def get_agent_info(email: str):
     return {"success": True, "agent": agent}
 
 
+# ─── POST /api/agent/bulk  ─────────────────────────────
+@router.post("/bulk", dependencies=[Depends(verify_apps_script_key)])
+def bulk_create_agents(agents: list[AgentOut]):
+    """Bulk import agents. Used for migration."""
+    if not agents: return {"success": True, "count": 0}
+    
+    query = """
+    INSERT INTO agents (email, estado, last_seen, max_leads, last_assigned, updated_at)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    ON CONFLICT (email) DO UPDATE SET
+        estado = EXCLUDED.estado,
+        last_seen = EXCLUDED.last_seen,
+        max_leads = EXCLUDED.max_leads,
+        last_assigned = EXCLUDED.last_assigned,
+        updated_at = EXCLUDED.updated_at
+    """
+    params = [
+        (a.email, a.estado, a.last_seen, a.max_leads, a.last_assigned, a.updated_at or datetime.now())
+        for a in agents
+    ]
+    
+    import database as db
+    conn = db.get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.executemany(query, params)
+            conn.commit()
+    finally:
+        db.release_conn(conn)
+        
+    return {"success": True, "count": len(agents)}
+
+
 # ─── GET /api/agent/list (coordinator) ─────────────────
 @router.get("/list")
 def list_agents():

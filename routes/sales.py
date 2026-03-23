@@ -32,6 +32,44 @@ def create_sale(sale: SaleCreate):
     return {"success": True}
 
 
+# ─── POST /api/sales/bulk  ─────────────────────────────
+@router.post("/bulk", dependencies=[Depends(verify_apps_script_key)])
+def bulk_create_sales(sales: list[SaleCreate]):
+    """Bulk import sales. Used for migration."""
+    if not sales: return {"success": True, "count": 0}
+    
+    query = """
+    INSERT INTO sales (
+        message_id, agente, producto, tipo_venta, tipo_venta_original,
+        cliente_nombre, cliente_cedula, cliente_email, cliente_telefono,
+        dir_depto, dir_ciudad, dir_barrio, dir_calle,
+        venta_plan, venta_equipo, venta_pago, vendedor_comentarios, created_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
+    """
+    params = [
+        (
+            s.message_id, s.agente, s.producto, s.tipo_venta,
+            s.tipo_venta_original, s.cliente_nombre, s.cliente_cedula,
+            s.cliente_email, s.cliente_telefono,
+            s.dir_depto, s.dir_ciudad, s.dir_barrio, s.dir_calle,
+            s.venta_plan, s.venta_equipo, s.venta_pago,
+            s.vendedor_comentarios
+        )
+        for s in sales
+    ]
+    
+    import database as db
+    conn = db.get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.executemany(query, params)
+            conn.commit()
+    finally:
+        db.release_conn(conn)
+        
+    return {"success": True, "count": len(sales)}
+
+
 @router.get("")
 def list_sales(agente: str = None, limit: int = 100):
     """List sales, optionally filtered by agent."""
