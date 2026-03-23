@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tigo Leads — Agente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #232637;
+      --border: #2e3147;
+      --accent: #4f6ef7;
+      --accent-hover: #3d5ce0;
+      --green: #22c55e;
+      --red: #ef4444;
+      --orange: #f97316;
+      --yellow: #eab308;
+      --text: #e8eaf2;
+      --muted: #8b8fad;
+      --radius: 12px;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* ─── Loader ─── */
+    #loader {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; gap: 16px;
+    }
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Navbar ─── */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { font-size: 18px; font-weight: 700; color: var(--accent); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .agent-badge {
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 6px 14px; border-radius: 999px; font-size: 13px; color: var(--muted);
+    }
+    .agent-badge span { color: var(--text); font-weight: 600; }
+
+    /* ─── Status toggle ─── */
+    .status-btn {
+      padding: 7px 16px; border-radius: 999px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600; transition: all 0.2s;
+    }
+    .status-btn.activo  { background: var(--green);  color: #fff; }
+    .status-btn.offline { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+    /* ─── Main layout ─── */
+    main { padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+    /* ─── Stats bar ─── */
+    .stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 22px; flex: 1; min-width: 130px;
+    }
+    .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+    .stat-card .value { font-size: 26px; font-weight: 700; }
+    .stat-card.accent .value { color: var(--accent); }
+    .stat-card.green  .value { color: var(--green);  }
+    .stat-card.orange .value { color: var(--orange); }
+
+    /* ─── Section title ─── */
+    .section-title { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+
+    /* ─── Lead card ─── */
+    .leads-grid { display: flex; flex-direction: column; gap: 12px; }
+    .lead-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 12px; align-items: start;
+      transition: border-color 0.2s;
+    }
+    .lead-card:hover { border-color: var(--accent); }
+    .lead-name { font-size: 15px; font-weight: 600; }
+    .lead-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .lead-meta b { color: var(--text); }
+
+    /* ─── Estado badge ─── */
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; letter-spacing: .04em;
+    }
+    .badge-asignado  { background: #1e3a8a22; color: #93c5fd; border: 1px solid #1e40af44; }
+    .badge-nuevo     { background: #14532d22; color: #86efac; border: 1px solid #16653344; }
+    .badge-seguimiento { background: #78350f22; color: #fcd34d; border: 1px solid #92400e44; }
+
+    /* ─── Actions ─── */
+    .lead-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      padding: 7px 16px; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 500; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); }
+    .btn-danger  { background: #7f1d1d22; color: #fca5a5; border: 1px solid #7f1d1d44; }
+    .btn-danger:hover { background: #7f1d1d44; }
+
+    /* ─── Empty state ─── */
+    .empty { text-align: center; padding: 60px 0; color: var(--muted); }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* ─── Toast ─── */
+    #toast-root { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 9998; }
+    .toast {
+      background: var(--surface2); border: 1px solid var(--border);
+      padding: 12px 18px; border-radius: 10px; font-size: 13px;
+      animation: slideIn 0.25s ease;
+      max-width: 340px;
+    }
+    .toast.ok  { border-color: var(--green);  color: var(--green);  }
+    .toast.err { border-color: var(--red);    color: var(--red);    }
+    @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ─── Modal ─── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; width: 460px; max-width: 95vw;
+    }
+    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    .form-group select, .form-group textarea, .form-group input {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); border-radius: 8px; padding: 8px 12px;
+      font-size: 14px; font-family: inherit;
+    }
+    .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<!-- Loader -->
+<div id="loader">
+  <div class="spinner"></div>
+  <div style="color: var(--muted); font-size: 14px;">Cargando datos...</div>
+</div>
+
+<!-- Navbar -->
+<nav>
+  <div class="nav-brand">🔵 Tigo Leads</div>
+  <div class="nav-right">
+    <div class="agent-badge">Agente: <span id="agentEmail">—</span></div>
+    <button class="status-btn offline" id="statusBtn" onclick="toggleStatus()">● OFFLINE</button>
+  </div>
+</nav>
+
+<!-- Main -->
+<main>
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card accent">
+      <div class="label">En cola</div>
+      <div class="value" id="queueCount">—</div>
+    </div>
+    <div class="stat-card green">
+      <div class="label">Mis leads</div>
+      <div class="value" id="myLeadsCount">—</div>
+    </div>
+  </div>
+
+  <!-- My leads -->
+  <div class="section-title">Mis Leads Activos</div>
+  <div class="leads-grid" id="leadsGrid">
+    <div class="empty">
+      <div class="empty-icon">📭</div>
+      <div>Cargando leads...</div>
+    </div>
+  </div>
+</main>
+
+<!-- Close lead modal -->
+<div class="modal-overlay" id="closeModal">
+  <div class="modal">
+    <h3>Cerrar Lead</h3>
+    <input type="hidden" id="closeMid">
+    <div class="form-group">
+      <label>Estado</label>
+      <select id="closeEstado">
+        <option value="NO VENTA">No Venta</option>
+        <option value="VENTA">Venta</option>
+        <option value="SEGUIMIENTO">Seguimiento</option>
+        <option value="NO CONTACTO">No Contacto</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Resultado / Notas</label>
+      <textarea id="closeResultado" rows="3" placeholder="Opcional..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="submitClose()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div id="toast-root"></div>
+
+<script>
+  const API = '';               // empty = same origin (Railway)
+  let agentEmail = '';
+  let agentEstado = 'OFFLINE';
+  let heartbeatInterval = null;
+
+  // ─── Init ───────────────────────────────────────────
+  async function init() {
+    // For now, ask email from URL param or prompt
+    const params = new URLSearchParams(location.search);
+    agentEmail = params.get('email') || localStorage.getItem('agent_email') || '';
+
+    if (!agentEmail) {
+      agentEmail = prompt('Ingresa tu email:');
+      if (!agentEmail) { document.getElementById('loader').innerHTML = '<p style="color:#ef4444">Email requerido.</p>'; return; }
+    }
+
+    localStorage.setItem('agent_email', agentEmail);
+    document.getElementById('agentEmail').textContent = agentEmail;
+
+    await loadData();
+    startHeartbeat();
+    document.getElementById('loader').style.display = 'none';
+  }
+
+  // ─── Load leads + queue ──────────────────────────────
+  async function loadData() {
+    try {
+      const [leadsRes, queueRes, agentRes] = await Promise.all([
+        fetch(`${API}/api/leads/mine?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
+        fetch(`${API}/api/leads/queue`).then(r => r.json()),
+        fetch(`${API}/api/agent/info?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
+      ]);
+
+      document.getElementById('queueCount').textContent = queueRes.count ?? '—';
+      document.getElementById('myLeadsCount').textContent = leadsRes.leads?.length ?? 0;
+
+      if (agentRes.agent) {
+        agentEstado = agentRes.agent.estado || 'OFFLINE';
+        updateStatusBtn();
+      }
+
+      renderLeads(leadsRes.leads || []);
+    } catch (e) {
+      showToast('Error de conexión: ' + e.message, 'err');
+    }
+  }
+
+  // ─── Render leads ────────────────────────────────────
+  function renderLeads(leads) {
+    const grid = document.getElementById('leadsGrid');
+    if (!leads.length) {
+      grid.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>No tienes leads activos</div></div>';
+      return;
+    }
+
+    grid.innerHTML = leads.map(l => `
+      <div class="lead-card">
+        <div>
+          <div class="lead-name">${esc(l.nombre || 'Sin nombre')}</div>
+          <div class="lead-meta">
+            📞 <b>${esc(l.linea || '—')}</b> &nbsp;|&nbsp;
+            📦 <b>${esc(l.plan || '—')}</b> &nbsp;|&nbsp;
+            🕑 ${formatDate(l.fecha_gmail)}
+          </div>
+          <div style="margin-top:8px">
+            <span class="badge badge-${l.estado?.toLowerCase().replace(' ','-')}">${esc(l.estado)}</span>
+          </div>
+        </div>
+        <div class="lead-actions">
+          <button class="btn btn-primary" onclick="openCloseModal('${esc(l.message_id)}')">Gestionar</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ─── Agent status ────────────────────────────────────
+  async function toggleStatus() {
+    const newState = agentEstado === 'ACTIVO' ? 'OFFLINE' : 'ACTIVO';
+    try {
+      const res = await fetch(`${API}/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: newState })
+      }).then(r => r.json());
+
+      if (res.success) {
+        agentEstado = newState;
+        updateStatusBtn();
+        showToast('Estado: ' + newState, 'ok');
+      } else {
+        showToast(res.detail || 'Error al cambiar estado', 'err');
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message, 'err');
+    }
+  }
+
+  function updateStatusBtn() {
+    const btn = document.getElementById('statusBtn');
+    if (agentEstado === 'ACTIVO') {
+      btn.textContent = '● ACTIVO';
+      btn.className = 'status-btn activo';
+    } else {
+      btn.textContent = '● OFFLINE';
+      btn.className = 'status-btn offline';
+    }
+  }
+
+  // ─── Heartbeat ───────────────────────────────────────
+  function startHeartbeat() {
+    heartbeatInterval = setInterval(async () => {
+      await fetch(`${API}/api/agent/touch?email=${encodeURIComponent(agentEmail)}`, { method: 'POST' });
+      await loadData();
+    }, 10000); // every 10s
+  }
+
+  // ─── Close modal ─────────────────────────────────────
+  function openCloseModal(mid) {
+    document.getElementById('closeMid').value = mid;
+    document.getElementById('closeEstado').value = 'NO VENTA';
+    document.getElementById('closeResultado').value = '';
+    document.getElementById('closeModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('closeModal').classList.remove('open');
+  }
+
+  async function submitClose() {
+    const mid = document.getElementById('closeMid').value;
+    const estado = document.getElementById('closeEstado').value;
+    const resultado = document.getElementById('closeResultado').value;
+
+    try {
+      const res = await fetch(`${API}/api/leads/${encodeURIComponent(mid)}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado, resultado })
+      }).then(r => r.json());
+
+      if (res.success) {
+        closeModal();
+        showToast('Lead cerrado: ' + estado, 'ok');
+        await loadData();
+      } else {
+        showToast('Error al cerrar lead', 'err');
+      }
+    } catch (e) {
+      showToast('Error: ' + e.message, 'err');
+    }
+  }
+
+  // ─── Helpers ─────────────────────────────────────────
+  function showToast(msg, type = 'ok') {
+    const root = document.getElementById('toast-root');
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.textContent = msg;
+    root.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function formatDate(v) {
+    if (!v) return '—';
+    const d = new Date(v);
+    return isNaN(d) ? v : d.toLocaleString('es-BO', { dateStyle:'short', timeStyle:'short' });
+  }
+
+  init();
+</script>
+</body>
+</html>

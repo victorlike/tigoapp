@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Tigo Leads — Ingresa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0f1117; color: #e8eaf2; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: #1a1d27; border: 1px solid #2e3147; border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; }
+    h1 { font-size: 22px; font-weight: 700; color: #4f6ef7; margin-bottom: 8px; }
+    p  { font-size: 13px; color: #8b8fad; margin-bottom: 28px; }
+    input {
+      width: 100%; padding: 10px 14px; border-radius: 8px;
+      border: 1px solid #2e3147; background: #232637; color: #e8eaf2;
+      font-size: 14px; margin-bottom: 16px; font-family: inherit;
+    }
+    input:focus { outline: none; border-color: #4f6ef7; }
+    button {
+      width: 100%; padding: 11px; background: #4f6ef7; color: #fff;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: background 0.2s;
+    }
+    button:hover { background: #3d5ce0; }
+    .role-select { display: flex; gap: 8px; margin-bottom: 16px; }
+    .role-btn {
+      flex: 1; padding: 8px; background: #232637; border: 1px solid #2e3147;
+      color: #8b8fad; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;
+    }
+    .role-btn.active { background: #1e3a8a22; border-color: #4f6ef7; color: #93c5fd; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔵 Tigo Leads</h1>
+    <p>Ingresa tu email corporativo para continuar</p>
+
+    <div class="role-select">
+      <button class="role-btn active" id="btnAgent" onclick="setRole('agent')">Agente</button>
+      <button class="role-btn" id="btnCoord" onclick="setRole('coordinator')">Coordinador</button>
+    </div>
+
+    <input type="email" id="emailInput" placeholder="correo@empresa.com" autocomplete="email">
+    <button onclick="login()">Ingresar</button>
+  </div>
+
+  <script>
+    let role = 'agent';
+    function setRole(r) {
+      role = r;
+      document.getElementById('btnAgent').classList.toggle('active', r === 'agent');
+      document.getElementById('btnCoord').classList.toggle('active', r === 'coordinator');
+    }
+
+    function login() {
+      const email = document.getElementById('emailInput').value.trim();
+      if (!email || !email.includes('@')) {
+        alert('Ingresa un email válido.');
+        return;
+      }
+      localStorage.setItem('agent_email', email);
+      location.href = role === 'coordinator'
+        ? `/coordinator?email=${encodeURIComponent(email)}`
+        : `/leaddesk?email=${encodeURIComponent(email)}`;
+    }
+
+    document.getElementById('emailInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter') login();
+    });
+  </script>
+</body>
+</html>
