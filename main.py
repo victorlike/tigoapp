@@ -49,3 +49,28 @@ async def coordinator_view(request: Request):
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "2.0.0"}
+
+
+# ─── Global Exception Handler ───────────────────────────
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch-all for unhandled exceptions to avoid generic 500 HTML pages."""
+    # If it's already an HTTPException, let it through
+    if isinstance(exc, HTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"success": False, "error": exc.detail}
+        )
+    
+    # Otherwise, log it and return a 500 JSON
+    import logging
+    logging.getLogger("uvicorn.error").error(f"Global exception: {exc}", exc_info=True)
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error": "Internal Server Error",
+            "detail": str(exc)
+        }
+    )

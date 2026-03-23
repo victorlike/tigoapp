@@ -59,18 +59,9 @@ def bulk_create_sales(sales: list[SaleCreate]):
         for s in sales
     ]
     
-    import database as db
-    conn = db.get_conn()
-    try:
-        with conn.cursor() as cur:
-            cur.executemany(query, params)
-            conn.commit()
-    except Exception as e:
-        conn.rollback()
-        return {"success": False, "error": str(e)}
-    finally:
-        db.release_conn(conn)
-        
+    from database import bulk_execute
+    bulk_execute(query, params)
+    
     return {"success": True, "count": len(sales)}
 
 

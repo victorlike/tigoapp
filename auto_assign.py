@@ -25,7 +25,7 @@ def run():
         FROM agents a
         LEFT JOIN leads l ON l.agente = a.email
         WHERE a.estado = 'ACTIVO'
-          AND a.last_seen >= (now() - INTERVAL '%s seconds')
+          AND a.last_seen >= (now() - (%s * INTERVAL '1 second'))
         GROUP BY a.email, a.max_leads, a.last_assigned
         HAVING COUNT(l.id) FILTER (WHERE l.estado = 'ASIGNADO') < a.max_leads
         ORDER BY open_leads ASC, a.last_assigned ASC NULLS FIRST
