@@ -1,9 +1,10 @@
 """
 routes/agents.py — Agent presence and status management
 """
-from fastapi import APIRouter, HTTPException
-from models import AgentStatusUpdate
+from fastapi import APIRouter, HTTPException, Depends
+from models import AgentStatusUpdate, AgentOut
 from database import execute, fetchone
+from auth import verify_apps_script_key
 from datetime import datetime, timezone
 import auto_assign
 

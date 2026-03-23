@@ -3,7 +3,7 @@ routes/leads.py — Lead management endpoints
 """
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime, timezone
-from models import LeadCreate, LeadStatusUpdate, ResponseOK
+from models import LeadCreate, LeadStatusUpdate, LeadOut, ResponseOK
 from database import execute, fetchone
 from auth import verify_apps_script_key
 import auto_assign

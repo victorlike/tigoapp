@@ -1,9 +1,10 @@
 """
 routes/sales.py — Sales logging
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from models import SaleCreate
 from database import execute, fetchone
+from auth import verify_apps_script_key
 
 router = APIRouter()
 
