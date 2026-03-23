@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.strip()
 
 # Connection pool: min 1, max 10 simultaneous connections
 _pool = None
