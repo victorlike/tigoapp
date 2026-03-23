@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tigo Leads — Coordinador</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f1117; --surface: #1a1d27; --surface2: #232637;
+      --border: #2e3147; --accent: #4f6ef7; --text: #e8eaf2;
+      --muted: #8b8fad; --green: #22c55e; --orange: #f97316;
+      --radius: 12px;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 24px; }
+    h1 { font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 24px; }
+    
+    .stats { display: flex; gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; flex: 1; }
+    .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    th { text-align: left; padding: 12px 16px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+    td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--border); }
+    .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .badge-activo { background: rgba(34,197,94,0.1); color: var(--green); }
+    .badge-offline { background: rgba(139,143,173,0.1); color: var(--muted); }
+  </style>
+</head>
+<body>
+  <h1>📊 Dashboard Coordinador</h1>
+  
+  <div class="stats" id="stats">
+    <div class="stat-card">
+      <div class="label">Leads en Cola</div>
+      <div class="value" id="qCount">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Agentes Activos</div>
+      <div class="value" id="aCount">—</div>
+    </div>
+  </div>
+
+  <h2 style="font-size:16px; margin-bottom:12px;">Estado de Agentes</h2>
+  <table id="agentsTable">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Estado</th>
+        <th>Leads Abiertos</th>
+        <th>Última Conexión</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function load() {
+      const res = await fetch('/api/coordinator/dashboard').then(r => r.json());
+      if (!res.success) return;
+
+      document.getElementById('qCount').textContent = res.queueCount;
+      document.getElementById('aCount').textContent = res.agents.filter(a => a.estado === 'ACTIVO').length;
+
+      const tbody = document.querySelector('#agentsTable tbody');
+      tbody.innerHTML = res.agents.map(a => `
+        <tr>
+          <td>${a.email}</td>
+          <td><span class="badge badge-${a.estado.toLowerCase()}">${a.estado}</span></td>
+          <td>${a.open_leads}</td>
+          <td>${new Date(a.last_seen).toLocaleString()}</td>
+        </tr>
+      `).join('');
+    }
+    load();
+    setInterval(load, 15000);
+  </script>
+</body>
+</html>

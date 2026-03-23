@@ -4,8 +4,8 @@
  */
 
 // ─── CONFIGURATION ──────────────────────────────────────
-const RAILWAY_URL = 'https://YOUR_APP.railway.app'; // ← Change this
-const API_KEY     = 'your-apps-script-api-key';    // ← Change this
+const RAILWAY_URL = 'https://web-production-cbfe.up.railway.app/'; // ← Change this
+const API_KEY     = 'gmail2railway2025';    // ← Change this
 
 const BATCH_SIZE  = 100;
 
