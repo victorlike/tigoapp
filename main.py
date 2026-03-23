@@ -48,7 +48,21 @@ async def coordinator_view(request: Request):
 # ─── Health check ───────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "2.0.0"}
+    """Verify API and Database connectivity."""
+    from database import fetchone
+    db_ok = False
+    try:
+        # Simple query to test DB
+        fetchone("SELECT 1")
+        db_ok = True
+    except:
+        pass
+    
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "database": "connected" if db_ok else "disconnected",
+        "version": "2.0.1"
+    }
 
 
 # ─── Global Exception Handler ───────────────────────────
