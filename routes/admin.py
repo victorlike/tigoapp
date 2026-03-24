@@ -60,7 +60,7 @@ def get_users():
             EXTRACT(EPOCH FROM (now() - last_seen))::int as last_seen_ago_sec
         FROM agents
         ORDER BY role DESC, email ASC
-    """)
+    """, fetch=True)
     return {"success": True, "items": users}
 
 @router.post("/users/update")
