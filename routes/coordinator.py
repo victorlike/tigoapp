@@ -103,19 +103,24 @@ def get_dashboard():
             sales_by_agent_seg[ag] = sales_by_agent_seg.get(ag, 0) + 1
             sales_by_product_seg[pr] = sales_by_product_seg.get(pr, 0) + 1
 
+    # Calculate conversion
+    total_new = kpi_queue["total"] if kpi_queue else 0
+    total_sales = kpi_sales["total"] if kpi_sales else 0
+    conversion = round((total_sales / total_new * 100), 1) if total_new > 0 else 0
+
     from datetime import datetime
     return {
         "success": True,
         "agents": agents,
-        "stuckLeads": stuck,
+        "stuckLeads": stuck_leads,
         "seguimientos": seguimientos,
         "backofficePending": backoffice,
         "kpis": {
-            "queueNew": kpi_queue["total"] if kpi_queue else 0,
-            "ventasCantadasHoy": sales,
+            "queueNew": total_new,
+            "ventasCantadasHoy": total_sales,
             "ventasSeguimientoHoy": ventas_seg_hoy,
             "aprobadasPorBOHoy": kpi_approved["total"] if kpi_approved else 0,
-            "noVentasHoy": nosales,
+            "noVentasHoy": kpi_nosale["total"] if kpi_nosale else 0,
             "salesByAgent": sales_by_agent,
             "salesByProduct": sales_by_product,
             "salesByAgentSeguimiento": sales_by_agent_seg,
