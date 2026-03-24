@@ -5,16 +5,7 @@ import os
 import psycopg2
 import psycopg2.pool
 import logging
-import socket
 from dotenv import load_dotenv
-
-# WORKAROUND: Force IPv4 for environments with broken IPv6 routing (like some Railway regions)
-original_getaddrinfo = socket.getaddrinfo
-def forced_getaddrinfo(*args, **kwargs):
-    # Force address family to AF_INET (IPv4)
-    return original_getaddrinfo(args[0], args[1], socket.AF_INET, *args[3:])
-
-socket.getaddrinfo = forced_getaddrinfo
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +33,9 @@ def get_pool():
             _pool = psycopg2.pool.ThreadedConnectionPool(
                 minconn=1,
                 maxconn=10,
-                dsn=DATABASE_URL
+                dsn=DATABASE_URL,
+                connect_timeout=10,
+                options="-c prepare_threshold=0"
             )
             logger.info("Connection pool initialized successfully.")
         except Exception as e:
