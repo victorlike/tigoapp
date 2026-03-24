@@ -64,6 +64,31 @@ class LeadOut(BaseModel):
     tracking: Optional[str] = None
     gaid: Optional[str] = None
     cantidad_ventas: int = 0
+    
+    # Extra fields from multiple sheets
+    origen: Optional[str] = None
+    url: Optional[str] = None
+    equipo: Optional[str] = None
+    plan: Optional[str] = None
+    utm: Optional[str] = None
+    horario: Optional[str] = None
+    timestamp_sheet: Optional[str] = None
+    documento: Optional[str] = None
+    compania: Optional[str] = None
+    operacion: Optional[str] = None
+    tsource: Optional[str] = None
+    modal: Optional[str] = None
+    direccion: Optional[str] = None
+    email: Optional[str] = None
+    fecha_cierre: Optional[str] = None
+    notas: Optional[str] = None
+    minutos_asignacion: Optional[str] = None
+    seguimiento_tomado_por: Optional[str] = None
+    seguimiento_tomado_en: Optional[str] = None
+    liberado_por: Optional[str] = None
+    liberado_en: Optional[str] = None
+    liberado_motivo: Optional[str] = None
+    error: Optional[str] = None
 
     class Config:
         coerce_numbers_to_str = True
@@ -121,6 +146,54 @@ class SaleCreate(BaseModel):
     tip_resultado: Optional[str] = None
     tip_motivo: Optional[str] = None
     tip_submotivo: Optional[str] = None
+
+    # New fields for alignment with Sheet "ventas_detall_backoffice"
+    cliente_vendedor: Optional[str] = None
+    cliente_nacimiento: Optional[str] = None
+    dir_loc: Optional[str] = None
+    dir_puerta: Optional[str] = None
+    dir_tipo: Optional[str] = None
+    dir_apto: Optional[str] = None
+    dir_esq1: Optional[str] = None
+    dir_esq2: Optional[str] = None
+    venta_vigencia: Optional[str] = None
+    venta_clc: Optional[str] = None
+    venta_llevaequipo: Optional[str] = None
+    venta_precio: Optional[str] = None
+    venta_cuotas: Optional[str] = None
+    dg_solicita: Optional[str] = None
+    dg_importe: Optional[str] = None
+    dg_corresponde: Optional[str] = None
+    envio_tipo: Optional[str] = None
+    envio_detalles: Optional[str] = None
+    cobro_importe: Optional[str] = None
+    cobro_motivo: Optional[str] = None
+    cobro_linkemail: Optional[str] = None
+    link_enviado: Optional[str] = None
+    nombre_link: Optional[str] = None
+    plateran_cargado: Optional[str] = None
+    plateran_so: Optional[str] = None
+    estado_pedido: Optional[str] = None
+    controldoc_subido: Optional[str] = None
+    controldoc_estado: Optional[str] = None
+    porta_nip: Optional[str] = None
+    vendedor_comentarios_por: Optional[str] = None
+    vendedor_comentarios_at: Optional[str] = None
+    backoffice_status: Optional[str] = None
+    backoffice_sub_status: Optional[str] = None
+    backoffice_agent: Optional[str] = None
+    backoffice_at: Optional[str] = None
+    backoffice_notas: Optional[str] = None
+    origen: Optional[str] = None
+    valor_plan: Optional[str] = None
+    valor_telefono: Optional[str] = None
+    revenue: Optional[str] = None
+    revenuedolar: Optional[str] = None
+    bo_email_enviado_at: Optional[str] = None
+    suptipo_reco: Optional[str] = None
+
+    class Config:
+        coerce_numbers_to_str = True
 
 
 # ─── GENERIC ────────────────────────────────────────────

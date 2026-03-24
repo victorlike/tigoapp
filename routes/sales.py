@@ -52,18 +52,36 @@ def bulk_create_sales(sales: list[SaleCreate]):
         cliente_nombre, cliente_cedula, cliente_email, cliente_telefono,
         dir_depto, dir_ciudad, dir_barrio, dir_calle,
         venta_plan, venta_equipo, venta_pago, vendedor_comentarios,
-        tip_tipo, tip_resultado, tip_motivo, tip_submotivo, created_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
+        tip_tipo, tip_resultado, tip_motivo, tip_submotivo,
+        cliente_vendedor, cliente_nacimiento, dir_loc, dir_puerta, dir_tipo,
+        dir_apto, dir_esq1, dir_esq2, venta_vigencia, venta_clc,
+        venta_llevaequipo, venta_precio, venta_cuotas, dg_solicita, dg_importe,
+        dg_corresponde, envio_tipo, envio_detalles, cobro_importe, cobro_motivo,
+        cobro_linkemail, link_enviado, nombre_link, plateran_cargado, plateran_so,
+        estado_pedido, controldoc_subido, controldoc_estado, porta_nip,
+        vendedor_comentarios_por, vendedor_comentarios_at, backoffice_status,
+        backoffice_sub_status, backoffice_agent, backoffice_at, backoffice_notas,
+        origen, valor_plan, valor_telefono, revenue, revenuedolar,
+        bo_email_enviado_at, suptipo_reco, created_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
     """
     params = [
         (
-            s.message_id, s.agente, s.producto, s.tipo_venta,
-            s.tipo_venta_original, s.cliente_nombre, s.cliente_cedula,
-            s.cliente_email, s.cliente_telefono,
+            s.message_id, s.agente, s.producto, s.tipo_venta, s.tipo_venta_original,
+            s.cliente_nombre, s.cliente_cedula, s.cliente_email, s.cliente_telefono,
             s.dir_depto, s.dir_ciudad, s.dir_barrio, s.dir_calle,
-            s.venta_plan, s.venta_equipo, s.venta_pago,
-            s.vendedor_comentarios,
-            s.tip_tipo, s.tip_resultado, s.tip_motivo, s.tip_submotivo
+            s.venta_plan, s.venta_equipo, s.venta_pago, s.vendedor_comentarios,
+            s.tip_tipo, s.tip_resultado, s.tip_motivo, s.tip_submotivo,
+            s.cliente_vendedor, s.cliente_nacimiento, s.dir_loc, s.dir_puerta, s.dir_tipo,
+            s.dir_apto, s.dir_esq1, s.dir_esq2, s.venta_vigencia, s.venta_clc,
+            s.venta_llevaequipo, s.venta_precio, s.venta_cuotas, s.dg_solicita, s.dg_importe,
+            s.dg_corresponde, s.envio_tipo, s.envio_detalles, s.cobro_importe, s.cobro_motivo,
+            s.cobro_linkemail, s.link_enviado, s.nombre_link, s.plateran_cargado, s.plateran_so,
+            s.estado_pedido, s.controldoc_subido, s.controldoc_estado, s.porta_nip,
+            s.vendedor_comentarios_por, s.vendedor_comentarios_at, s.backoffice_status,
+            s.backoffice_sub_status, s.backoffice_agent, s.backoffice_at, s.backoffice_notas,
+            s.origen, s.valor_plan, s.valor_telefono, s.revenue, s.revenuedolar,
+            s.bo_email_enviado_at, s.suptipo_reco
         )
         for s in sales
     ]

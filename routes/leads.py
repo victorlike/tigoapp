@@ -120,13 +120,22 @@ def bulk_create_leads(leads: list[LeadOut]):
         fecha_gmail, fecha_asignacion, resultado, rellamar_en,
         reagendar_tipo, nocontacto_intentos, sla_asignacion,
         tip_tipo, tip_resultado, tip_motivo, tip_submotivo,
-        tracking, gaid, cantidad_ventas
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        tracking, gaid, cantidad_ventas,
+        origen, url, equipo, utm, horario, timestamp_sheet, documento,
+        compania, operacion, tsource, modal, direccion, email,
+        fecha_cierre, notas, minutos_asignacion, seguimiento_tomado_por,
+        seguimiento_tomado_en, liberado_por, liberado_en, liberado_motivo, error
+    ) VALUES (
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+    )
     ON CONFLICT (message_id) DO UPDATE SET
         estado = EXCLUDED.estado,
         agente = EXCLUDED.agente,
         resultado = EXCLUDED.resultado,
         tip_resultado = EXCLUDED.tip_resultado,
+        tracking = EXCLUDED.tracking,
+        gaid = EXCLUDED.gaid,
         updated_at = now()
     """
     params = [
@@ -135,7 +144,11 @@ def bulk_create_leads(leads: list[LeadOut]):
             l.fecha_gmail, l.fecha_asignacion, l.resultado, l.rellamar_en,
             l.reagendar_tipo, l.nocontacto_intentos, l.sla_asignacion,
             l.tip_tipo, l.tip_resultado, l.tip_motivo, l.tip_submotivo,
-            l.tracking, l.gaid, l.cantidad_ventas
+            l.tracking, l.gaid, l.cantidad_ventas,
+            l.origen, l.url, l.equipo, l.utm, l.horario, l.timestamp_sheet, l.documento,
+            l.compania, l.operacion, l.tsource, l.modal, l.direccion, l.email,
+            l.fecha_cierre, l.notas, l.minutos_asignacion, l.seguimiento_tomado_por,
+            l.seguimiento_tomado_en, l.liberado_por, l.liberado_en, l.liberado_motivo, l.error
         )
         for l in leads
     ]
