@@ -42,7 +42,7 @@ class PinRequest(BaseModel):
 def verify_pin(data: PinRequest):
     """Verify the admin PIN to unlock the dashboard."""
     from utils.settings import get_setting
-    correct_pin = get_setting("admin_pin", "1234")
+    correct_pin = get_setting("admin_pin", "2777")
     if data.pin == correct_pin:
         return {"success": True}
     return {"success": False, "error": "PIN incorrecto"}

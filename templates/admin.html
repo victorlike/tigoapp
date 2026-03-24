@@ -149,6 +149,14 @@
                </div>
                <input type="text" id="set_allowed_domain" class="w-full md:w-64 px-4 py-3 rounded-xl text-sm outline-none bg-slate-900 border border-white/10" placeholder="@xtendo-it.com">
              </div>
+             
+             <div class="flex flex-col md:flex-row md:items-center justify-between p-4 pill rounded-2xl gap-4">
+               <div>
+                 <div class="text-sm font-bold">PIN de Administrador</div>
+                 <div class="text-xs text-slate-500">Bloquea la vista de administración. Usa 2777 por defecto.</div>
+               </div>
+               <input type="text" id="set_admin_pin" class="w-full md:w-64 px-4 py-3 rounded-xl text-sm outline-none bg-slate-900 border border-white/10" placeholder="2777">
+             </div>
           </div>
           <button id="btnSaveSecurity" class="btn w-full py-4 rounded-xl bg-sky-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20">Guardar Seguridad</button>
         </div>
@@ -246,6 +254,7 @@
       $('set_stuck_min').value = SETTINGS.stuck_min || 15;
       $('set_auto_assign').checked = SETTINGS.auto_assign_enabled === 'true';
       if ($('set_allowed_domain')) $('set_allowed_domain').value = SETTINGS.allowed_domain || '@xtendo-it.com';
+      if ($('set_admin_pin')) $('set_admin_pin').value = SETTINGS.admin_pin || '2777';
     }
 
     function editUser(email) {
@@ -302,10 +311,11 @@
     if ($('btnSaveSecurity')) {
         $('btnSaveSecurity').onclick = async () => {
           const allowed_domain = $('set_allowed_domain').value.trim();
+          const admin_pin = $('set_admin_pin').value.trim();
           const res = await fetch('/api/admin/settings/update', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({allowed_domain})
+            body: JSON.stringify({allowed_domain, admin_pin})
           }).then(r => r.json());
           
           if (res.success) toast('Seguridad y Acceso actualizado', 'ok');
