@@ -203,9 +203,25 @@ def release_lead(message_id: str):
 @router.post("/clean", dependencies=[Depends(verify_apps_script_key)])
 def clean_database():
     """TRUNCATE all main tables for a fresh start AND ensure schema updates."""
-    # 1. Self-healing migration
-    execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS tipo_venta_original TEXT")
+    # 1. Comprehensive self-healing migration for sales table
+    columns = [
+        "cliente_vendedor", "cliente_nacimiento", "cliente_telefono", "dir_loc", "dir_tipo",
+        "dir_esq1", "dir_esq2", "venta_vigencia", "venta_clc", "venta_llevaequipo",
+        "venta_precio", "venta_cuotas", "dg_solicita", "dg_importe", "dg_corresponde",
+        "envio_tipo", "envio_detalles", "cobro_importe", "cobro_motivo", "cobro_linkemail",
+        "link_enviado", "nombre_link", "plateran_cargado", "plateran_so", "estado_pedido",
+        "controldoc_subido", "controldoc_estado", "porta_nip", "vendedor_comentarios_por",
+        "backoffice_sub_status", "backoffice_agent", "valor_plan", "valor_telefono",
+        "revenuedolar", "suptipo_reco", "tipo_venta_original"
+    ]
+    for col in columns:
+        execute(f"ALTER TABLE sales ADD COLUMN IF NOT EXISTS {col} TEXT")
     
+    # Timestamptz columns
+    ts_columns = ["vendedor_comentarios_at", "bo_email_enviado_at"]
+    for col in ts_columns:
+        execute(f"ALTER TABLE sales ADD COLUMN IF NOT EXISTS {col} TIMESTAMPTZ")
+
     # 2. Cleanup
     for table in ["leads", "sales", "agents"]:
         execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE")
