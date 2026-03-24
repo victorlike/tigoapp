@@ -83,6 +83,116 @@ def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
     return {"success": True}
 
 
+@router.post("/manual")
+def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
+    """
+    Creates both a Lead (closed as Venta) and a Sale record for ad-hoc agent entries.
+    """
+    from utils.logic import normalize_product_group
+    
+    # 1. Normalize Product
+    producto = normalize_product_group(sale.producto)
+    
+    # 2. Create the Lead Record (so it exists in the leads table for reporting)
+    # Manual sales are inherently "Venta" status
+    execute(
+        """
+        INSERT INTO leads (
+            message_id, nombre, linea, plan, agente, agente_original, 
+            estado, resultado, created_at, updated_at, 
+            tip_tipo, tip_resultado, tip_motivo, origen, tsource
+        ) VALUES (%s, %s, %s, %s, %s, %s, 'Venta', 'Venta', now(), now(), %s, %s, %s, 'manual-referido', 'manual')
+        ON CONFLICT (message_id) DO UPDATE SET estado='Venta', updated_at=now()
+        """,
+        (
+            sale.message_id, sale.cliente_nombre, sale.cliente_telefono, sale.venta_plan, 
+            sale.agente, sale.agente, sale.tip_tipo, sale.tip_resultado, sale.tip_motivo
+        )
+    )
+
+    # 3. Insert Sale Record (reuse common logic or insert directly)
+    query = """
+    INSERT INTO sales (
+        message_id, agente, producto, tipo_venta, tipo_venta_original,
+        cliente_nombre, cliente_cedula, cliente_email, cliente_telefono,
+        dir_depto, dir_ciudad, dir_barrio, dir_calle,
+        venta_plan, venta_equipo, venta_pago, vendedor_comentarios,
+        tip_tipo, tip_resultado, tip_motivo, tip_submotivo,
+        cliente_vendedor, cliente_nacimiento, dir_loc, dir_puerta, dir_tipo,
+        dir_apto, dir_esq1, dir_esq2, venta_vigencia, venta_clc,
+        venta_llevaequipo, venta_precio, venta_cuotas, dg_solicita, dg_importe,
+        dg_corresponde, envio_tipo, envio_detalles, cobro_importe, cobro_motivo,
+        cobro_linkemail, link_enviado, nombre_link, plateran_cargado, plateran_so,
+        estado_pedido, controldoc_subido, controldoc_estado, porta_nip,
+        backoffice_status, created_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Pendiente de carga',now())
+    """
+    params = (
+        sale.message_id, sale.agente, producto, sale.tipo_venta, sale.tipo_venta_original,
+        sale.cliente_nombre, sale.cliente_cedula, sale.cliente_email, sale.cliente_telefono,
+        sale.dir_depto, sale.dir_ciudad, sale.dir_barrio, sale.dir_calle,
+        sale.venta_plan, sale.venta_equipo, sale.venta_pago, sale.vendedor_comentarios,
+        sale.tip_tipo, sale.tip_resultado, sale.tip_motivo, sale.tip_submotivo,
+        sale.cliente_vendedor, sale.cliente_nacimiento, sale.dir_loc, sale.dir_puerta, sale.dir_tipo,
+        sale.dir_apto, sale.dir_esq1, sale.dir_esq2, sale.venta_vigencia, sale.venta_clc,
+        sale.venta_llevaequipo, sale.venta_precio, sale.venta_cuotas, sale.dg_solicita, sale.dg_importe,
+        sale.dg_corresponde, sale.envio_tipo, sale.envio_detalles, sale.cobro_importe, sale.cobro_motivo,
+        sale.cobro_linkemail, sale.link_enviado, sale.nombre_link, sale.plateran_cargado, sale.plateran_so,
+        sale.estado_pedido, sale.controldoc_subido, sale.controldoc_estado, sale.porta_nip
+    )
+    
+    execute(query, params)
+    
+    # 4. Trigger Backoffice Email
+    background_tasks.add_task(send_backoffice_email, sale)
+    
+    return {"success": True, "message_id": sale.message_id}
+
+
+DEFAULT_BO_STATUS_LIST = [
+    'Pendiente de carga',
+    'Pendiente de firma',
+    'Pendiente de pago',
+    'Enviada a plateran',
+    'Pendiente de retiro en pick up',
+    'Pendiente de control de documentación',
+    'Documentación rechazada',
+    'Venta cancelada falta retoma',
+    'Venta cancelada finalizada'
+]
+
+
+@router.get("/backoffice")
+def list_backoffice_sales(q: Optional[str] = None):
+    """List sales for backoffice processing."""
+    query = "SELECT * FROM sales"
+    params = []
+    if q:
+        query += " WHERE cliente_nombre ILIKE %s OR message_id ILIKE %s OR cliente_cedula ILIKE %s"
+        params = [f"%{q}%", f"%{q}%", f"%{q}%"]
+    
+    query += " ORDER BY created_at DESC LIMIT 200"
+    items = execute(query, params, fetch=True)
+    return {"success": True, "items": items}
+
+
+@router.patch("/{message_id}/backoffice")
+def update_backoffice_status(message_id: str, status: str, notas: Optional[str] = None, agent: Optional[str] = None):
+    """Update the backoffice status and notes for a sale."""
+    execute(
+        """
+        UPDATE sales SET 
+            backoffice_status = %s, 
+            backoffice_notas = %s, 
+            backoffice_agent = %s, 
+            backoffice_at = now() 
+        WHERE message_id = %s
+        """,
+        (status, notas, agent, message_id)
+    )
+    return {"success": True}
+
+
 @router.get("/{message_id}")
 def get_sale_details(message_id: str):
     """Fetch full details for a single sale (Backoffice modal)."""

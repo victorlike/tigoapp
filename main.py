@@ -34,6 +34,11 @@ async def startup_event():
     """Run migrations on startup."""
     from routes.admin import migrate_admin_schema
     migrate_admin_schema()
+    try:
+        import migrate_catalog
+        migrate_catalog.run()
+    except Exception as e:
+        print("Error migrating catalog:", e)
 
 
 # ─── Frontend routes (Jinja2 views) ─────────────────────

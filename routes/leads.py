@@ -68,36 +68,59 @@ def create_lead(lead: LeadCreate):
 @router.get("/mine")
 def get_my_leads(email: str):
     """Return categorized leads and sales for the given agent."""
-    # 1. Active Leads (ASIGNADO)
     active = execute(
         "SELECT * FROM leads WHERE agente = %s AND estado = 'ASIGNADO' ORDER BY fecha_asignacion ASC",
         (email,),
         fetch=True
     )
-    
-    # 2. Seguimientos (SEGUIMIENTO)
-    followups = execute(
-        "SELECT * FROM leads WHERE agente = %s AND estado = 'SEGUIMIENTO' ORDER BY rellamar_en ASC",
-        (email,),
-        fetch=True
-    )
-    
-    # 3. Mis Ventas (RESULTADO = Venta)
-    sales = execute(
-        "SELECT * FROM sales WHERE agente = %s ORDER BY created_at DESC LIMIT 50",
-        (email,),
-        fetch=True
-    )
-    
-    # 4. Backoffice (Sales from this agent and their state)
-    backoffice = execute(
-        "SELECT message_id, producto, cliente_nombre, backoffice_status, backoffice_notas FROM sales WHERE agente = %s AND backoffice_status != 'Aprobado' ORDER BY updated_at DESC",
-        (email,),
-        fetch=True
-    )
+    return {"success": True, "myLeads": active}
 
+
+# ─── GET /api/leads/followups  ─────────────────────────
+@router.get("/followups")
+def get_followups(email: str):
+    """Return scheduled followups for the agent."""
+    now = datetime.now()
+    items = execute(
+        """
+        SELECT *, (rellamar_en <= %s) AS due_now 
+        FROM leads 
+        WHERE agente = %s AND estado = 'SEGUIMIENTO' 
+        ORDER BY rellamar_en ASC
+        """,
+        (now, email),
+        fetch=True
+    )
+    return {"success": True, "items": items}
+
+
+# ─── GET /api/leads/dup_check  ─────────────────────────
+@router.get("/dup_check")
+def duplicate_check(phone: str, message_id: str):
+    """Check for recent leads with the same phone suffix."""
+    from utils.logic import get_phone_suffix
+    suffix = get_phone_suffix(phone)
+    if not suffix:
+        return {"success": True, "today": 0, "items": []}
+    
+    # Coincidences today (last 24h)
+    items = execute(
+        """
+        SELECT fecha_gmail, agente, estado, resultado 
+        FROM leads 
+        WHERE RIGHT(linea, 8) = %s 
+          AND message_id != %s
+          AND created_at > now() - interval '24 hours'
+        ORDER BY created_at DESC
+        """,
+        (suffix, message_id),
+        fetch=True
+    )
     return {
-        "success": True,
+        "success": True, 
+        "today": len(items), 
+        "items": items
+    }
         "active": active,
         "followups": followups,
         "sales": sales,
@@ -117,7 +140,7 @@ def get_queue():
 
 # ─── PATCH /api/leads/{message_id}/status  ─────────────
 @router.patch("/{message_id}/status")
-def update_lead_status(message_id: str, body: LeadStatusUpdate):
+def update_lead_status(message_id: str, body: LeadStatusUpdate, background_tasks: BackgroundTasks):
     """Update lead estado, resultado, rellamar_en, etc."""
     lead = fetchone("SELECT * FROM leads WHERE message_id = %s", (message_id,))
     if not lead:
@@ -160,6 +183,29 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate):
             message_id
         )
     )
+
+    # Handle Sale Data if provided
+    if body.sale_data and (estado == "Venta" or body.tip_resultado == "Venta"):
+        from routes.sales import create_sale
+        from models import SaleCreate
+        try:
+            # Prepare SaleCreate-compatible data
+            s_data = body.sale_data.copy()
+            s_data["message_id"] = message_id
+            s_data["agente"] = lead["agente"]
+            s_data["tip_tipo"] = body.tip_tipo or lead["tip_tipo"]
+            s_data["tip_resultado"] = body.tip_resultado or lead["tip_resultado"]
+            s_data["tip_motivo"] = body.tip_motivo or lead["tip_motivo"]
+            
+            # Ensure required fields are present
+            if "producto" not in s_data: s_data["producto"] = s_data.get("TipoVenta", "VENTA")
+            if "tipo_venta" not in s_data: s_data["tipo_venta"] = s_data.get("TipoVenta", "VENTA")
+            
+            sale_obj = SaleCreate(**s_data)
+            create_sale(sale_obj, background_tasks)
+        except Exception as e:
+            logger.error(f"Error creating sale from lead status update: {e}")
+
     return {"success": True}
 
 

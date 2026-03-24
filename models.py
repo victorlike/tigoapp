@@ -45,6 +45,7 @@ class LeadStatusUpdate(BaseModel):
     tip_resultado: Optional[str] = None
     tip_motivo: Optional[str] = None
     tip_submotivo: Optional[str] = None
+    sale_data: Optional[dict] = None
 
 
 class LeadRelease(BaseModel):
@@ -217,6 +218,27 @@ class SaleCreate(BaseModel):
 # ─── SALES/SELLER ──────────────────────────────────────
 class SaleCommentUpdate(BaseModel):
     comentario: str
+
+
+# ─── CATALOG ──────────────────────────────────────────
+class CatalogItem(BaseModel):
+    id: int
+    item_type: str
+    name: str
+    price: float
+    active: bool
+
+class CatalogItemCreate(BaseModel):
+    item_type: str
+    name: str
+    price: float
+    active: bool = True
+
+class CatalogItemUpdate(BaseModel):
+    item_type: Optional[str] = None
+    name: Optional[str] = None
+    price: Optional[float] = None
+    active: Optional[bool] = None
 
 
 # ─── GENERIC ────────────────────────────────────────────

@@ -66,16 +66,57 @@ def set_agent_status(email: str, body: AgentStatusUpdate):
     return {"success": True, "estado": body.estado}
 
 
-# ─── GET /api/agent/info  ──────────────────────────────
-@router.get("/info")
-def get_agent_info(email: str):
-    """Return current agent info."""
+# ─── GET /api/agent/init  ──────────────────────────────
+@router.get("/init")
+def get_agent_init(email: str):
+    """
+    Called on page load. Aggregates data needed for the Agent Portal.
+    """
     agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
     if not agent:
         # Auto-create on first access
         touch_agent(email)
         agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
-    return {"success": True, "agent": agent}
+    
+    # Queue count (NUEVO leads)
+    q_row = fetchone("SELECT COUNT(*) AS n FROM leads WHERE estado = 'NUEVO'")
+    q_count = q_row["n"] if q_row else 0
+    
+    # SLA breached (NUEVO leads > 15 mins)
+    sla_row = fetchone("SELECT COUNT(*) AS n FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '15 minutes'")
+    sla_count = sla_row["n"] if sla_row else 0
+    
+    # My leads (ASIGNADO)
+    my_leads = execute(
+        "SELECT * FROM leads WHERE agente = %s AND estado = 'ASIGNADO' ORDER BY fecha_asignacion ASC",
+        (email,),
+        fetch=True
+    )
+    
+    # Roles & Permissions
+    is_bo = (agent["role"] in ["COORD", "ADMIN"])
+    
+    # BO Status list (can be hardcoded or from another table)
+    from sales import DEFAULT_BO_STATUS_LIST
+
+    # Catalog
+    catalog = execute("SELECT * FROM catalog WHERE active = TRUE ORDER BY item_type, name", fetch=True)
+    
+    return {
+        "success": True,
+        "agentEmail": email,
+        "agentStatus": agent["estado"],
+        "myLeads": my_leads,
+        "isBO": is_bo,
+        "boAllowed": is_bo,
+        "boStatusList": DEFAULT_BO_STATUS_LIST,
+        "queueCount": q_count,
+        "slaBreachedCount": sla_count,
+        "catalog": catalog or []
+    }
+
+
+# ─── GET /api/agent/info  ──────────────────────────────
 
 
 # ─── POST /api/agent/bulk  ─────────────────────────────

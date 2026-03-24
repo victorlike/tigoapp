@@ -91,6 +91,7 @@
         Backoffice <span id="tab-count-backoffice" class="tab-badge">--</span>
       </button>
       <button class="tab btn px-4 py-2 rounded-xl pill text-sm font-semibold" data-tab="tab-kpi">KPIs</button>
+      <button class="tab btn px-4 py-2 rounded-xl pill text-sm font-semibold" data-tab="tab-catalog">Catálogo</button>
     </div>
 
     <!-- Content -->
@@ -120,6 +121,31 @@
             <div class="text-xs text-slate-300">Seguimientos hoy</div><div id="kpiFollowupsToday" class="text-3xl font-bold mono mt-1">--</div>
             <div class="text-xs text-slate-300 mt-2">Pendientes BO</div><div id="kpiPendingInBackoffice" class="text-xl font-bold mono">--</div>
           </div>
+        </div>
+      </section>
+
+      <!-- TAB: CATALOGO -->
+      <section id="tab-catalog" class="card rounded-2xl p-4 tab-pane hidden">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-semibold">Gestión de Catálogo</h2>
+            <p class="text-xs text-slate-300">Añadir, modificar y eliminar Planes y Equipos</p>
+          </div>
+          <button class="btn px-4 py-2 rounded-xl bg-sky-500/90 text-sm font-semibold" onclick="openCatalogModal()">+ Añadir Ítem</button>
+        </div>
+        <div class="mt-4 overflow-auto soft-scroll">
+          <table class="w-full text-sm">
+            <thead class="text-slate-300 tracking-wider font-bold">
+              <tr class="border-b border-slate-500/20 text-left">
+                <th class="py-2 pr-3">Tipo</th>
+                <th class="py-2 pr-3">Nombre</th>
+                <th class="py-2 pr-3">Precio</th>
+                <th class="text-center py-2">Estado</th>
+                <th class="text-right py-2">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="catalogTbody" class="align-top"></tbody>
+          </table>
         </div>
       </section>
 
@@ -592,6 +618,100 @@
       setTimeout(() => el.remove(), 4000);
     }
 
+    // ==========================================
+    // CATALOG MANAGEMENT
+    // ==========================================
+    let CATALOG_ITEMS = [];
+    
+    async function loadCatalog() {
+      const res = await fetch('/api/coordinator/catalog').then(r => r.json());
+      CATALOG_ITEMS = res.items || [];
+      const tbody = document.getElementById('catalogTbody');
+      if (!CATALOG_ITEMS.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-500">No hay ítems registrados</td></tr>';
+        return;
+      }
+      tbody.innerHTML = CATALOG_ITEMS.map(i => `
+        <tr class="border-b border-slate-500/10 hover:bg-white/5 transition-colors">
+          <td class="py-3 pr-3">
+            <span class="pill px-2 py-1 rounded-md text-[10px] uppercase font-bold ${i.item_type==='PLAN'?'text-emerald-400 border-emerald-500/30':'text-sky-400 border-sky-500/30'}">${i.item_type}</span>
+          </td>
+          <td class="py-3 pr-3 font-semibold text-slate-200">${i.name}</td>
+          <td class="py-3 pr-3 mono text-slate-300">$${i.price}</td>
+          <td class="py-3 text-center">
+             ${i.active 
+               ? `<span class="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_8px_#34d399]" title="Activo"></span>`
+               : `<span class="w-2 h-2 rounded-full bg-rose-500 inline-block" title="Inactivo"></span>`}
+          </td>
+          <td class="py-3 text-right">
+            <button class="text-sky-400 hover:text-sky-300 mr-3 text-xs font-semibold" onclick="editCatalogItem(${i.id})">Editar</button>
+            <button class="text-rose-400 hover:text-rose-300 text-xs font-semibold" onclick="deleteCatalogItem(${i.id})">Borrar</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function openCatalogModal(id = null) {
+      const isEdit = id !== null;
+      let item = { item_type: 'PLAN', name: '', price: 0, active: true };
+      if (isEdit) item = CATALOG_ITEMS.find(i => i.id === id);
+      
+      document.getElementById('catModalId').value = id || '';
+      document.getElementById('catModalType').value = item.item_type;
+      document.getElementById('catModalName').value = item.name;
+      document.getElementById('catModalPrice').value = item.price;
+      document.getElementById('catModalActive').checked = item.active;
+      
+      document.getElementById('catalogModalTitle').innerText = isEdit ? 'Editar Ítem' : 'Nuevo Ítem';
+      document.getElementById('catalogModal').classList.remove('hidden');
+    }
+
+    function closeCatalogModal() {
+      document.getElementById('catalogModal').classList.add('hidden');
+    }
+
+    async function saveCatalogItem() {
+      const id = document.getElementById('catModalId').value;
+      const payload = {
+        item_type: document.getElementById('catModalType').value,
+        name: document.getElementById('catModalName').value,
+        price: parseFloat(document.getElementById('catModalPrice').value) || 0,
+        active: document.getElementById('catModalActive').checked
+      };
+
+      if (!payload.name) { toast('El nombre es obligatorio', 'error'); return; }
+
+      if (id) {
+        await fetch(`/api/coordinator/catalog/${id}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        toast('Ítem actualizado', 'ok');
+      } else {
+        await fetch(`/api/coordinator/catalog`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        toast('Ítem creado', 'ok');
+      }
+      closeCatalogModal();
+      loadCatalog();
+    }
+
+    async function deleteCatalogItem(id) {
+      if (!confirm('¿Seguro que deseas eliminar permanentemente este ítem?')) return;
+      await fetch(`/api/coordinator/catalog/${id}`, { method: 'DELETE' });
+      toast('Ítem eliminado', 'ok');
+      loadCatalog();
+    }
+    
+    // Inject loadCatalog into the main load
+    const _origLoad = load;
+    load = async () => {
+       await _origLoad();
+       await loadCatalog();
+    }
+
     // Loop
     setInterval(() => {
       if (!AUTO_ON) return;
@@ -602,5 +722,40 @@
 
     load();
   </script>
+
+  <!-- Catalog Modal -->
+  <div id="catalogModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50">
+    <div class="card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl">
+      <h3 id="catalogModalTitle" class="text-xl font-bold mb-4">Nuevo Ítem</h3>
+      <input type="hidden" id="catModalId">
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Tipo</label>
+          <select id="catModalType" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-sky-500">
+            <option value="PLAN">Plan</option>
+            <option value="EQUIPO">Equipo</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Nombre</label>
+          <input type="text" id="catModalName" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-sky-500 placeholder-slate-600" placeholder="Ej: Plan 50GB">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1 uppercase tracking-wider">Precio / Valor</label>
+          <input type="number" id="catModalPrice" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 outline-none focus:border-sky-500 placeholder-slate-600">
+        </div>
+        <div class="flex items-center gap-2 mt-2">
+          <input type="checkbox" id="catModalActive" class="w-4 h-4 accent-sky-500" checked>
+          <label class="text-sm text-slate-300 select-none cursor-pointer" for="catModalActive">Activo (visible para agentes)</label>
+        </div>
+      </div>
+      
+      <div class="mt-6 flex justify-end gap-3">
+        <button class="btn px-4 py-2 hover:bg-slate-700/50 rounded-xl text-slate-300 font-semibold" onclick="closeCatalogModal()">Cancelar</button>
+        <button class="btn px-5 py-2 bg-sky-500 hover:bg-sky-400 rounded-xl font-bold shadow-[0_4px_12px_rgba(14,165,233,0.3)]" onclick="saveCatalogItem()">Guardar</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

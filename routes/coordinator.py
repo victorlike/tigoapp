@@ -5,8 +5,54 @@ from database import execute, fetchone
 from auth import verify_apps_script_key
 from fastapi import APIRouter, Depends
 from utils.settings import get_int_setting
+from typing import List, Any
+from models import CatalogItemCreate, CatalogItemUpdate, ResponseOK
 
 router = APIRouter()
+
+# ─── CATALOG MANAGEMENT ─────────────────────────────────
+@router.get("/catalog")
+def get_catalog():
+    items = execute("SELECT * FROM catalog ORDER BY item_type, name", fetch=True)
+    return {"success": True, "items": items}
+
+@router.post("/catalog", response_model=ResponseOK)
+def create_catalog_item(item: CatalogItemCreate):
+    execute(
+        "INSERT INTO catalog (item_type, name, price, active) VALUES (%s, %s, %s, %s)",
+        (item.item_type, item.name, item.price, item.active)
+    )
+    return ResponseOK()
+
+@router.patch("/catalog/{item_id}", response_model=ResponseOK)
+def update_catalog_item(item_id: int, item: CatalogItemUpdate):
+    updates = []
+    args = []
+    if item.item_type is not None:
+        updates.append("item_type = %s")
+        args.append(item.item_type)
+    if item.name is not None:
+        updates.append("name = %s")
+        args.append(item.name)
+    if item.price is not None:
+        updates.append("price = %s")
+        args.append(item.price)
+    if item.active is not None:
+        updates.append("active = %s")
+        args.append(item.active)
+    
+    if updates:
+        args.append(item_id)
+        query = f"UPDATE catalog SET {', '.join(updates)} WHERE id = %s"
+        execute(query, tuple(args))
+    return ResponseOK()
+
+@router.delete("/catalog/{item_id}", response_model=ResponseOK)
+def delete_catalog_item(item_id: int):
+    execute("DELETE FROM catalog WHERE id = %s", (item_id,))
+    return ResponseOK()
+
+
 
 
 @router.get("/dashboard")

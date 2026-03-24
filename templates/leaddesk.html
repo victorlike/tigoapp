@@ -1,283 +1,250 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
+  <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tigo LeadDesk · Agente</title>
+  <title>LeadDesk Tigo · Agente</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg0: #050814;
-      --bg1: #0b1220;
-      --bg2: #0f1a2e;
-      --card: rgba(15, 27, 51, .72);
-      --card-solid: #0d1b33;
-      --line: rgba(148, 163, 184, .18);
-      --muted: #93a4c7;
-      --txt: #e2e8f0;
-      --txt-dim: #64748b;
-      --accent: #00aef0;
-      --accent-glow: rgba(0, 174, 240, .25);
-      --accent-dark: #0369a1;
-      --ok: #34d399;
-      --ok-bg: rgba(52, 211, 153, .12);
-      --warn: #fbbf24;
-      --warn-bg: rgba(251, 191, 36, .12);
-      --danger: #fb7185;
-      --danger-bg: rgba(251, 113, 133, .12);
-      --radius: 14px;
+      --bg0: #050814; --bg1: #0b1220; --bg2: #0f1a2e;
+      --card: rgba(15, 27, 51, .72); --card-solid: #0d1b33;
+      --line: rgba(148, 163, 184, .18); --muted: #93a4c7;
+      --txt: #e2e8f0; --txt-dim: #64748b;
+      --accent: #00aef0; --accent-glow: rgba(0, 174, 240, .25);
+      --accent-dark: #0369a1; --ok: #34d399;
+      --ok-bg: rgba(52, 211, 153, .12); --warn: #fbbf24;
+      --warn-bg: rgba(251, 191, 36, .12); --danger: #fb7185;
+      --danger-bg: rgba(251, 113, 133, .12); --radius: 14px;
       --radius-sm: 8px;
-      --border: rgba(148, 163, 184, .18);
-      --surface2: rgba(15, 27, 51, .6);
     }
-
-    *,::before,::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', sans-serif;
       background: radial-gradient(1200px 600px at 20% 10%, rgba(0, 174, 240, .10), transparent 55%),
                   radial-gradient(900px 500px at 90% 20%, rgba(52, 211, 153, .08), transparent 55%),
                   linear-gradient(180deg, var(--bg0), var(--bg1));
-      color: var(--txt);
-      min-height: 100vh;
-      overflow-x: hidden;
-      padding: 16px;
+      color: var(--txt); padding: 16px; min-height: 100vh; overflow-x: hidden;
     }
-
-    .app-container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-rows: auto 1fr; gap: 16px; height: calc(100vh - 32px); }
-
-    header {
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      padding: 12px 24px;
-      border-radius: var(--radius);
-      border: 1px solid var(--line);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), #0ea5e9); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; box-shadow: 0 4px 12px var(--accent-glow); }
-    .brand-text { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
-    .brand-sub { font-size: 11px; color: var(--muted); }
-
-    .header-right { display: flex; align-items: center; gap: 12px; }
-    .agent-pill { background: rgba(148, 163, 184, .08); border: 1px solid var(--line); border-radius: 99px; padding: 6px 16px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
-    .agent-pill strong { color: white; }
-
-    .status-btns { display: flex; gap: 8px; }
-    .status-btn { 
-      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--line); background: rgba(148, 163, 184, .05); color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; gap: 6px;
-    }
-    .status-btn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-    .status-btn.active-activo { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
-    .status-btn.active-activo .dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
-    .status-btn.active-pausa { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
-    .status-btn.active-pausa .dot { background: var(--warn); }
-    .status-btn.active-offline { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
-    .status-btn.active-offline .dot { background: var(--danger); }
-
-    .main-grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; overflow: hidden; }
-
-    .card { background: var(--card); backdrop-filter: blur(12px); border-radius: var(--radius); border: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
-    .card-title { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 12px; display: flex; justify-content: space-between; }
-
-    .sidebar-stats { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
-    .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-    .stat-val { color: white; font-weight: 700; }
-
-    .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-    .btn { padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: rgba(148, 163, 184, .08); color: white; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-    .btn:hover { background: rgba(148, 163, 184, .15); border-color: var(--muted); }
-    .btn-primary { background: var(--accent); border: none; box-shadow: 0 4px 12px var(--accent-glow); }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-    .tab-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
-    .tab-btn.active { background: rgba(0, 174, 240, .15); border-color: var(--accent); color: var(--accent); }
-    .tab-badge { background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 99px; font-size: 10px; margin-left: 6px; }
-
-    .lead-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; padding-right: 4px; }
-    .lead-item { background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-    .lead-item:hover { border-color: var(--accent); background: rgba(0, 174, 240, 0.05); }
-
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
-    .modal-overlay.open { display: flex; }
-    .modal { background: var(--bg2); width: 95%; max-width: 1000px; height: 90vh; border-radius: 20px; border: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; }
-    .modal-head { padding: 20px 30px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); }
-    .modal-body { flex: 1; overflow: hidden; display: grid; grid-template-columns: 40% 60%; }
-    .modal-info { padding: 30px; border-right: 1px solid var(--line); overflow-y: auto; background: rgba(0,0,0,0.1); }
-    .modal-action { padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
-    
-    .info-group { margin-bottom: 24px; }
-    .info-group h4 { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid rgba(0,174,240,0.2); padding-bottom: 6px; }
-    .info-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-    .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 4px; }
-    .val { font-size: 13px; font-weight: 500; color: white; }
-
-    input, select, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; color: white; font-family: inherit; font-size: 13px; transition: 0.2s; }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-glow); }
-
-    .wizard-steps { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-    .w-step { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); }
-    .w-step.active { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 10px var(--accent-glow); }
-    .w-line { flex: 1; height: 1px; background: var(--line); }
-
-    .form-section { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px; border: 1px solid var(--line); }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-    #loader { position: fixed; inset: 0; background: var(--bg0); z-index: 9999; display: flex; align-items: center; justify-content: center; }
-    .spinner { width: 40px; height: 40px; border: 4px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    .app-container { max-width: 1320px; margin: 0 auto; display: grid; grid-template-rows: auto 1fr; gap: 14px; }
+    .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); backdrop-filter: blur(16px); padding: 12px 20px; border-radius: var(--radius); border: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), #0ea5e9); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; box-shadow: 0 4px 12px var(--accent-glow); }
+    .brand-text { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-right { display: flex; gap: 10px; align-items: center; }
+    .agent-pill { background: rgba(148, 163, 184, .08); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .btn { padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: rgba(148, 163, 184, .08); color: var(--txt); cursor: pointer; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .btn:hover { background: rgba(148, 163, 184, .16); }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), #0ea5e9); border: none; color: #fff; font-weight: 700; box-shadow: 0 4px 12px var(--accent-glow); }
+    .grid { display: grid; grid-template-columns: 300px 1fr; gap: 14px; }
+    .card { background: var(--card); backdrop-filter: blur(12px); padding: 16px; border-radius: var(--radius); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+    .card-head { font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding: 5px 0; border-bottom: 1px solid rgba(148, 163, 184, .06); }
+    .stat-val { font-weight: 700; color: var(--txt); }
+    .lead-list { display: flex; flex-direction: column; gap: 8px; }
+    .lead-item { border: 1px solid var(--line); padding: 12px 14px; border-radius: 12px; background: rgba(15, 27, 51, .5); display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; font-size: 12px; }
+    .lead-tag { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .tag-asig { background: rgba(0, 174, 240, .15); color: var(--accent); border: 1px solid rgba(0, 174, 240, .3); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(5, 8, 20, .8); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal { background: var(--card-solid); border: 1px solid var(--line); width: 95%; max-width: 1020px; max-height: 92vh; border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; }
+    .modal-body { display: flex; flex-direction: column; overflow-y: auto; flex: 1; }
+    .modal-split { display: grid; grid-template-columns: 45% 55%; min-height: 0; }
+    .info-col { padding: 20px; border-right: 1px solid var(--line); background: rgba(5, 8, 20, .3); }
+    .action-col { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .typification-box { border: 1px solid rgba(251, 191, 36, .25); background: rgba(251, 191, 36, .05); padding: 14px; border-radius: 12px; }
+    input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: rgba(15, 27, 51, .6); color: var(--txt); font-size: 12px; }
+    .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: rgba(148, 163, 184, .07); font-size: 11px; color: var(--muted); }
+    .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 11px 18px; border-radius: 10px; font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.3); background: var(--card-solid); border: 1px solid var(--line); color: #fff; }
+    .loader { position: fixed; inset: 0; background: rgba(5,8,20,.6); display: none; justify-content: center; align-items: center; z-index: 4000; }
+    .spinner { width: 44px; height: 44px; border: 3px solid transparent; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .toast { position: fixed; top: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; font-size: 13px; font-weight: 500; color: white; z-index: 10000; box-shadow: 0 12px 32px rgba(0,0,0,0.4); animation: toastIn 0.3s ease; }
-    @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   </style>
 </head>
 <body>
-  <div id="loader"><div class="spinner"></div></div>
+  <div class="loader" id="loader"><div class="spinner"></div></div>
+  <div class="toast-wrap" id="toast-root"></div>
 
   <div class="app-container">
-    <header>
-      <div class="brand">
-        <div class="brand-icon">T</div>
-        <div>
-          <div class="brand-text">LeadDesk Tigo</div>
-          <div class="brand-sub">Portal de Agente</div>
-        </div>
-      </div>
+    <div class="header">
+      <div class="brand"><div class="brand-icon">T</div><div><div class="brand-text">Tigo LeadDesk</div></div></div>
       <div class="header-right">
-        <div class="agent-pill">
-          👤 Agente: <strong id="agentEmailDisplay">—</strong>
+        <div class="agent-pill">Agente: <strong id="agent-name">...</strong></div>
+        <div id="status-btns" style="display:flex;gap:6px;">
+          <button class="btn" onclick="setStatus('ACTIVO')">Activo</button>
+          <button class="btn" onclick="setStatus('PAUSA')">Pausa</button>
+          <button class="btn" onclick="setStatus('OFFLINE')">Offline</button>
         </div>
-        <div class="status-btns">
-          <button class="status-btn" id="st-ACTIVO" onclick="setStatus('ACTIVO')"><span class="dot"></span>Activo</button>
-          <button class="status-btn" id="st-PAUSA" onclick="setStatus('PAUSA')"><span class="dot"></span>Pausa</button>
-          <button class="status-btn" id="st-OFFLINE" onclick="setStatus('OFFLINE')"><span class="dot"></span>Offline</button>
-        </div>
-        <button class="btn" style="height:36px" onclick="load()">🔄 Refrescar</button>
+        <button class="btn" onclick="refresh()">Actualizar</button>
       </div>
-    </header>
+    </div>
 
-    <div class="main-grid">
+    <div class="grid">
       <div class="card">
-        <div class="card-title">PANEL DE CONTROL</div>
-        <div class="action-btns">
-          <button class="btn btn-primary" onclick="takeLead()" id="btnTake">▶️ Tomar Lead</button>
-          <button class="btn" onclick="openManualSale()">📝 Venta Manual</button>
-        </div>
+        <div class="card-head">Control</div>
+        <button class="btn btn-primary" id="btn-take" onclick="takeLead()">Tomar Lead</button>
+        <button class="btn" onclick="openManualSaleModal()">Venta Manual</button>
         <div class="sidebar-stats">
-          <div class="stat-row"><span>Leads en Cola</span> <span class="stat-val" id="statQueue">0</span></div>
-          <div class="stat-row"><span>Mis Pendientes</span> <span class="stat-val" id="statMine">0</span></div>
-          <div class="stat-row"><span>Fuera de SLA</span> <span class="stat-val" id="statSla" style="color:var(--danger)">0</span></div>
-          <div class="stat-row"><span>Seguimientos</span> <span class="stat-val" id="statFollowups">0</span></div>
-          <div class="stat-row"><span>Mis Ventas</span> <span class="stat-val" id="statSales" style="color:var(--ok)">0</span></div>
+          <div class="stat-row"><span>Cola</span><span class="stat-val" id="q-count">0</span></div>
+          <div class="stat-row"><span>Mios</span><span class="stat-val" id="my-count">0</span></div>
+          <div class="stat-row"><span>Ventas</span><span class="stat-val" id="sales-count">0</span></div>
         </div>
       </div>
-
       <div class="card">
-        <div class="tabs">
-          <button class="tab-btn active" onclick="switchTab('active')">Mis Leads <span class="tab-badge" id="badgeActive">0</span></button>
-          <button class="tab-btn" onclick="switchTab('followups')">Seguimientos <span class="tab-badge" id="badgeFollowups">0</span></button>
-          <button class="tab-btn" onclick="switchTab('sales')">Mis Ventas <span class="tab-badge" id="badgeSales">0</span></button>
-          <button class="tab-btn" onclick="switchTab('backoffice')">Backoffice <span class="tab-badge" id="badgeBackoffice">0</span></button>
+        <div class="card-head">
+          <div style="display:flex;gap:6px;">
+            <button class="btn" onclick="setTab('my')">Mis Leads</button>
+            <button class="btn" onclick="setTab('fu')">Seguimientos</button>
+            <button class="btn" onclick="setTab('sales')">Mis Ventas</button>
+            <button class="btn" id="tab-bo" style="display:none;" onclick="setTab('bo')">Backoffice</button>
+          </div>
         </div>
-        <div class="lead-list" id="mainList"></div>
+        <div class="lead-list" id="tab-body"></div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL GESTION -->
-  <div id="gestModal" class="modal-overlay">
+  <div class="modal-overlay" id="modal">
     <div class="modal">
-      <div class="modal-head">
-        <div>
-          <div class="modal-title">Gestión de Cliente</div>
-          <div class="modal-subtitle" id="modalSub">—</div>
-        </div>
-        <div style="display:flex; gap:10px">
-          <button class="btn btn-danger" id="btnRelease" onclick="releaseLead()">🔓 Liberar</button>
-          <button class="btn" onclick="closeModal()">✕</button>
-        </div>
+      <div style="padding:16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between;">
+        <div class="modal-title">Gestión Cliente</div>
+        <button class="btn" onclick="closeModal()">✕</button>
       </div>
       <div class="modal-body">
-        <div class="modal-info">
-          <div id="infoContent"></div>
+        <div class="modal-split">
+          <div class="info-col" id="info-container"></div>
+          <div class="action-col">
+            <div class="typification-box">
+              <label class="lbl">1. Tipo</label>
+              <select id="tip-type" onchange="updateResultTypes()"><option value="">-</option></select>
+              <label class="lbl">2. Resultado</label>
+              <select id="tip-result-type" onchange="updateResults()"><option value="">-</option></select>
+              <label class="lbl">3. Res</label>
+              <select id="tip-res" onchange="updateMotives()"><option value="">-</option></select>
+              <label class="lbl">4. Motivo</label>
+              <select id="tip-motive" onchange="checkSale()"><option value="">-</option></select>
+              <div id="fu-wrap" style="display:none; margin-top:10px;">
+                <label class="lbl">Rellamar</label><input type="datetime-local" id="fu-datetime">
+              </div>
+            </div>
+            <div id="sale-container" style="display:none;">
+              <select id="sale-form-selector" onchange="renderSaleForm(this.value)">
+                <option value="">- Tipo Venta -</option>
+                <option value="migracion">Migración</option>
+                <option value="alta">Alta</option>
+                <option value="porta">Porta</option>
+              </select>
+              <textarea id="seller-comment" placeholder="Comentario vendedor..."></textarea>
+              <div id="dynamic-form"></div>
+            </div>
+          </div>
         </div>
-        <div class="modal-action">
-          <div class="wizard-steps">
-            <div class="w-step" id="w1">1</div><div class="w-line"></div>
-            <div class="w-step" id="w2">2</div><div class="w-line"></div>
-            <div class="w-step" id="w3">3</div><div class="w-line"></div>
-            <div class="w-step" id="w4">4</div>
+        <div style="padding:16px; border-top:1px solid var(--line);">
+          <textarea id="notes" placeholder="Notas..."></textarea>
+          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+            <button class="btn" onclick="closeModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="save()">GUARDAR</button>
           </div>
-
-          <div id="step1">
-            <label class="lbl">PASO 1: Consulta Inicial</label>
-            <select id="selConsultaIncial" onchange="goStep2()"></select>
-          </div>
-
-          <div id="step2" style="display:none">
-            <label class="lbl">PASO 2: Resultado y Motivo</label>
-            <div style="display:flex; flex-direction:column; gap:16px">
-            <select id="selResultado" onchange="updateResultados()"></select>
-            <select id="selMotivo" onchange="updateMotivos()"></select>
-            <select id="selSubMotivo" onchange="checkStep2()"></select>
-              <div id="step2Extra"></div>
-              <div style="display:flex; gap:10px; margin-top:20px">
-                <button class="btn" onclick="showStep(1)">Atrás</button>
-                <button class="btn btn-primary" id="btnNext2" onclick="goStep3()" disabled>Siguiente</button>
-              </div>
-            </div>
-          </div>
-
-          <div id="step3" style="display:none">
-            <label class="lbl">PASO 3: Formulario de Registro</label>
-            <div style="display:flex; flex-direction:column; gap:16px">
-              <textarea id="fNotas" placeholder="Notas de la llamada..."></textarea>
-              <div id="saleForm" style="display:none">
-                 <select id="fTipoVenta" onchange="renderSaleForm(this.value)">
-                   <option value="">Selecciona tipo de venta...</option>
-                   <option value="migracion">⭐ MIGRACIÓN</option>
-                   <option value="alta">ALTAS (Línea Nueva)</option>
-                   <option value="porta">PORTABILIDAD</option>
-                   <option value="recontrato">RECONTRATO</option>
-                   <option value="upgrade">UPGRADE / UPSELLING</option>
-                 </select>
-                 <div id="dynamicForm" style="margin-top:16px"></div>
-              </div>
-              <div style="display:flex; gap:10px; margin-top:20px">
-                <button class="btn" onclick="showStep(2)">Atrás</button>
-                <button class="btn btn-primary" onclick="goStep4()">Revisar</button>
-              </div>
-            </div>
-          </div>
-
-          <div id="step4" style="display:none">
-            <label class="lbl">PASO 4: Confirmación Final</label>
-            <div class="form-section">
-              <div id="reviewSummary" style="font-size:13px; line-height:1.6"></div>
-            </div>
-            <div style="display:flex; gap:10px; margin-top:24px">
-              <button class="btn" onclick="showStep(3)">Atrás</button>
-              <button class="btn btn-primary" id="btnSubmit" onclick="submitGestion()">💾 GUARDAR Y CERRAR</button>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    let agentEmail = '';
-    let agentState = 'OFFLINE';
-    let currentTab = 'active';
-    let currentLead = null;
-    let gestType = ''; 
-    let _data = {};
+    // --- FastAPI Adaptation ---
+    const agentEmail = new URLSearchParams(window.location.search).get('email') || prompt("Ingresa tu email:");
+    if (!agentEmail) { alert("Email requerido"); window.location.href="/login.html"; }
 
+    const google = {
+      script: {
+        run: {
+          withSuccessHandler: function(callback) { this._success = callback; return this; },
+          withFailureHandler: function(callback) { this._failure = callback; return this; },
+          apiGetInitialData: async function() {
+            const r = await fetch(`/api/agent/init?email=${encodeURIComponent(agentEmail)}`).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiSetAgentStatus: async function(s) {
+            const r = await fetch(`/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
+              method: 'PATCH', headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({estado: s})
+            }).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiTakeNextLead: async function() {
+            const r = await fetch(`/api/agent/take?email=${encodeURIComponent(agentEmail)}`, {method: 'POST'}).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiGetFollowups: async function() {
+            const r = await fetch(`/api/leads/followups?email=${encodeURIComponent(agentEmail)}`).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiListSalesForSeller: async function() {
+            const r = await fetch(`/api/seller/sales?email=${encodeURIComponent(agentEmail)}`).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiListSalesForBackoffice: async function(filter) {
+            const r = await fetch(`/api/sales/backoffice?q=${encodeURIComponent(filter?.q || '')}`).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiGetLeadDetails: async function(id) {
+            const r = await fetch(`/api/leads/${id}`).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiPhoneDupContext: async function(phone, mid) {
+            const r = await fetch(`/api/leads/dup_check?phone=${phone}&message_id=${mid}`).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiReleaseLead: async function(mid, reason) {
+            const r = await fetch(`/api/leads/${mid}/release?email=${encodeURIComponent(agentEmail)}`, {
+              method: 'POST', headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({motivo: reason})
+            }).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiCloseLead: async function(mid, status, notes, saleData, tip, resType, res, motive, fuWhen, fuType) {
+             const r = await fetch(`/api/leads/${mid}/status`, {
+              method: 'PATCH', headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                estado: status, notas: notes, sale_data: saleData,
+                tip_tipo: tip, tip_resultado: resType, tip_motivo: res, tip_submotivo: motive,
+                rellamar_en: fuWhen, reagendar_tipo: fuType
+              })
+            }).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiSaveManualSale: async function(saleData, notes, tip, resType, res, motive) {
+             const r = await fetch(`/api/sales/manual`, {
+              method: 'POST', headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                ...saleData, agente: agentEmail, message_id: 'manual-' + Date.now(),
+                producto: saleData.Producto || saleData.TipoVenta || 'VENTA',
+                tipo_venta: saleData.TipoVenta || 'VENTA',
+                vendedor_comentarios: saleData.VendedorComentarios,
+                tip_tipo: tip, tip_resultado: resType, tip_motivo: res, tip_submotivo: motive
+              })
+            }).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+          apiSetSellerComment: async function(mid, txt) {
+             const r = await fetch(`/api/seller/sales/${mid}/comment?email=${encodeURIComponent(agentEmail)}`, {
+               method: 'PATCH', headers: {'Content-Type': 'application/json'},
+               body: JSON.stringify({comentario: txt})
+             }).then(res => res.json());
+            if (this._success) this._success(r);
+          },
+           apiMarkSaleReviewed: async function(mid, st, notas) {
+             const r = await fetch(`/api/sales/${mid}/backoffice?status=${encodeURIComponent(st)}&notas=${encodeURIComponent(notas || '')}&agent=${encodeURIComponent(agentEmail)}`, {method: 'PATCH'}).then(res => res.json());
+            if (this._success) this._success(r);
+          }
+        }
+      }
+    };
+
+    // --- Typification Logic (User provided) ---
     const RAW_TIP = `
 ConsultaInicial	TipoResultado	Resultado	Motivo
 Equipo libres	Venta	Venta	-
@@ -415,410 +382,226 @@ Multiasistencia	No venta	No Acepta Medio de Pago	-
 Multiasistencia	Venta Cancelada	Preventa Caída por No Pago	-
 Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
 `;
-
     const TYPES = {};
-    RAW_TIP.split('\n').filter(l => l.trim() && !l.includes('ConsultaInicial')).forEach(line => {
-      let [c1, c2, c3, c4] = line.split('\t');
-      c1 = c1.trim(); c2 = c2.trim(); c3 = c3.trim(); c4 = (c4||'').trim();
+    RAW_TIP.split('\n').forEach(line => {
+      let [c1, c2, c3, c4] = (line || '').split('\t');
+      if (!c1 || c1.trim() === 'ConsultaInicial') return;
+      c1 = c1.trim(); c2 = (c2||'').trim(); c3 = (c3||'').trim(); c4 = (c4||'').trim();
       if (!TYPES[c1]) TYPES[c1] = {};
       if (!TYPES[c1][c2]) TYPES[c1][c2] = {};
       if (!TYPES[c1][c2][c3]) TYPES[c1][c2][c3] = [];
-      if (c4 && c4 !== '-' && !TYPES[c1][c2][c3].includes(c4)) TYPES[c1][c2][c3].push(c4);
+      if (c4 && c4 !== '-') TYPES[c1][c2][c3].push(c4);
     });
 
-    async function init() {
-      const params = new URLSearchParams(location.search);
-      agentEmail = params.get('email') || localStorage.getItem('agent_email');
-      if (!agentEmail) {
-        agentEmail = prompt('Ingresa tu email corporativo:');
-        if (!agentEmail) return;
-      }
-      localStorage.setItem('agent_email', agentEmail);
-      document.getElementById('agentEmailDisplay').textContent = agentEmail;
-      
-      await load();
-      document.getElementById('loader').style.display = 'none';
-      setInterval(load, 15000);
-      setInterval(() => fetch('/api/agent/touch?email=' + agentEmail, {method:'POST'}), 10000);
+    let ACTIVE_PLANS = [];
+    let ACTIVE_EQUIPMENT = [];
+    let CATALOG_DATA = [];
+
+    var app = { agent: agentEmail, myLeads: [], followups: [], mySales: [], isBO: false };
+    var currentTab = 'my';
+
+    function init() {
+      const s = document.getElementById('tip-type');
+      Object.keys(TYPES).sort().forEach(k => s.add(new Option(k, k)));
+      refresh();
+      setInterval(() => softRefresh(), 5000); // 5s polling for instant auto-assignment
     }
 
-    async function load() {
-      try {
-        const [dataRes, statsRes, agentRes, salesRes] = await Promise.all([
-          fetch(`/api/leads/mine?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
-          fetch(`/api/leads/stats?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
-          fetch(`/api/agent/info?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
-          fetch(`/api/seller/sales?email=${encodeURIComponent(agentEmail)}`).then(r => r.json())
-        ]);
-
-        if (statsRes.success) {
-          document.getElementById('statQueue').textContent = statsRes.queue;
-          document.getElementById('statMine').textContent = statsRes.pendientes;
-          document.getElementById('statSla').textContent = statsRes.sla;
-          document.getElementById('statFollowups').textContent = statsRes.followups || '0';
-          document.getElementById('statSales').textContent = statsRes.sales_today;
-        }
-
-        if (dataRes.success) {
-          _data = dataRes;
-          _data.sales = salesRes.success ? salesRes.items : [];
-          document.getElementById('badgeActive').textContent = dataRes.active.length;
-          document.getElementById('badgeFollowups').textContent = dataRes.followups.length;
-          document.getElementById('badgeSales').textContent = _data.sales.length;
-          document.getElementById('badgeBackoffice').textContent = dataRes.backoffice.length;
-          renderList();
-        }
-
-        if (agentRes.agent) {
-          agentState = agentRes.agent.estado;
-          updateStatusUI();
-        }
-      } catch (e) {
-        console.error("Load error:", e);
-      }
-    }
-
-    function updateStatusUI() {
-      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active-activo', 'active-pausa', 'active-offline'));
-      const btn = document.getElementById('st-' + agentState);
-      if (btn) btn.classList.add('active-' + agentState.toLowerCase());
-      document.getElementById('btnTake').disabled = (agentState !== 'ACTIVO' || _data.active.length > 0);
-    }
-
-    function switchTab(t) {
-      currentTab = t;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(x => x.innerText.toLowerCase().includes(t));
-      if (btn) btn.classList.add('active');
-      renderList();
-    }
-
-    function renderList() {
-      const list = _data[currentTab] || [];
-      const cont = document.getElementById('mainList');
-      if (list.length === 0) {
-        cont.innerHTML = `<div style="padding:40px; text-align:center; color:var(--muted)">Sin datos en esta pestaña. ${currentTab === 'sales' ? 'Registra una venta para verla aquí.' : ''}</div>`;
-        return;
-      }
-
-      cont.innerHTML = list.map(l => {
-        const title = l.linea || (l.message_id ? l.message_id.substring(0,8) : '—');
-        const sub = l.nombre || l.cliente_nombre || 'Sin nombre';
-        let stLabel = '';
-        let actionBtn = `<button class="btn btn-primary" style="padding:6px 12px; font-size:11px" onclick="openGestion('${l.message_id}')">Gestionar</button>`;
-
-        if (currentTab === 'followups') {
-          stLabel = `<span style="color:var(--warn); font-size:10px">📅 ${l.rellamar_en || ''}</span>`;
-        } else if (currentTab === 'sales') {
-          const boStatus = l.backoffice_status || 'Pendiente';
-          const boColor = boStatus === 'OK' ? 'var(--ok)' : (boStatus.includes('Rechazado') ? 'var(--danger)' : 'var(--warn)');
-          stLabel = `<span style="color:${boColor}; font-size:10px; font-weight:700">BO: ${boStatus}</span>`;
-          actionBtn = `<button class="btn" style="padding:6px 12px; font-size:11px" onclick="editComment('${l.message_id}')">Comentar</button>`;
-        }
+    function processInitData(res) {
+        app.agent = res.agentEmail;
+        app.isBO = res.isBO;
+        app.myLeads = res.myLeads || [];
         
-        return `
+        CATALOG_DATA = res.catalog || [];
+        ACTIVE_PLANS = CATALOG_DATA.filter(c => c.item_type === 'PLAN').map(c => c.name);
+        ACTIVE_EQUIPMENT = CATALOG_DATA.filter(c => c.item_type === 'EQUIPO').map(c => c.name);
+
+        document.getElementById('agent-name').innerText = app.agent;
+        document.getElementById('q-count').innerText = res.queueCount;
+        document.getElementById('my-count').innerText = app.myLeads.length;
+        if (app.isBO) document.getElementById('tab-bo').style.display = 'block';
+        if (typeof renderActiveTab === 'function') renderActiveTab();
+    }
+
+    function refresh() {
+      document.getElementById('loader').style.display = 'flex';
+      google.script.run.withSuccessHandler(res => {
+        document.getElementById('loader').style.display = 'none';
+        processInitData(res);
+      }).apiGetInitialData();
+    }
+
+    function softRefresh() {
+      // Refresh without the full screen loader
+      google.script.run.withSuccessHandler(res => {
+        processInitData(res);
+      }).apiGetInitialData();
+    }
+
+    function setTab(t) { currentTab = t; renderActiveTab(); }
+
+    function renderActiveTab() {
+      const c = document.getElementById('tab-body');
+      c.innerHTML = '';
+      let list = [];
+      if (currentTab === 'my') list = app.myLeads;
+      if (currentTab === 'fu') list = app.followups;
+      if (currentTab === 'sales') list = app.mySales;
+      if (currentTab === 'bo') list = app.boSales;
+
+      if (!list.length) { c.innerHTML = '<div style="padding:40px; color:var(--txt-dim); font-size:13px; text-align:center;">No hay registros en esta sección</div>'; return; }
+
+      list.forEach(l => {
+        const mid = l.message_id || l.messageId;
+        const title = l.nombre || l.cliente_nombre || 'S/N';
+        const subtitle = l.linea || l.cliente_telefono || '-';
+        const st = l.estado || l.backoffice_status || 'ASIGNADO';
+        
+        c.innerHTML += `
           <div class="lead-item">
-            <div>
-              <div style="font-weight:700; font-size:14px">${title}</div>
-              <div style="font-size:11px; color:var(--muted)">${sub} · ${l.plan || l.venta_plan || 'Plan s/e'}</div>
-              ${stLabel}
+            <div style="font-weight:700; color:var(--txt);">${title}</div>
+            <div style="color:var(--txt-dim); font-size:11px;">${subtitle}</div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+               <span class="pill" style="margin-right:8px;">${st}</span>
+               <button class="btn btn-primary" style="padding:5px 10px;" onclick="openModal('${mid}')">Gestionar</button>
             </div>
-            ${actionBtn}
           </div>
         `;
-      }).join('');
+      });
     }
 
-    async function setStatus(s) {
-      const res = await fetch(`/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: s })
-      }).then(r => r.json());
-      if (res.success) {
-        agentState = s;
-        updateStatusUI();
-        if (s === 'OFFLINE') toast("Has pasado a modo Offline", "info");
-      } else {
-        toast(res.detail || "No puedes cambiar a Offline con leads pendientes", "warn");
+    function renderModalInfo(l) {
+      const h = (f, v) => v ? `<div style="padding:10px; border-bottom:1px solid rgba(148,163,184,.08);"><span style="color:var(--txt-dim); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">${f}</span><div style="font-size:13px; margin-top:3px; color:var(--txt);">${v}</div></div>` : '';
+      let html = `<div style="display:grid; grid-template-columns:1fr 1fr; background:rgba(5,8,20,.2); border-radius:12px; overflow:hidden; border:1px solid var(--line);">`;
+      html += h('Nombre', l.nombre || l.cliente_nombre);
+      html += h('Teléfono', l.linea || l.cliente_telefono);
+      html += h('Documento', l.documento || l.cliente_cedula);
+      html += h('Plan Interés', l.plan || l.venta_plan);
+      html += h('Origen', l.origen);
+      html += h('Fecha', l.fecha_gmail || l.created_at);
+      html += h('Gaid', l.gaid);
+      html += h('Dirección', l.direccion);
+      html += `</div>`;
+      if (l.url) html += `<div style="margin-top:12px;"><a href="${l.url}" target="_blank" class="btn" style="width:100%; justify-content:center; background:rgba(148,163,184,.15); font-weight:700;">Ver Original en Gmail</a></div>`;
+      document.getElementById('info-container').innerHTML = html;
+    }
+
+    function openModal(id) {
+      document.getElementById('loader').style.display = 'flex';
+      google.script.run.withSuccessHandler(r => {
+        document.getElementById('loader').style.display = 'none';
+        app.current = r.lead || r.sale;
+        if (!app.current) { alert("Error al cargar detalles"); return; }
+        
+        renderModalInfo(app.current);
+        document.getElementById('modal').style.display = 'flex';
+        
+        // Reset tipification
+        document.getElementById('tip-type').value = '';
+        updateResultTypes();
+        document.getElementById('sale-container').style.display = 'none';
+        document.getElementById('fu-wrap').style.display = 'none';
+        document.getElementById('notes').value = '';
+        document.getElementById('dynamic-form').innerHTML = '';
+        document.getElementById('sale-form-selector').value = '';
+        document.getElementById('seller-comment').value = '';
+        
+        if (app.current.vendedor_comentarios) {
+           document.getElementById('seller-comment').value = app.current.vendedor_comentarios;
+        }
+      }).apiGetLeadDetails(id);
+    }
+
+    const UI = {
+      inp: (id, lbl, ph) => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--muted);">${lbl}</label><input type="text" id="f-${id}" placeholder="${ph||''}"></div>`,
+      date: (id, lbl) => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--muted);">${lbl}</label><input type="date" id="f-${id}"></div>`,
+      sel: (id, lbl, opts) => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--muted);">${lbl}</label><select id="f-${id}" onchange="if('${id}'==='venta_plan'||'${id}'==='venta_equipo') autoFillPrice('${id}', this.value);"><option value="">-</option>${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`,
+      numb: (id, lbl, ph) => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--muted);">${lbl}</label><input type="number" id="f-${id}" placeholder="${ph||''}"></div>`,
+    };
+
+    function autoFillPrice(sourceId, nameSelected) {
+      if (!nameSelected) return;
+      const match = CATALOG_DATA.find(c => c.name === nameSelected);
+      if (match && document.getElementById('f-venta_precio')) {
+         document.getElementById('f-venta_precio').value = match.price;
       }
-    }
-
-    async function takeLead() {
-      const res = await fetch(`/api/agent/take?email=${encodeURIComponent(agentEmail)}`, { method: 'POST' }).then(r => r.json());
-      if (res.success) {
-        toast("Lead asignado con éxito", "ok");
-        load();
-      } else {
-        toast(res.message || "No hay leads disponibles", "info");
-      }
-    }
-
-    function openGestion(mid) {
-      const list = [..._data.active, ..._data.followups];
-      const lead = list.find(x => x.message_id === mid);
-      if (!lead) return;
-      currentLead = lead;
-
-      document.getElementById('modalSub').textContent = 'ID: ' + mid;
-      const f = (k, v) => `<div class="field-block"><span class="lbl">${k}</span><div class="val">${v || '-'}</div></div>`;
-      
-      document.getElementById('infoContent').innerHTML = `
-        <div class="info-group">
-          <h4>DATOS PERSONALES</h4>
-          <div class="info-grid">${f('Línea', lead.linea)} ${f('Cliente', lead.nombre)} ${f('Cédula', lead.documento)}</div>
-        </div>
-        <div class="info-group">
-          <h4>PRODUCTO E INTERÉS</h4>
-          <div class="info-grid">${f('Plan', lead.plan)} ${f('Origen', lead.origen)} ${f('Compañía', lead.compania)}</div>
-        </div>
-      `;
-
-      showStep(1);
-      const sel1 = document.getElementById('selConsultaIncial');
-      sel1.innerHTML = '<option value="">Selecciona...</option>' + Object.keys(TYPES).map(k => `<option value="${k}">${k}</option>`).join('');
-      document.getElementById('gestModal').classList.add('open');
-    }
-
-    function closeModal() { document.getElementById('gestModal').classList.remove('open'); }
-
-    function showStep(n) {
-      for(let i=1; i<=4; i++) {
-        document.getElementById('step' + i).style.display = (i === n ? 'block' : 'none');
-        document.getElementById('w' + i).classList.toggle('active', i <= n);
-      }
-    }
-
-    function goStep2() {
-      const consulta = document.getElementById('selConsultaIncial').value;
-      if (!consulta) return;
-      
-      const selR = document.getElementById('selResultado');
-      selR.innerHTML = '<option value="">Selecciona Tipo Resultado...</option>' + Object.keys(TYPES[consulta]).map(m => `<option value="${m}">${m}</option>`).join('');
-      document.getElementById('selMotivo').innerHTML = '<option value="-">-</option>';
-      document.getElementById('selSubMotivo').innerHTML = '<option value="-">-</option>';
-      showStep(2);
-      checkStep2();
-    }
-
-    function updateResultados() {
-      const c = document.getElementById('selConsultaIncial').value;
-      const r = document.getElementById('selResultado').value;
-      gestType = r.toUpperCase();
-      const selM = document.getElementById('selMotivo');
-      selM.innerHTML = '<option value="">Selecciona Resultado...</option>' + Object.keys(TYPES[c][r]).map(m => `<option value="${m}">${m}</option>`).join('');
-      document.getElementById('selSubMotivo').innerHTML = '<option value="-">-</option>';
-      checkStep2();
-    }
-
-    function updateMotivos() {
-      const c = document.getElementById('selConsultaIncial').value;
-      const r = document.getElementById('selResultado').value;
-      const m = document.getElementById('selMotivo').value;
-      const selS = document.getElementById('selSubMotivo');
-      
-      const sub = TYPES[c][r][m];
-      selS.innerHTML = sub && sub.length ? '<option value="">Selecciona Motivo...</option>' + sub.map(s => `<option value="${s}">${s}</option>`).join('') : '<option value="-">-</option>';
-      
-      const extra = document.getElementById('step2Extra');
-      extra.innerHTML = '';
-      if (r.toLowerCase().includes('rellamado')) {
-        extra.innerHTML = `<label class="lbl">HORA RELLAMADA</label><input type="datetime-local" id="fRellamar">`;
-      }
-      checkStep2();
-    }
-
-    function checkStep2() {
-      document.getElementById('btnNext2').disabled = !document.getElementById('selResultado').value;
-    }
-
-    function goStep3() {
-      showStep(3);
-      document.getElementById('saleForm').style.display = (gestType === 'VENTA' ? 'block' : 'none');
-      if (gestType === 'VENTA') renderSaleForm('');
     }
 
     function renderSaleForm(type) {
-      const div = document.getElementById('dynamicForm');
-      div.innerHTML = '';
-      if (!type) return;
-
-      const f = (id, l, p='', t='text') => `<div class="field-block"><label class="lbl">${l}</label><input type="${t}" id="${id}" placeholder="${p}"></div>`;
-      const s = (id, l, opt) => `<div class="field-block"><label class="lbl">${l}</label><select id="${id}"><option value="">-</option>${opt.map(o => `<option value="${o}">${o}</option>`).join('')}</select></div>`;
-
-      let html = `<div class="form-grid">
-        ${f('f_nombre', 'Nombre completo', currentLead.nombre || '')}
-        ${f('f_cedula', 'Cédula', currentLead.documento || '')}
-        ${f('f_tel', 'Teléfono contacto', currentLead.linea || '')}
-        ${f('f_email', 'Email', currentLead.email || '')}
-        ${f('f_nacimiento', 'Fecha Nacimiento (dd/mm/aaaa)')}
-        ${s('f_dpto', 'Departamento', ['Montevideo', 'Canelones', 'Maldonado', 'Rocha', 'Treinta y Tres', 'Cerro Largo', 'Rivera', 'Artigas', 'Salto', 'Paysandú', 'Río Negro', 'Soriano', 'Colonia', 'San José', 'Flores', 'Florida', 'Lavalleja', 'Durazno', 'Tacuarembó'])}
-        ${f('f_ciudad', 'Ciudad/Localidad')}
-        ${f('f_barrio', 'Barrio')}
-        ${f('f_calle', 'Calle')}
-        ${f('f_nro', 'Nro Puerta')}
-        ${f('f_apto', 'Apto/Piso')}
-        ${f('f_esq1', 'Esquina 1')}
-        ${f('f_esq2', 'Esquina 2')}
-        ${s('f_pago', 'Forma de Pago', ['FACTURA', 'MERCADO PAGO', 'CONTADO', 'TARJETA CREDITO', 'DEPOSITO GESTIONADO'])}
-        ${f('f_plan', 'Plan Vendido', currentLead.plan || '')}
-        ${f('f_equipo', 'Equipo Vendido', currentLead.equipo || '')}
-      </div>`;
+      if (!type) { document.getElementById('dynamic-form').innerHTML = ''; return; }
       
-      if (type === 'alta' || type === 'porta' || type === 'migracion') {
-        html += `<div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--line)">
-          <label class="lbl" style="color:var(--accent)">DATOS DE ENVÍO / PORTABILIDAD</label>
-          <div class="form-grid" style="margin-top:10px">
-            ${s('f_envio', 'Tipo Envío', ['DOMICILIO', 'PICKUP', 'CADETE', 'SIN ENVIO'])}
-            ${f('f_envio_det', 'Detalles/Observaciones Envío')}
-            ${type === 'porta' ? f('f_nip', 'NIP Portabilidad') : ''}
-          </div>
-        </div>`;
-      }
-
-      div.innerHTML = html;
-    }
-
-    function goStep4() {
-      showStep(4);
-      const res = document.getElementById('selResultado').value;
-      document.getElementById('reviewSummary').innerHTML = `
-        <b>Gestión:</b> ${gestType}<br>
-        <b>Resultado:</b> ${res}<br>
-        <b>Notas:</b> ${document.getElementById('fNotas').value || 'Sin notas'}
-      `;
-    }
-
-    async function submitGestion() {
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true;
-      btn.textContent = 'Enviando...';
-
-      const consulta = document.getElementById('selConsultaIncial').value;
-      const tipoRes = document.getElementById('selResultado').value;
-      const resVal = document.getElementById('selMotivo').value;
-      const subMotivo = document.getElementById('selSubMotivo').value;
-      const notas = document.getElementById('fNotas').value;
+      const pPago = ['Contraentrega', 'Tarjeta de credito', 'Financiacion en la factura', 'Link de pago'];
+      let html = '';
       
-      const isVenta = tipoRes.toLowerCase() === 'venta';
-      const isRellamado = tipoRes.toLowerCase().includes('rellamado') || tipoRes.toLowerCase().includes('pendiente');
-
-      if (isVenta) {
-        const formType = document.getElementById('fTipoVenta').value;
-        const saleBody = {
-          message_id: currentLead.message_id,
-          agente: agentEmail,
-          producto: formType || consulta,
-          tipo_venta: resVal,
-          cliente_nombre: document.getElementById('f_nombre')?.value || currentLead.nombre,
-          cliente_cedula: document.getElementById('f_cedula')?.value || currentLead.documento,
-          cliente_email: document.getElementById('f_email')?.value || currentLead.email,
-          cliente_telefono: document.getElementById('f_tel')?.value || currentLead.linea,
-          cliente_nacimiento: document.getElementById('f_nacimiento')?.value,
-          dir_depto: document.getElementById('f_dpto')?.value,
-          dir_ciudad: document.getElementById('f_ciudad')?.value,
-          dir_barrio: document.getElementById('f_barrio')?.value,
-          dir_calle: document.getElementById('f_calle')?.value,
-          dir_puerta: document.getElementById('f_nro')?.value,
-          dir_apto: document.getElementById('f_apto')?.value,
-          dir_esq1: document.getElementById('f_esq1')?.value,
-          dir_esq2: document.getElementById('f_esq2')?.value,
-          venta_plan: document.getElementById('f_plan')?.value,
-          venta_equipo: document.getElementById('f_equipo')?.value,
-          venta_pago: document.getElementById('f_pago')?.value,
-          envio_tipo: document.getElementById('f_envio')?.value,
-          envio_detalles: document.getElementById('f_envio_det')?.value,
-          porta_nip: document.getElementById('f_nip')?.value,
-          vendedor_comentarios: notas,
-          tip_tipo: consulta,
-          tip_resultado: tipoRes,
-          tip_motivo: resVal,
-          tip_submotivo: subMotivo !== '-' ? subMotivo : '',
-          origen: currentLead.origen
-        };
-        await fetch('/api/sales', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(saleBody) });
+      html += UI.inp('cliente_cedula', 'Cédula', 'Documento del cliente');
+      html += UI.inp('cliente_nombre', 'Nombre', 'Nombre del cliente');
+      html += UI.inp('cliente_telefono', 'Teléfono de Contacto', '');
+      html += UI.inp('cliente_email', 'Email', '');
+      html += UI.date('cliente_nacimiento', 'Fecha de Nacimiento');
+      html += UI.inp('direccion', 'Dirección de Entrega', '');
+      html += UI.inp('departamento', 'Departamento', '');
+      html += UI.inp('ciudad', 'Ciudad/Localidad', '');
+      
+      if (type === 'alta' || type === 'migracion' || type === 'porta') {
+          html += UI.sel('venta_plan', 'Plan Vendido', ACTIVE_PLANS);
+          html += UI.sel('venta_equipo', 'Equipo', ACTIVE_EQUIPMENT);
+          html += UI.numb('venta_precio', 'Precio/Valor Final', '0');
+          html += UI.sel('venta_pago', 'Método de Pago', pPago);
+      }
+      
+      if (type === 'porta') {
+          html += UI.inp('porta_numero', 'Línea a Portar', 'Ej: 09...');
+          html += UI.sel('porta_operador', 'Operador Donante', ['Claro', 'Antel']);
+          html += UI.inp('porta_nip', 'NIP / PIN', '');
       }
 
-      const statusBody = {
-        estado: isRellamado ? 'SEGUIMIENTO' : 'CERRADO',
-        resultado: isVenta ? 'Venta' : (isRellamado ? 'Seguimiento' : 'No Venta'),
-        rellamar_en: document.getElementById('fRellamar')?.value,
-        tip_tipo: consulta,
-        tip_resultado: tipoRes,
-        tip_motivo: resVal,
-        tip_submotivo: subMotivo !== '-' ? subMotivo : ''
-      };
-
-      await fetch(`/api/leads/${currentLead.message_id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(statusBody)
-      });
-
-      toast("Gestión guardada con éxito", "ok");
-      closeModal();
-      load();
+      document.getElementById('dynamic-form').innerHTML = html;
     }
 
-    async function releaseLead() {
-      const motivo = prompt('Motivo de liberación:');
-      if (!motivo) return;
-      document.getElementById('loader').style.display = 'flex';
-      const res = await fetch(`/api/leads/${currentLead.message_id}/release?email=${encodeURIComponent(agentEmail)}`, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ motivo: motivo })
-      }).then(r => r.json());
-      document.getElementById('loader').style.display = 'none';
-      if (res.success) {
-        toast("Lead liberado", "ok");
-        closeModal();
-        load();
-      } else {
-        toast(res.error || "Error al liberar", "warn");
-      }
-    }
+    function save() {
+      const tip = document.getElementById('tip-type').value;
+      const tr = document.getElementById('tip-result-type').value;
+      const r = document.getElementById('tip-res').value;
+      const m = document.getElementById('tip-motive').value;
+      if (!tip || !tr || !r) { alert("Debes completar la tipificación (Tipo, Resultado y Res)"); return; }
 
-    function openManualSale() {
-      const linea = prompt('Línea/Teléfono del cliente:');
-      if (!linea) return;
-      fetch(`/api/agent/manual_sale?email=${encodeURIComponent(agentEmail)}&linea=${encodeURIComponent(linea)}`, {method:'POST'})
-        .then(r => r.json())
-        .then(res => {
-          if (res.success) {
-            toast("Venta manual creada", "ok");
-            load();
-          } else {
-            toast(res.message || "Error al crear venta manual", "warn");
-          }
+      const notes = document.getElementById('notes').value;
+      const isManual = app.current?.message_id?.includes('manual-');
+      
+      const saleData = {};
+      const isSale = (tr.toLowerCase() === 'venta' || r.toLowerCase() === 'venta');
+      
+      if (isSale) {
+        const formType = document.getElementById('sale-form-selector').value;
+        if (!formType) { alert("Selecciona el Tipo de Venta para habilitar el formulario"); return; }
+        
+        saleData.Producto = formType;
+        saleData.VendedorComentarios = document.getElementById('seller-comment').value;
+        const inputs = document.querySelectorAll('#dynamic-form [id^="f-"]');
+        inputs.forEach(i => {
+           const key = i.id.replace('f-', '');
+           saleData[key] = i.value;
         });
-    }
-
-    function toast(m, t='info') {
-      const d = document.createElement('div');
-      d.className = 'toast';
-      d.style.borderColor = t === 'ok' ? 'var(--ok)' : (t === 'warn' ? 'var(--danger)' : 'var(--accent)');
-      d.innerText = m;
-      document.body.appendChild(d);
-      setTimeout(() => d.remove(), 4000);
-    }
-
-    async function editComment(mid) {
-      const sale = _data.sales.find(x => x.message_id === mid);
-      if (!sale) return;
-      const c = prompt('Actualizar comentario para el vendedor:', sale.vendedor_comentarios || '');
-      if (c === null) return;
-      
-      const res = await fetch(`/api/seller/sales/${mid}/comment?email=${encodeURIComponent(agentEmail)}`, {
-        method: 'PATCH',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ comentario: c })
-      }).then(r => r.json());
-      
-      if (res.success) {
-        toast("Comentario actualizado", "ok");
-        load();
+        
+        if (!saleData.cliente_cedula || !saleData.cliente_telefono) { 
+           alert("Cédula y Teléfono son obligatorios para registrar una venta"); return; 
+        }
       }
+
+      document.getElementById('loader').style.display = 'flex';
+      const success = () => { document.getElementById('loader').style.display = 'none'; closeModal(); refresh(); };
+      
+      if (isManual) {
+        google.script.run.withSuccessHandler(success).apiSaveManualSale(saleData, notes, tip, tr, r, m);
+      } else {
+        const finalStatus = isSale ? 'Venta' : (tr === 'Rellamado' ? 'SEGUIMIENTO' : 'CERRADO');
+        google.script.run.withSuccessHandler(success).apiCloseLead(app.current.message_id, finalStatus, notes, saleData, tip, tr, r, m);
+      }
+    }
+
+    function openManualSaleModal() {
+      app.current = { message_id: 'manual-' + Date.now(), nombre: '', linea: '' };
+      document.getElementById('modal').style.display = 'flex';
     }
 
     init();
