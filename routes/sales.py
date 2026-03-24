@@ -7,6 +7,7 @@ from database import execute, fetchone
 from auth import verify_apps_script_key
 from utils.mailer import send_backoffice_email
 import logging
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
