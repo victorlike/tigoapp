@@ -3,115 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tigo LeadDesk · Agente</title>
+  <title>Tigo LeadDesk</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   <style>
-    .agent-nav { background: var(--surface); padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-    .status-group { display: flex; gap: 8px; }
-    .status-btn { padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); }
-    .status-btn.active-activo { background: var(--green); color: white; border-color: var(--green); }
-    .status-btn.active-pausa { background: var(--orange); color: white; border-color: var(--orange); }
-    .status-btn.active-offline { background: var(--surface2); color: white; border-color: var(--muted); }
-
-    .control-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; }
-    .main-btn { padding: 12px 24px; border-radius: 8px; font-weight: 800; font-size: 14px; flex: 1; text-align: center; cursor: pointer; border: none; transition: 0.2s; }
-    .btn-green { background: var(--green); color: white; }
-    .btn-green:hover { filter: brightness(1.1); }
+    .agent-email-badge { background: rgba(255,255,255,0.05); padding: 6px 16px; border-radius: 99px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+    .status-btn-group { display: flex; gap: 8px; margin-left: 24px; }
+    .st-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 16px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .st-btn.active-activo { background: rgba(16,185,129,0.1); color: var(--green); border-color: var(--green); }
+    .st-btn.active-pausa { background: rgba(245,158,11,0.1); color: var(--orange); border-color: var(--orange); }
+    .st-btn.active-offline { background: rgba(239,68,68,0.1); color: var(--red); border-color: var(--red); }
     
-    .tabs { display: flex; gap: 4px; background: var(--surface2); padding: 4px; border-radius: 8px; margin-bottom: 20px; }
-    .tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; color: var(--muted); transition: 0.2s; }
-    .tab.active { background: var(--surface); color: white; box-shadow: var(--shadow); }
+    .sidebar-title { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; letter-spacing: 0.1em; }
+    .sidebar-stats { margin-top: 24px; }
+    .sidebar-stat-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .sidebar-stat-row .label { color: var(--muted); }
+    .sidebar-stat-row .val { font-weight: 700; }
+    
+    .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+    .action-btn { background: var(--surface2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: 0.2s; }
+    .action-btn:hover { border-color: var(--accent); background: rgba(0,132,255,0.05); }
+    .action-btn i { font-size: 14px; }
 
-    .lead-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); }
-    .lead-info { display: flex; flex-direction: column; gap: 2px; }
-    .lead-info .name { font-weight: 700; font-size: 14px; }
-    .lead-info .sub { font-size: 11px; color: var(--muted); font-weight: 600; }
-
-    #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
-    .spinner { width: 40px; height: 40px; border: 4px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+    #loader { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
-    .modal-overlay.open { display: flex; }
-    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 400px; max-width: 90vw; }
-    select, textarea { width: 100%; padding: 10px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); color: white; margin-top: 4px; font-family: inherit; }
+    .empty-state { padding: 80px 0; text-align: center; color: var(--muted); }
+    .empty-icon { font-size: 48px; opacity: 0.2; margin-bottom: 16px; }
   </style>
 </head>
 <body>
-  <div id="loader"><div class="spinner"></div><div>Preparando tu escritorio...</div></div>
+  <div id="loader"><div class="spinner"></div></div>
 
-  <div class="agent-nav">
-    <div class="brand">🔵 Tigo LeadDesk</div>
-    <div class="status-group">
-      <div id="emailDisplay" style="margin-right:12px; font-size:12px; color:var(--muted); font-weight:700"></div>
-      <button class="status-btn" id="btn-ACTIVO" onclick="setStatus('ACTIVO')">ACTIVO</button>
-      <button class="status-btn" id="id-PAUSA" onclick="setStatus('PAUSA')">PAUSA</button>
-      <button class="status-btn" id="btn-OFFLINE" onclick="setStatus('OFFLINE')">OFFLINE</button>
-    </div>
-  </div>
-
-  <main>
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="label">Leads en Cola</div>
-        <div class="value" id="statQueue" style="color:var(--accent)">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="label">Mis Activos</div>
-        <div class="value" id="statActive">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="label">Seguimientos para hoy</div>
-        <div class="value" id="statFollowups">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="label">Ventas hoy</div>
-        <div class="value" id="statSales" style="color:var(--green)">0</div>
+  <header>
+    <div class="brand-container">
+      <div class="logo-box" style="background: #00bcd4">T</div>
+      <div class="brand-text">
+        <div class="brand-title">Tigo LeadDesk</div>
+        <div class="brand-sub">Vista Agente</div>
       </div>
     </div>
-
-    <div class="control-panel">
-      <button class="main-btn btn-green" onclick="takeLead()">🚀 TOMAR LEAD</button>
-      <button class="main-btn btn-outline" onclick="manualSale()">➕ VENTA MANUAL</button>
-    </div>
-
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('active')">Mis Leads</div>
-      <div class="tab" onclick="switchTab('followups')">Seguimientos</div>
-      <div class="tab" onclick="switchTab('sales')">Mis Ventas</div>
-      <div class="tab" onclick="switchTab('backoffice')">Backoffice</div>
-    </div>
-
-    <div class="card">
-      <div class="card-body" id="tabContent">
-        <!-- Content injected via JS -->
+    
+    <div style="display:flex; align-items:center">
+      <div class="agent-email-badge">
+        <i style="color:var(--green)">👤</i> Agente: <span id="agentEmailDisplay" style="color:var(--text); font-weight:700">—</span>
       </div>
+      <div class="status-btn-group">
+        <button class="st-btn" id="btn-ACTIVO" onclick="setStatus('ACTIVO')">● Activo</button>
+        <button class="st-btn" id="id-PAUSA" onclick="setStatus('PAUSA')">● Pausa</button>
+        <button class="st-btn" id="btn-OFFLINE" onclick="setStatus('OFFLINE')">● Offline</button>
+      </div>
+      <button class="btn btn-outline" style="margin-left:16px; height:36px; padding:0 12px" onclick="load()">🔄 Actualizar</button>
     </div>
-  </main>
+  </header>
 
-  <!-- Modal Gestionar -->
-  <div class="modal-overlay" id="gestionModal">
-    <div class="modal">
-       <h3 id="modalTitle" style="margin-bottom:16px; font-size:16px">Gestionar Lead</h3>
-       <input type="hidden" id="modalMid">
-       <div style="margin-bottom:12px">
-         <label style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase">Resultado</label>
-         <select id="modalStatusSelect">
-           <option value="NO VENTA">No Venta</option>
-           <option value="VENTA">Venta</option>
-           <option value="SEGUIMIENTO">Seguimiento / Rellamada</option>
-           <option value="NO CONTACTO">No contesta / Buzón</option>
-         </select>
+  <div class="main-wrapper">
+    <div class="sidebar">
+       <div class="sidebar-title">Panel de Control</div>
+       <div class="action-btns">
+         <button class="action-btn" onclick="takeLead()"><i>▶️</i> Tomar Lead</button>
+         <button class="action-btn" onclick="manualSale()"><i>📝</i> Venta Manual</button>
        </div>
-       <div style="margin-bottom:16px">
-         <label style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase">Observaciones</label>
-         <textarea id="modalNotes" rows="3" placeholder="Nota de la gestión..."></textarea>
+       
+       <div class="sidebar-stats">
+         <div class="sidebar-stat-row"><span class="label">Leads en Cola</span> <span class="val" id="sideQueue">0</span></div>
+         <div class="sidebar-stat-row"><span class="label">Mis Pendientes</span> <span class="val" id="sideMine">0</span></div>
+         <div class="sidebar-stat-row"><span class="label" style="color:var(--red)">Fuera de SLA</span> <span class="val" id="sideSla">0</span></div>
+         <div class="sidebar-stat-row"><span class="label">Seguimientos hoy</span> <span class="val" id="sideFollowups">—</span></div>
+         <div class="sidebar-stat-row"><span class="label">Mis Ventas</span> <span class="val" id="sideSales" style="color:var(--green)">0</span></div>
        </div>
-       <div style="display:flex; gap:8px; justify-content:flex-end">
-         <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-         <button class="btn btn-primary" onclick="submitGestion()">Guardar Gestión</button>
-       </div>
+    </div>
+
+    <div class="content-area">
+      <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('active')">Mis Leads <span class="tab-badge" id="badgeActive">0</span></button>
+        <button class="tab-btn" onclick="switchTab('followups')">Seguimientos <span class="tab-badge" id="badgeFollowups">0</span></button>
+        <button class="tab-btn" onclick="switchTab('sales')">Mis Ventas <span class="tab-badge" id="badgeSales">0</span></button>
+        <button class="tab-btn" onclick="switchTab('backoffice')">Backoffice <span class="tab-badge" id="badgeBackoffice">0</span></button>
+      </div>
+
+      <div id="tab-active" class="tab-content active">
+         <div id="leadsList">
+           <div class="empty-state">
+              <div class="empty-icon">📂</div>
+              <div style="font-size:14px; font-weight:600">No tienes leads asignados.</div>
+              <div style="font-size:12px; margin-top:4px">Presioná <b>Tomar Lead</b> cuando estés listo.</div>
+           </div>
+         </div>
+      </div>
+      
+      <div id="tab-followups" class="tab-content"></div>
+      <div id="tab-sales" class="tab-content"></div>
+      <div id="tab-backoffice" class="tab-content"></div>
     </div>
   </div>
 
@@ -119,104 +103,83 @@
     let agentEmail = '';
     let agentState = 'OFFLINE';
     let currentTab = 'active';
-    let data = { active: [], followups: [], sales: [], backoffice: [] };
 
     async function init() {
       const params = new URLSearchParams(location.search);
       agentEmail = params.get('email') || localStorage.getItem('agent_email');
-      
       if (!agentEmail) {
-        agentEmail = prompt('Por favor, ingresa tu email corporativo:');
-        if (!agentEmail) {
-          document.body.innerHTML = '<div style="padding:100px; text-align:center">Email requerido para operar.</div>';
-          return;
-        }
+        agentEmail = prompt('Ingresa tu email corporativo:');
+        if (!agentEmail) return;
       }
       localStorage.setItem('agent_email', agentEmail);
-      document.getElementById('emailDisplay').textContent = agentEmail;
-
+      document.getElementById('agentEmailDisplay').textContent = agentEmail;
+      
       await load();
       document.getElementById('loader').style.display = 'none';
       setInterval(load, 15000);
-      setInterval(heartbeat, 10000);
+      setInterval(() => fetch(`/api/agent/touch?email=${agentEmail}`, {method:'POST'}), 10000);
     }
 
     async function load() {
       try {
-        const [leadsRes, queueRes, agentRes] = await Promise.all([
+        const [dataRes, statsRes, agentRes] = await Promise.all([
           fetch(`/api/leads/mine?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
-          fetch(`/api/leads/queue`).then(r => r.json()),
+          fetch(`/api/leads/stats?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
           fetch(`/api/agent/info?email=${encodeURIComponent(agentEmail)}`).then(r => r.json())
         ]);
 
-        if (leadsRes.success) data = leadsRes;
-        document.getElementById('statQueue').textContent = queueRes.count || 0;
-        document.getElementById('statActive').textContent = data.active.length;
-        document.getElementById('statFollowups').textContent = data.followups.length;
-        document.getElementById('statSales').textContent = data.sales.filter(s => {
-           const d = new Date(s.created_at || s.fecha);
-           return d.toDateString() === new Date().toDateString();
-        }).length;
+        if (statsRes.success) {
+          document.getElementById('sideQueue').textContent = statsRes.queue;
+          document.getElementById('sideMine').textContent = statsRes.pendientes;
+          document.getElementById('sideSla').textContent = statsRes.sla;
+          document.getElementById('sideFollowups').textContent = statsRes.followups || '—';
+          document.getElementById('sideSales').textContent = statsRes.sales_today;
+        }
+
+        if (dataRes.success) {
+          document.getElementById('badgeActive').textContent = dataRes.active.length;
+          document.getElementById('badgeFollowups').textContent = dataRes.followups.length;
+          document.getElementById('badgeSales').textContent = dataRes.sales.length;
+          document.getElementById('badgeBackoffice').textContent = dataRes.backoffice.length;
+          renderTab(dataRes);
+        }
 
         if (agentRes.agent) {
           agentState = agentRes.agent.estado;
           updateStatusUI();
         }
-
-        renderTab();
       } catch (e) {
         console.error(e);
       }
     }
 
-    function renderTab() {
-      const container = document.getElementById('tabContent');
+    function renderTab(data) {
       const list = data[currentTab] || [];
+      const container = document.getElementById('tab-' + currentTab);
       
       if (list.length === 0) {
-        container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--muted); font-size:13px">Nada pendiente por aquí.</div>';
+        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><div style="font-size:14px; font-weight:600">Nada pendiente en esta pestaña.</div></div>`;
         return;
       }
 
-      if (currentTab === 'active' || currentTab === 'followups') {
-        container.innerHTML = list.map(l => `
-          <div class="lead-row">
-            <div class="lead-info">
-              <div class="name">${l.linea} · ${l.nombre || 'Sin nombre'}</div>
-              <div class="sub">${l.plan || 'Plan no especificado'} · ${l.operacion || ''}</div>
-              ${currentTab === 'followups' ? `<div style="color:var(--orange); font-size:10px; font-weight:800">RELLAMAR: ${formatTime(l.rellamar_en)}</div>` : ''}
-            </div>
-            <button class="btn btn-primary" onclick="openGestion('${l.message_id}', '${l.linea}')">Gestionar</button>
+      container.innerHTML = list.map(l => `
+        <div class="card" style="padding:16px; display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <div style="font-weight:700; font-size:14px">${l.linea || l.message_id.substring(0,8)}</div>
+            <div style="font-size:11px; color:var(--muted)">${l.nombre || 'Sin nombre'} · ${l.plan || 'Plan s/e'}</div>
           </div>
-        `).join('');
-      } else if (currentTab === 'sales') {
-        container.innerHTML = list.map(s => `
-          <div class="lead-row">
-            <div class="lead-info">
-              <div class="name">${s.cliente_nombre || 'Venta'}</div>
-              <div class="sub">${s.venta_plan} · ${formatDate(s.created_at || s.fecha)}</div>
-            </div>
-            <span class="badge badge-green">VENTA</span>
-          </div>
-        `).join('');
-      } else if (currentTab === 'backoffice') {
-        container.innerHTML = list.map(s => `
-          <div class="lead-row">
-            <div class="lead-info">
-              <div class="name">${s.producto} · ${s.message_id.substring(0,8)}</div>
-              <div class="sub">${s.backoffice_notas || 'Sin notas del BO'}</div>
-            </div>
-            <span class="badge ${s.backoffice_status === 'Rechazado' ? 'badge-red' : 'badge-orange'}">${s.backoffice_status || 'Pendiente'}</span>
-          </div>
-        `).join('');
-      }
+          <button class="btn btn-outline" style="border-radius:6px; font-size:11px" onclick="openGestion('${l.message_id}')">Gestionar</button>
+        </div>
+      `).join('');
     }
 
     function switchTab(t) {
       currentTab = t;
-      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + t).classList.add('active');
       event.target.classList.add('active');
-      renderTab();
+      load();
     }
 
     async function setStatus(s) {
@@ -232,75 +195,22 @@
     }
 
     function updateStatusUI() {
-      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active-activo', 'active-pausa', 'active-offline'));
+      document.querySelectorAll('.st-btn').forEach(b => b.classList.remove('active-activo', 'active-pausa', 'active-offline'));
       const btn = document.getElementById('btn-' + agentState) || document.getElementById('id-PAUSA');
       if (btn) btn.classList.add('active-' + agentState.toLowerCase());
     }
 
     async function takeLead() {
-      if (agentState !== 'ACTIVO') return alert('Debes estar en estado ACTIVO para tomar leads.');
       const res = await fetch(`/api/agent/take?email=${encodeURIComponent(agentEmail)}`, { method: 'POST' }).then(r => r.json());
-      if (res.success) {
-        alert('Lead asignado: ' + res.lead.linea);
-        load();
-      } else {
-        alert('No hay leads disponibles o ya tienes el máximo permitido.');
-      }
+      if (res.success) load();
+      else alert(res.message);
     }
-
+    
     async function manualSale() {
-      const linea = prompt('Ingrese el número de línea:');
+      const linea = prompt('Línea:');
       if (!linea) return;
-      const nombre = prompt('Nombre del cliente (opcional):');
-      
-      const res = await fetch(`/api/agent/manual_sale?email=${encodeURIComponent(agentEmail)}&linea=${encodeURIComponent(linea)}&nombre=${encodeURIComponent(nombre || '')}`, {
-        method: 'POST'
-      }).then(r => r.json());
-      
-      if (res.success) {
-        alert('Lead manual creado. Ahora gestiónalo en "Mis Leads"');
-        load();
-      }
-    }
-
-    function openGestion(mid, linea) {
-      document.getElementById('modalMid').value = mid;
-      document.getElementById('modalTitle').textContent = 'Gestionar: ' + linea;
-      document.getElementById('gestionModal').classList.add('open');
-    }
-
-    function closeModal() {
-      document.getElementById('gestionModal').classList.remove('open');
-    }
-
-    async function submitGestion() {
-      const mid = document.getElementById('modalMid').value;
-      const estado = document.getElementById('modalStatusSelect').value;
-      const notas = document.getElementById('modalNotes').value;
-
-      const res = await fetch(`/api/leads/${mid}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado, resultado: notas })
-      }).then(r => r.json());
-
-      if (res.success) {
-        closeModal();
-        load();
-      }
-    }
-
-    async function heartbeat() {
-      fetch(`/api/agent/touch?email=${encodeURIComponent(agentEmail)}`, { method: 'POST' });
-    }
-
-    function formatTime(iso) {
-      if (!iso) return '—';
-      return new Date(iso).toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' });
-    }
-    function formatDate(iso) {
-      if (!iso) return '—';
-      return new Date(iso).toLocaleDateString();
+      const res = await fetch(`/api/agent/manual_sale?email=${encodeURIComponent(agentEmail)}&linea=${encodeURIComponent(linea)}`, { method: 'POST' }).then(r => r.json());
+      if (res.success) load();
     }
 
     init();

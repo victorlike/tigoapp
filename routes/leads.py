@@ -182,3 +182,41 @@ def bulk_create_leads(leads: list[LeadOut]):
     bulk_execute(query, params)
     
     return {"success": True, "count": len(leads)}
+
+
+@router.get("/stats")
+def get_agent_stats(email: str):
+    """Return sidebar stats for the given agent."""
+    # 1. Leads en cola
+    queue = fetchone("SELECT COUNT(*) AS total FROM leads WHERE estado = 'NUEVO' AND agente IS NULL")
+    
+    # 2. Mis pendientes (Activos)
+    mine = fetchone("SELECT COUNT(*) AS total FROM leads WHERE agente = %s AND estado = 'ASIGNADO'", (email,))
+    
+    # 3. Fuera de SLA (> 5 min en cola o > 15 min sin gestión)
+    sla = fetchone(
+        """
+        SELECT COUNT(*) AS total FROM leads 
+        WHERE (estado = 'NUEVO' AND created_at < now() - interval '5 minutes')
+           OR (estado = 'ASIGNADO' AND agente = %s AND updated_at < now() - interval '15 minutes')
+        """, 
+        (email,)
+    )
+    
+    # 4. Seguimientos hoy
+    followups = fetchone(
+        "SELECT COUNT(*) AS total FROM leads WHERE agente = %s AND estado = 'SEGUIMIENTO' AND (rellamar_en::date = now()::date OR rellamar_en IS NULL)",
+        (email,)
+    )
+    
+    # 5. Mis ventas hoy
+    sales = fetchone("SELECT COUNT(*) AS total FROM sales WHERE agente = %s AND created_at::date = now()::date", (email,))
+
+    return {
+        "success": True,
+        "queue": queue["total"] if queue else 0,
+        "pendientes": mine["total"] if mine else 0,
+        "sla": sla["total"] if sla else 0,
+        "followups": followups["total"] if followups else 0,
+        "sales_today": sales["total"] if sales else 0
+    }

@@ -67,8 +67,8 @@ def get_dashboard():
         fetch=True
     )
     
-    # 6. KPIs (Today's summary)
-    kpis = fetchone(
+    # 6. KPIs (Today's summary matched to mockup)
+    kpis_raw = fetchone(
         """
         SELECT 
             COUNT(*) FILTER (WHERE estado = 'NUEVO') AS queue,
@@ -76,14 +76,53 @@ def get_dashboard():
             COUNT(*) FILTER (WHERE (resultado != 'Venta' OR resultado IS NULL) AND estado = 'CERRADO' AND fecha_cierre::date = now()::date) AS no_sales_today,
             COUNT(*) FILTER (WHERE estado = 'NUEVO' AND created_at < now() - interval '5 minutes') AS sla_breach,
             COUNT(*) FILTER (WHERE estado = 'SEGUIMIENTO' AND (rellamar_en::date = now()::date OR rellamar_en IS NULL)) AS followups_today,
-            COUNT(*) FILTER (WHERE backoffice_status = 'Pendiente de carga') AS pending_backoffice
+            COUNT(*) FILTER (WHERE backoffice_status = 'Pendiente de carga') AS pending_backoffice,
+            COUNT(*) FILTER (WHERE backoffice_status = 'Aprobado' AND backoffice_at::date = now()::date) AS approved_bo_today,
+            COUNT(*) FILTER (WHERE resultado = 'Venta' AND seguimiento_tomado_en IS NOT NULL AND fecha_cierre::date = now()::date) AS followup_sales_today
         FROM (
-            SELECT estado, resultado, fecha_cierre, created_at, rellamar_en, NULL as backoffice_status FROM leads
+            SELECT estado, resultado, fecha_cierre, created_at, rellamar_en, seguimiento_tomado_en, NULL as backoffice_status, NULL as backoffice_at FROM leads
             UNION ALL
-            SELECT NULL, NULL, NULL, NULL, NULL, backoffice_status FROM sales
+            SELECT NULL, NULL, NULL, NULL, NULL, NULL, backoffice_status, backoffice_at FROM sales
         ) combined
         """
     )
+    
+    # 7. Sales by Agent
+    sales_by_agent = execute(
+        """
+        SELECT agente, COUNT(*) as total 
+        FROM sales 
+        WHERE created_at::date = now()::date 
+        GROUP BY agente 
+        ORDER BY total DESC 
+        LIMIT 5
+        """,
+        fetch=True
+    )
+    
+    # 8. Sales by Product
+    sales_by_product = execute(
+        """
+        SELECT COALESCE(venta_plan, 'Otros') as producto, COUNT(*) as total 
+        FROM sales 
+        WHERE created_at::date = now()::date 
+        GROUP BY venta_plan 
+        ORDER BY total DESC 
+        LIMIT 5
+        """,
+        fetch=True
+    )
+    
+    # Calculate conversion: Sales / Closed
+    closed_today = (kpis_raw["sales_today"] or 0) + (kpis_raw["no_sales_today"] or 0)
+    conversion = round((kpis_raw["sales_today"] / closed_today * 100), 2) if closed_today > 0 else 0
+
+    kpis = {
+        **kpis_raw,
+        "conversion": conversion,
+        "sales_by_agent": sales_by_agent,
+        "sales_by_product": sales_by_product
+    }
     
     return {
         "success": True,
