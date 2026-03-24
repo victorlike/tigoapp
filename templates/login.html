@@ -3,116 +3,219 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Tigo Leads — Ingresa</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Tigo Leads — Acceso</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #050814; color: #e8eaf2; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .card { background: rgba(15, 27, 51, .72); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, .18); border-radius: 20px; padding: 40px 36px; width: 380px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-    h1 { font-size: 24px; font-weight: 800; color: #00aef0; margin-bottom: 8px; letter-spacing: -0.5px; }
-    p  { font-size: 14px; color: #64748b; margin-bottom: 28px; }
-    input {
-      width: 100%; padding: 12px 16px; border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, .18); background: rgba(2, 6, 23, .35); color: #fff;
-      font-size: 15px; margin-bottom: 16px; font-family: inherit; transition: 0.2s;
+    :root {
+      --bg: #030712;
+      --accent: #0ea5e9;
+      --accent-glow: rgba(14, 165, 233, 0.35);
+      --glass: rgba(17, 24, 39, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.08);
     }
-    input:focus { outline: none; border-color: #00aef0; box-shadow: 0 0 0 4px rgba(0, 174, 240, 0.15); }
-    button {
-      width: 100%; padding: 12px; background: #00aef0; color: #fff;
-      border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
-      cursor: pointer; transition: 0.2s;
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(79, 70, 229, 0.15) 0%, transparent 40%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
     }
-    button:hover { opacity: 0.9; transform: translateY(-1px); }
-    .hidden { display: none; }
-    .role-btn {
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(148, 163, 184, 0.1);
-      color: #e2e8f0; margin-bottom: 8px; font-weight: 600; text-align: left; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+    .font-display { font-family: 'Outfit', sans-serif; }
+    
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
-    .role-btn:hover { background: rgba(0, 174, 240, 0.1); border-color: #00aef0; }
-    .role-btn span { font-size: 11px; opacity: 0.5; font-weight: 400; }
-    #loader { border: 3px solid rgba(148,163,184,0.1); border-top: 3px solid #00aef0; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 20px; display: none; }
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .btn-glow:hover {
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* Animated background elements */
+    .blob {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: var(--accent);
+      filter: blur(120px);
+      opacity: 0.12;
+      z-index: -1;
+      border-radius: 50%;
+      animation: float 20s infinite alternate;
+    }
+    @keyframes float {
+      from { transform: translate(-20%, -20%) scale(1); }
+      to { transform: translate(20%, 20%) scale(1.1); }
+    }
+
+    .loader-spin {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.8s linear infinite;
+    }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .role-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .role-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(8px);
+      border-color: var(--accent);
+    }
   </style>
 </head>
-<body>
-  <div class="card" id="loginBox">
-    <h1>🔵 Tigo Leads</h1>
-    <p>Ingresa tu email corporativo para continuar</p>
-    
-    <div id="loader"></div>
-    <input type="email" id="emailInput" placeholder="correo@empresa.com" autocomplete="email">
-    <button id="btnLogin" onclick="login()">Ingresar</button>
+<body class="p-6">
+  <div class="blob" style="top: 10%; left: 10%;"></div>
+  <div class="blob" style="bottom: 15%; right: 10%; background: #4f46e5;"></div>
+
+  <!-- LOGIN BOX -->
+  <div id="loginBox" class="glass w-full max-w-[420px] rounded-[32px] p-10 md:p-12 animate-in fade-in zoom-in duration-700">
+    <div class="flex flex-col items-center mb-10">
+      <div class="w-16 h-16 bg-sky-500 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-500/30 mb-6">
+        <span class="text-white text-3xl font-black font-display">T</span>
+      </div>
+      <h1 class="text-3xl md:text-4xl font-extrabold font-display gradient-text tracking-tight mb-2">Tigo Leads</h1>
+      <p class="text-slate-400 text-sm font-medium">Ingresa para empezar a gestionar</p>
+    </div>
+
+    <div class="space-y-5">
+      <div class="relative group">
+        <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest pl-1 mb-1.5 block">Email Corporativo</label>
+        <input type="email" id="emailInput" placeholder="nombre@xtendo-it.com" autocomplete="email"
+          class="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-5 py-4 text-white text-sm outline-none transition-all duration-300">
+      </div>
+
+      <button id="btnLogin" onclick="login()" 
+        class="btn-glow w-full bg-sky-500 hover:bg-sky-400 text-white font-bold py-4 rounded-2xl transition-all duration-300 active:scale-95 shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2">
+        <span>Ingresar</span>
+        <div id="loader" class="hidden loader-spin"></div>
+      </button>
+    </div>
+
+    <div class="mt-8 text-center">
+      <p class="text-[11px] text-slate-500 italic">Exclusivo para uso interno autorizado.</p>
+    </div>
   </div>
 
-  <div class="card hidden" id="roleBox">
-    <h1 id="welcomeTitle">👋 Hola</h1>
-    <p>Selecciona tu área de trabajo:</p>
-    <div id="roleButtons" style="display:flex; flex-direction:column; gap:4px"></div>
-    <button style="background:transparent; color:#64748b; font-size:12px; font-weight:500; margin-top:16px" onclick="location.reload()">← Usar otra cuenta</button>
+  <!-- ROLE SELECTION BOX -->
+  <div id="roleBox" class="glass hidden w-full max-w-[440px] rounded-[32px] p-10 md:p-12 animate-in slide-in-from-bottom duration-500">
+    <div class="flex items-center gap-4 mb-8">
+      <div class="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400 text-xl font-bold">👋</div>
+      <div>
+        <h2 id="welcomeTitle" class="text-xl md:text-2xl font-bold font-display text-white tracking-tight">Hola, Usuario</h2>
+        <p class="text-slate-400 text-xs">Selecciona tu destino</p>
+      </div>
+    </div>
+
+    <div id="roleButtons" class="space-y-3">
+       <!-- Role buttons injected by JS -->
+    </div>
+
+    <button onclick="location.reload()" 
+      class="mt-8 w-full py-4 text-slate-500 hover:text-white text-xs font-bold tracking-widest uppercase transition-colors">
+      ← Usar otra cuenta
+    </button>
   </div>
 
   <script>
     async function login() {
       const email = document.getElementById('emailInput').value.trim().toLowerCase();
       if (!email || !email.includes('@')) {
-        alert('Ingresa un email corporativo válido.');
+        showError('Ingresa un email corporativo válido.');
         return;
       }
 
-      document.getElementById('loader').style.display = 'block';
-      document.getElementById('btnLogin').disabled = true;
+      const btn = document.getElementById('btnLogin');
+      const loader = document.getElementById('loader');
+      
+      btn.disabled = true;
+      loader.classList.remove('hidden');
+      btn.classList.add('opacity-80', 'cursor-not-allowed');
 
       try {
         const res = await fetch(`/api/agent/info?email=${encodeURIComponent(email)}`).then(r => r.json());
-        if (!res.success || !res.agent) {
-          alert(res.error || 'No se pudo verificar tu cuenta. Contacta al administrador.');
-          document.getElementById('loader').style.display = 'none';
-          document.getElementById('btnLogin').disabled = false;
+        
+        if (!res.success) {
+          showError(res.error || 'No se pudo verificar tu cuenta.');
           return;
         }
 
         const agent = res.agent;
         localStorage.setItem('agent_email', email);
-        
         const role = (agent.role || 'AGENT').toUpperCase();
 
         if (role === 'AGENT') {
-          // Redirect immediately
           location.href = `/leaddesk?email=${encodeURIComponent(email)}`;
           return;
         }
 
-        // Multiple options for Coord/Admin
+        // Show options for Admin/Coord
         document.getElementById('loginBox').classList.add('hidden');
         document.getElementById('roleBox').classList.remove('hidden');
-        document.getElementById('welcomeTitle').textContent = `👋 Hola, ${email.split('@')[0]}`;
+        document.getElementById('welcomeTitle').textContent = `Hola, ${email.split('@')[0]}`;
         
         const btnBox = document.getElementById('roleButtons');
         btnBox.innerHTML = '';
 
         if (role === 'ADMIN') {
-          btnBox.innerHTML += createRoleBtn('Panel de Control', 'Administración Global', `/admin?email=${encodeURIComponent(email)}`);
-          btnBox.innerHTML += createRoleBtn('Torre de Control', 'Gestión de Equipos', `/coordinator?email=${encodeURIComponent(email)}`);
-          btnBox.innerHTML += createRoleBtn('Portal Agente', 'Gestión de Leads', `/leaddesk?email=${encodeURIComponent(email)}`);
+          btnBox.innerHTML += createRoleBtn('Panel Admin', 'Configuración y Auditoría', `/admin?email=${encodeURIComponent(email)}`, '🛠️');
+          btnBox.innerHTML += createRoleBtn('Torre de Control', 'Gestión de Equipos', `/coordinator?email=${encodeURIComponent(email)}`, '🎯');
+          btnBox.innerHTML += createRoleBtn('Portal Agente', 'Gestión de Leads', `/leaddesk?email=${encodeURIComponent(email)}`, '💬');
         } else if (role === 'COORD') {
-          btnBox.innerHTML += createRoleBtn('Torre de Control', 'Gestión de Equipos', `/coordinator?email=${encodeURIComponent(email)}`);
-          btnBox.innerHTML += createRoleBtn('Portal Agente', 'Gestión de Leads', `/leaddesk?email=${encodeURIComponent(email)}`);
+          btnBox.innerHTML += createRoleBtn('Torre de Control', 'Gestión de Equipos', `/coordinator?email=${encodeURIComponent(email)}`, '🎯');
+          btnBox.innerHTML += createRoleBtn('Portal Agente', 'Gestión de Leads', `/leaddesk?email=${encodeURIComponent(email)}`, '💬');
         }
 
       } catch (e) {
         console.error(e);
-        alert('Error de conexión con el servidor.');
+        showError('Error de conexión con el servidor.');
       } finally {
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('btnLogin').disabled = false;
+        btn.disabled = false;
+        loader.classList.add('hidden');
+        btn.classList.remove('opacity-80', 'cursor-not-allowed');
       }
     }
 
-    function createRoleBtn(title, sub, url) {
-      return `<button class="role-btn" onclick="location.href='${url}'">
-        <div>${title}<br><span>${sub}</span></div>
-        <div style="opacity:0.3">→</div>
-      </button>`;
+    function createRoleBtn(title, sub, url, icon) {
+      return `
+        <button class="role-card w-full text-left glass bg-white/[0.03] border-white/5 p-5 rounded-2xl flex items-center justify-between group" onclick="location.href='${url}'">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-lg">${icon}</div>
+            <div>
+              <div class="text-[13px] font-bold text-white group-hover:text-sky-400 transition-colors">${title}</div>
+              <div class="text-[10px] text-slate-500 font-medium">${sub}</div>
+            </div>
+          </div>
+          <div class="text-white/20 group-hover:translate-x-1 group-hover:text-sky-400 transition-all">→</div>
+        </button>`;
+    }
+
+    function showError(msg) {
+      alert(msg); // Placeholder for better toast later
     }
 
     document.getElementById('emailInput').addEventListener('keypress', e => {

@@ -155,8 +155,10 @@
 
   <script>
     // --- FastAPI Adaptation ---
-    const agentEmail = new URLSearchParams(window.location.search).get('email') || prompt("Ingresa tu email:");
-    if (!agentEmail) { alert("Email requerido"); window.location.href="/login.html"; }
+    const agentEmail = new URLSearchParams(window.location.search).get('email');
+    if (!agentEmail) {
+      window.location.href = "/login.html";
+    }
 
     const google = {
       script: {
