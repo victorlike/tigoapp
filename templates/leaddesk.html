@@ -602,6 +602,89 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
     function openManualSaleModal() {
       app.current = { message_id: 'manual-' + Date.now(), nombre: '', linea: '' };
       document.getElementById('modal').style.display = 'flex';
+      
+      // Reset tipification
+      document.getElementById('tip-type').value = '';
+      updateResultTypes();
+      document.getElementById('sale-container').style.display = 'none';
+      document.getElementById('fu-wrap').style.display = 'none';
+      document.getElementById('notes').value = '';
+      document.getElementById('dynamic-form').innerHTML = '';
+      document.getElementById('sale-form-selector').value = '';
+      document.getElementById('seller-comment').value = '';
+    }
+
+    function setStatus(s) {
+      document.getElementById('loader').style.display = 'flex';
+      google.script.run.withSuccessHandler(res => {
+        document.getElementById('loader').style.display = 'none';
+        if (res.success || res.estado) {
+          app.agentStatus = s;
+          document.getElementById('agent-name').innerText = app.agent + ' (' + s + ')';
+          toast('Estado actualizado a ' + s, 'ok');
+        } else {
+          toast(res.detail || res.error || 'Error cambiando estado', 'err');
+        }
+      }).apiSetAgentStatus(s);
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    function takeLead() {
+      document.getElementById('loader').style.display = 'flex';
+      google.script.run.withSuccessHandler(res => {
+        document.getElementById('loader').style.display = 'none';
+        if (res.success) {
+          toast('Lead asignado exitosamente', 'ok');
+          refresh();
+        } else {
+          toast(res.detail || res.message || 'Error tomando lead', 'err');
+        }
+      }).apiTakeNextLead();
+    }
+
+    function updateResultTypes() {
+      const t = document.getElementById('tip-type').value;
+      const s = document.getElementById('tip-result-type');
+      s.innerHTML = '<option value="">-</option>';
+      if (t && TYPES[t]) Object.keys(TYPES[t]).sort().forEach(k => s.add(new Option(k,k)));
+      updateResults();
+    }
+    
+    function updateResults() {
+      const t = document.getElementById('tip-type').value;
+      const r = document.getElementById('tip-result-type').value;
+      const s = document.getElementById('tip-res');
+      s.innerHTML = '<option value="">-</option>';
+      if (t && r && TYPES[t][r]) Object.keys(TYPES[t][r]).sort().forEach(k => s.add(new Option(k,k)));
+      updateMotives();
+    }
+    
+    function updateMotives() {
+      const t = document.getElementById('tip-type').value;
+      const r = document.getElementById('tip-result-type').value;
+      const c = document.getElementById('tip-res').value;
+      const s = document.getElementById('tip-motive');
+      s.innerHTML = '<option value="">-</option>';
+      if (t && r && c && TYPES[t][r][c]) {
+        TYPES[t][r][c].forEach(m => s.add(new Option(m,m)));
+      }
+      checkSale();
+    }
+    
+    function checkSale() {
+      const tr = document.getElementById('tip-result-type').value.toLowerCase();
+      const r = document.getElementById('tip-res').value.toLowerCase();
+      
+      const isSale = (tr.includes('venta') && !tr.includes('cancelada') && !tr.includes('no venta')) || 
+                     (r.includes('venta') && !r.includes('cancelada') && !r.includes('no venta'));
+                     
+      document.getElementById('sale-container').style.display = isSale ? 'block' : 'none';
+      
+      const isRellamado = (tr.includes('rellamado') || r.includes('rellamado'));
+      document.getElementById('fu-wrap').style.display = isRellamado ? 'block' : 'none';
     }
 
     init();

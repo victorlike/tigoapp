@@ -19,10 +19,17 @@ OPEN_STATE = "ASIGNADO"
 @router.post("/touch")
 def touch_agent(email: str):
     """Update agent LastSeen (heartbeat). Creates agent if not exists."""
-    now = datetime.now(timezone.utc)
-
+    from utils.settings import get_setting
+    email = email.lower().strip()
+    
     existing = fetchone("SELECT email FROM agents WHERE email = %s", (email,))
+    now = datetime.now(timezone.utc)
+    
     if not existing:
+        allowed_domain = get_setting("allowed_domain", "@xtendo-it.com").strip().lower()
+        if not email.endswith(allowed_domain):
+            raise HTTPException(status_code=403, detail=f"Dominio no permitido. Debe terminar en {allowed_domain}")
+            
         execute(
             """
             INSERT INTO agents (email, estado, last_seen, max_leads, updated_at)
@@ -73,11 +80,15 @@ def get_agent_init(email: str):
     """
     Called on page load. Aggregates data needed for the Agent Portal.
     """
+    email = email.lower().strip()
     agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
     if not agent:
-        # Auto-create on first access
-        touch_agent(email)
-        agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
+        try:
+            # Auto-create on first access
+            touch_agent(email)
+            agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
+        except HTTPException as e:
+            return {"success": False, "error": e.detail}
     
     # Queue count (NUEVO leads)
     q_row = fetchone("SELECT COUNT(*) AS n FROM leads WHERE estado = 'NUEVO'")
