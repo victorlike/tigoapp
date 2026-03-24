@@ -209,34 +209,38 @@
       const res = await fetch('/api/coordinator/dashboard').then(r => r.json());
       if (!res.success) return;
 
-      document.getElementById('serverDate').textContent = new Date().toLocaleDateString('es-UY');
+      document.getElementById('serverDate').textContent = res.serverNow || new Date().toLocaleDateString('es-UY');
       
       // Update counts in tabs
       document.getElementById('badgeMonitor').textContent = res.agents.length;
-      document.getElementById('badgeRescue').textContent = res.rescueLeads.length;
+      document.getElementById('badgeRescue').textContent = res.stuckLeads.length;
       document.getElementById('badgeSeguimientos').textContent = res.seguimientos.length;
-      document.getElementById('badgeBackoffice').textContent = res.kpis.pending_backoffice;
+      document.getElementById('badgeBackoffice').textContent = res.backofficePending.length;
 
       // Update KPI Tab
       const k = res.kpis;
-      document.getElementById('kpiQueue').textContent = k.queue;
-      document.getElementById('kpiSales').textContent = k.sales_today;
-      document.getElementById('kpiNoSales').textContent = k.no_sales_today;
+      document.getElementById('kpiQueue').textContent = k.queueNew;
+      document.getElementById('kpiSales').textContent = k.ventasCantadasHoy;
+      document.getElementById('kpiNoSales').textContent = k.noVentasHoy;
       document.getElementById('kpiConversion').textContent = k.conversion + '%';
       document.getElementById('kpiConvBar').style.width = k.conversion + '%';
-      document.getElementById('kpiSla').textContent = k.sla_breach;
-      document.getElementById('kpiApproved').textContent = k.approved_bo_today;
-      document.getElementById('kpiFollowupSales').textContent = k.followup_sales_today;
-      document.getElementById('kpiFollowupsCount').textContent = k.followups_today;
-      document.getElementById('kpiPendingBO').textContent = k.pending_backoffice;
+      document.getElementById('kpiSla').textContent = k.slaBreached;
+      document.getElementById('kpiApproved').textContent = k.aprobadasPorBOHoy;
+      document.getElementById('kpiFollowupSales').textContent = k.followupSalesToday || 0;
+      document.getElementById('kpiFollowupsCount').textContent = k.followupsToday;
+      document.getElementById('kpiPendingBO').textContent = res.backofficePending.length;
 
       // Lists for byAgent and byProduct
-      document.getElementById('kpiByAgent').innerHTML = k.sales_by_agent.map(a => `
-        <div class="list-item"><span>${a.agente}</span> <span style="font-weight:700">${a.total}</span></div>
-      `).join('');
-      document.getElementById('kpiByProduct').innerHTML = k.sales_by_product.map(p => `
-        <div class="list-item"><span>${p.producto}</span> <span style="font-weight:700">${p.total}</span></div>
-      `).join('');
+      if (k.salesByAgent) {
+        document.getElementById('kpiByAgent').innerHTML = Object.entries(k.salesByAgent).map(([agente, total]) => `
+          <div class="list-item"><span>${agente}</span> <span style="font-weight:700">${total}</span></div>
+        `).join('');
+      }
+      if (k.salesByProduct) {
+        document.getElementById('kpiByProduct').innerHTML = Object.entries(k.salesByProduct).map(([prod, total]) => `
+          <div class="list-item"><span>${prod}</span> <span style="font-weight:700">${total}</span></div>
+        `).join('');
+      }
 
       // Tables
       renderTables(res);
@@ -244,34 +248,62 @@
 
     function renderTables(res) {
       const agentsTable = document.querySelector('#agentsTable tbody');
-      agentsTable.innerHTML = res.agents.map(a => `
+      agentsTable.innerHTML = res.agents.map(a => {
+        const lastSeen = a.last_seen_ago_sec < 90 ? '<span style="color:var(--green)">Online</span>' : '<span style="color:var(--muted)">Offline</span>';
+        return `
         <tr>
-          <td><div style="font-weight:600">${a.email}</div></td>
-          <td><span class="badge ${a.estado === 'ACTIVO' ? 'badge-green' : 'badge-orange'}">${a.estado}</span></td>
+          <td><div style="font-weight:600">${a.email}</div><div style="font-size:10px; opacity:0.6">Visto hace ${a.last_seen_ago_sec}s</div></td>
+          <td><span class="badge ${a.estado === 'ACTIVO' ? 'badge-green' : 'badge-orange'}">${a.estado}</span> ${lastSeen}</td>
           <td>${a.open_leads}</td>
-          <td>${formatTime(a.last_seen)}</td>
-          <td><button class="btn btn-outline" style="padding:4px 10px; font-size:10px">Acciones</button></td>
+          <td>${a.last_assigned_ago_sec ? Math.round(a.last_assigned_ago_sec/60) + ' min' : '—'}</td>
+          <td style="display:flex; gap:6px">
+             <button class="btn btn-outline" style="padding:4px 8px; font-size:10px" onclick="forceOffline('${a.email}')">Forzar Offline</button>
+             <button class="btn btn-danger" style="padding:4px 8px; font-size:10px" onclick="rescueAll('${a.email}')">Rescatar Leads</button>
+          </td>
         </tr>
-      `).join('');
+      `}).join('');
 
       const rescueTable = document.querySelector('#rescueTable tbody');
-      rescueTable.innerHTML = res.rescueLeads.map(l => `
-        <tr><td>${l.linea}</td><td>${l.agente}</td><td style="color:var(--red)">${Math.round(l.minutes_stuck)}m</td><td><button class="btn btn-danger" onclick="release('${l.message_id}')">Liberar</button></td></tr>
+      rescueTable.innerHTML = res.stuckLeads.map(l => `
+        <tr><td>${l.linea}</td><td>${l.agente}</td><td style="color:var(--red)">${Math.round(l.minutos_asignado)}m</td><td><button class="btn btn-danger" onclick="release('${l.message_id}')">Liberar</button></td></tr>
       `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted)">Sin leads trabados</td></tr>';
 
+      const followupsTable = document.querySelector('#followupsTable tbody');
+      followupsTable.innerHTML = res.seguimientos.map(l => `
+        <tr><td>${l.linea} / ${l.nombre || '—'}</td><td>${l.rellamar_en ? new Date(l.rellamar_en).toLocaleString() : 'Pendiente'}</td><td>${l.agente_original || '—'}</td><td><button class="btn btn-primary" onclick="release('${l.message_id}')">A Cola</button></td></tr>
+      `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted)">Sin seguimientos</td></tr>';
+
       const backofficeTable = document.querySelector('#backofficeTable tbody');
-      backofficeTable.innerHTML = res.backoffice.map(s => `
-        <tr><td>${s.message_id.substring(0,16)}</td><td>${s.venta_plan}</td><td>${s.agente}</td><td><button class="btn btn-primary" onclick="boAction('${s.message_id}', 'approve')">OK</button></td></tr>
+      backofficeTable.innerHTML = res.backofficePending.map(s => `
+        <tr><td>${s.message_id.substring(0,12)}...</td><td>${s.producto}</td><td>${s.agente}</td><td style="display:flex; gap:6px"><button class="btn btn-primary" onclick="boAction('${s.message_id}', 'approve')">OK</button><button class="btn btn-danger" onclick="boAction('${s.message_id}', 'reject')">X</button></td></tr>
       `).join('');
     }
 
-    function formatTime(iso) {
-      if (!iso) return '—';
-      return new Date(iso).toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' });
+    async function forceOffline(email) {
+        if(!confirm('¿Forzar OFFLINE al agente ' + email + '?')) return;
+        await fetch(`/api/coordinator/agents/${encodeURIComponent(email)}/force-offline`, {method:'POST'});
+        load();
+    }
+    
+    async function rescueAll(email) {
+        if(!confirm('¿Mandar a COLA todos los leads de ' + email + '?')) return;
+        await fetch(`/api/coordinator/agents/${encodeURIComponent(email)}/rescue-all`, {method:'POST'});
+        load();
+    }
+
+    async function release(mid) {
+        await fetch(`/api/coordinator/release/${mid}`, {method:'POST'});
+        load();
+    }
+
+    async function boAction(mid, action) {
+        const note = prompt('Nota (opcional):');
+        await fetch(`/api/coordinator/backoffice/${action}?message_id=${mid}&note=${encodeURIComponent(note||'')}`, {method:'POST'});
+        load();
     }
 
     load();
-    setInterval(load, 10000);
+    setInterval(load, 5000);
   </script>
 </body>
 </html>

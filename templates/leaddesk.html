@@ -99,10 +99,112 @@
     </div>
   </div>
 
+  <div id="gestModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="mTit">Gestión de Lead</div>
+          <div class="modal-subtitle" id="mSub">ID: —</div>
+        </div>
+        <button class="btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-split">
+          <div class="info-col">
+            <div class="info-group">
+                <div class="info-title">DATOS DEL LEAD</div>
+                <div class="info-grid">
+                  <div class="field-block"><span class="lbl">Llamar a</span><div class="val" id="vLine"></div></div>
+                  <div class="field-block"><span class="lbl">Nombre</span><div class="val" id="vNom"></div></div>
+                  <div class="field-block"><span class="lbl">Plan Interés</span><div class="val" id="vPlan"></div></div>
+                  <div class="field-block"><span class="lbl">Origen</span><div class="val" id="vOri"></div></div>
+                </div>
+            </div>
+            <div class="info-group">
+                <div class="info-title">HISTORIAL / NOTAS</div>
+                <div id="vHist" class="mini-note" style="max-height: 200px; overflow-y: auto;">Sin historial previo.</div>
+            </div>
+          </div>
+          <div class="action-col">
+             <!-- STEP 1: TYPIFICATION -->
+             <div id="step1">
+                <div class="sidebar-title">PASO 1: SELECCIÓN</div>
+                <div class="action-btns">
+                  <button class="action-btn" onclick="goStep2('VENTA')"><i>💰</i> Venta</button>
+                  <button class="action-btn" onclick="goStep2('NO_VENTA')"><i>❌</i> No Venta</button>
+                  <button class="action-btn" onclick="goStep2('RELLAMADO')"><i>📞</i> Rellamado</button>
+                </div>
+             </div>
+
+             <!-- STEP 2: MOTIVOS -->
+             <div id="step2" style="display:none">
+                <div class="sidebar-title">PASO 2: DETALLES</div>
+                <select id="selMotivo" onchange="checkStep2()"></select>
+                <div id="step2Extra" style="margin-top:12px"></div>
+                <div style="margin-top:20px; display:flex; gap:10px">
+                   <button class="btn" onclick="goStep1()">Atrás</button>
+                   <button class="btn btn-primary" id="btnStep2Next" onclick="goStep3()">Siguiente</button>
+                </div>
+             </div>
+
+             <!-- STEP 3: FORMULARIO -->
+             <div id="step3" style="display:none">
+                <div class="sidebar-title">PASO 3: FORMULARIO</div>
+                <div id="formContainer" style="display:flex; flex-direction:column; gap:12px">
+                   <!-- This will be populated if VENTA -->
+                   <textarea id="fNotas" placeholder="Notas de la gestión..."></textarea>
+                   
+                   <div id="saleForm" style="display:none">
+                      <div class="sidebar-title" style="margin-top:10px">DATOS DE VENTA</div>
+                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+                         <input type="text" id="fCedula" placeholder="Cédula">
+                         <input type="text" id="fDepto" placeholder="Departamento">
+                         <input type="text" id="fCiudad" placeholder="Ciudad">
+                         <input type="text" id="fCalle" placeholder="Calle">
+                         <input type="text" id="fNro" placeholder="Puerta">
+                         <select id="fProducto">
+                            <option value="ALTAS">ALTA</option>
+                            <option value="PORTA">PORTA</option>
+                            <option value="RECO">RECO</option>
+                            <option value="MIGRA">MIGRACIÓN</option>
+                            <option value="UPGRADE">UPGRADE</option>
+                         </select>
+                      </div>
+                   </div>
+                </div>
+                <div style="margin-top:20px; display:flex; gap:10px">
+                   <button class="btn" onclick="goStep2()">Atrás</button>
+                   <button class="btn btn-primary" onclick="goStep4()">Revisar</button>
+                </div>
+             </div>
+
+             <!-- STEP 4: CONFIRMACIÓN -->
+             <div id="step4" style="display:none">
+                <div class="sidebar-title">PASO 4: CONFIRMAR</div>
+                <div class="mini-note" id="vReview"></div>
+                <div style="margin-top:20px; display:flex; gap:10px">
+                   <button class="btn" onclick="goStep3()">Atrás</button>
+                   <button class="btn btn-primary" id="btnSubmit" onclick="submitGestion()">CONFIRMAR Y CERRAR</button>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     let agentEmail = '';
     let agentState = 'OFFLINE';
     let currentTab = 'active';
+    let currentLead = null;
+    let gestType = ''; // VENTA, NO_VENTA, RELLAMADO
+
+    const MOTIVOS = {
+      VENTA: ["Venta Telefónica", "Venta WhatsApp", "Upselling"],
+      NO_VENTA: ["Ya tiene Movistar", "Fuera de zona", "Ilocalizable", "Cuelga / No interesa", "Error de número"],
+      RELLAMADO: ["Cliente pide llamar luego", "Fuera de horario", "No contesta 1", "No contesta 2", "No contesta 3"]
+    };
 
     async function init() {
       const params = new URLSearchParams(location.search);
@@ -141,7 +243,9 @@
           document.getElementById('badgeFollowups').textContent = dataRes.followups.length;
           document.getElementById('badgeSales').textContent = dataRes.sales.length;
           document.getElementById('badgeBackoffice').textContent = dataRes.backoffice.length;
-          renderTab(dataRes);
+          // Store data for render
+          window._data = dataRes;
+          renderTab();
         }
 
         if (agentRes.agent) {
@@ -153,8 +257,8 @@
       }
     }
 
-    function renderTab(data) {
-      const list = data[currentTab] || [];
+    function renderTab() {
+      const list = window._data[currentTab] || [];
       const container = document.getElementById('tab-' + currentTab);
       
       if (list.length === 0) {
@@ -163,12 +267,12 @@
       }
 
       container.innerHTML = list.map(l => `
-        <div class="card" style="padding:16px; display:flex; justify-content:space-between; align-items:center">
+        <div class="card" style="padding:16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
           <div>
             <div style="font-weight:700; font-size:14px">${l.linea || l.message_id.substring(0,8)}</div>
             <div style="font-size:11px; color:var(--muted)">${l.nombre || 'Sin nombre'} · ${l.plan || 'Plan s/e'}</div>
           </div>
-          <button class="btn btn-outline" style="border-radius:6px; font-size:11px" onclick="openGestion('${l.message_id}')">Gestionar</button>
+          <button class="btn btn-primary" style="border-radius:6px; font-size:11px" onclick="openGestion('${l.message_id}')">Gestionar</button>
         </div>
       `).join('');
     }
@@ -178,10 +282,132 @@
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + t).classList.add('active');
-      event.target.classList.add('active');
-      load();
+      const target = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes(t === 'active' ? 'Mis Leads' : t === 'followups' ? 'Seguimientos' : t === 'sales' ? 'Mis Ventas' : 'Backoffice'));
+      if (target) target.classList.add('active');
+      renderTab();
     }
 
+    // --- MODAL & WIZARD ---
+    function openGestion(mid) {
+      const lead = [...(window._data.active || []), ...(window._data.followups || [])].find(x => x.message_id === mid);
+      if (!lead) return;
+      currentLead = lead;
+      
+      document.getElementById('mSub').textContent = 'ID: ' + mid;
+      document.getElementById('vLine').textContent = lead.linea;
+      document.getElementById('vNom').textContent = lead.nombre || '—';
+      document.getElementById('vPlan').textContent = lead.plan || '—';
+      document.getElementById('vOri').textContent = lead.origen || 'Tigo Web';
+      
+      goStep1();
+      document.getElementById('gestModal').classList.add('open');
+    }
+
+    function closeModal() { document.getElementById('gestModal').classList.remove('open'); }
+
+    function goStep1() {
+        showStep('step1');
+    }
+
+    function goStep2(type) {
+        if (type) gestType = type;
+        showStep('step2');
+        const sel = document.getElementById('selMotivo');
+        sel.innerHTML = '<option value="">Selecciona motivo...</option>' + MOTIVOS[gestType].map(m => `<option value="${m}">${m}</option>`).join('');
+        document.getElementById('step2Extra').innerHTML = '';
+        checkStep2();
+    }
+
+    function checkStep2() {
+        const val = document.getElementById('selMotivo').value;
+        const extra = document.getElementById('step2Extra');
+        extra.innerHTML = '';
+        
+        if (gestType === 'RELLAMADO' && val.includes('llamar')) {
+            extra.innerHTML = `<span class="lbl">FECHA Y HORA</span><input type="datetime-local" id="fRellamar">`;
+        }
+        document.getElementById('btnStep2Next').disabled = !val;
+    }
+
+    function goStep3() {
+        showStep('step3');
+        document.getElementById('saleForm').style.display = (gestType === 'VENTA') ? 'block' : 'none';
+        // Reset form
+        if (gestType === 'VENTA') {
+            document.getElementById('fCedula').value = currentLead.documento || '';
+        }
+    }
+
+    function goStep4() {
+        showStep('step4');
+        const motivo = document.getElementById('selMotivo').value;
+        let summary = `<b>Tipo:</b> ${gestType}<br><b>Motivo:</b> ${motivo}<br>`;
+        if (gestType === 'VENTA') {
+            summary += `<b>Cliente:</b> ${document.getElementById('fCedula').value}<br><b>Lugar:</b> ${document.getElementById('fCiudad').value}`;
+        }
+        document.getElementById('vReview').innerHTML = summary;
+    }
+
+    function showStep(id) {
+        ['step1','step2','step3','step4'].forEach(s => document.getElementById(s).style.display = (s===id?'block':'none'));
+    }
+
+    async function submitGestion() {
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+      
+      const motivo = document.getElementById('selMotivo').value;
+      const notas = document.getElementById('fNotas').value;
+      
+      // 1. If VENTA, create sale
+      if (gestType === 'VENTA') {
+          await fetch('/api/sales', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify({
+                  message_id: currentLead.message_id,
+                  agente: agentEmail,
+                  producto: document.getElementById('fProducto').value,
+                  tipo_venta: motivo,
+                  cliente_cedula: document.getElementById('fCedula').value,
+                  dir_ciudad: document.getElementById('fCiudad').value,
+                  vendedor_comentarios: notas
+              })
+          });
+      }
+      
+      // 2. Update Lead Status
+      let estado = 'CERRADO';
+      let rellamar = null;
+      if (gestType === 'RELLAMADO') {
+          estado = 'SEGUIMIENTO';
+          rellamar = document.getElementById('fRellamar')?.value;
+      }
+      
+      const res = await fetch(`/api/leads/${currentLead.message_id}/status`, {
+          method: 'PATCH',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({
+              estado: estado,
+              resultado: gestType === 'VENTA' ? 'Venta' : gestType === 'RELLAMADO' ? 'Seguimiento' : 'No Venta',
+              rellamar_en: rellamar,
+              tip_tipo: gestType,
+              tip_resultado: motivo
+          })
+      }).then(r => r.json());
+
+      if (res.success) {
+          closeModal();
+          load();
+      } else {
+          alert('Error al guardar gestión');
+          btn.disabled = false;
+          btn.textContent = 'CONFIRMAR Y CERRAR';
+      }
+    }
+
+    // --- AGENT STATUS ---
     async function setStatus(s) {
       const res = await fetch(`/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
         method: 'PATCH',
@@ -196,8 +422,10 @@
 
     function updateStatusUI() {
       document.querySelectorAll('.st-btn').forEach(b => b.classList.remove('active-activo', 'active-pausa', 'active-offline'));
-      const btn = document.getElementById('btn-' + agentState) || document.getElementById('id-PAUSA');
-      if (btn) btn.classList.add('active-' + agentState.toLowerCase());
+      const mapping = {'ACTIVO':'ACTIVO', 'PAUSA':'PAUSA', 'OFFLINE':'OFFLINE'};
+      const id = mapping[agentState] || 'OFFLINE';
+      const btn = document.getElementById('btn-' + id) || document.getElementById('id-PAUSA');
+      if (btn) btn.classList.add('active-' + id.toLowerCase());
     }
 
     async function takeLead() {

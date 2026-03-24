@@ -49,7 +49,7 @@ class LeadOut(BaseModel):
     rellamar_en: Optional[datetime] = None
     reagendar_tipo: Optional[str] = None
     nocontacto_intentos: int = 0
-    sla_asignacion: Optional[int] = None
+    sla_asignacion: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     
@@ -59,11 +59,10 @@ class LeadOut(BaseModel):
     tip_motivo: Optional[str] = None
     tip_submotivo: Optional[str] = None
     liberado_por: Optional[str] = None
-    liberado_en: Optional[datetime] = None
-    liberado_motivo: Optional[str] = None
+    liberado_en: Optional[str] = None
     tracking: Optional[str] = None
     gaid: Optional[str] = None
-    cantidad_ventas: int = 0
+    cantidad_ventas: Optional[str] = None
     
     # Extra fields from multiple sheets
     origen: Optional[str] = None

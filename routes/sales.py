@@ -15,6 +15,27 @@ router = APIRouter()
 @router.post("")
 def create_sale(sale: SaleCreate):
     """Register a new sale."""
+    from utils.logic import normalize_product_group, get_phone_suffix
+    
+    # 1. Normalize Product
+    producto = normalize_product_group(sale.producto)
+    
+    # 2. Duplicate Check (Agent + Phone Suffix + 1 minute)
+    suffix = get_phone_suffix(sale.cliente_telefono)
+    if suffix:
+        existing = fetchone(
+            """
+            SELECT id FROM sales 
+            WHERE agente = %s 
+              AND RIGHT(cliente_telefono, 8) = %s 
+              AND created_at > now() - interval '1 minute'
+            LIMIT 1
+            """,
+            (sale.agente, suffix)
+        )
+        if existing:
+            return {"success": False, "message": "Duplicado detectado: Ya registraste esta venta hace instantes."}
+
     execute(
         """
         INSERT INTO sales (
@@ -22,11 +43,12 @@ def create_sale(sale: SaleCreate):
             cliente_nombre, cliente_cedula, cliente_email, cliente_telefono,
             dir_depto, dir_ciudad, dir_barrio, dir_calle,
             venta_plan, venta_equipo, venta_pago, vendedor_comentarios,
-            tip_tipo, tip_resultado, tip_motivo, tip_submotivo
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            tip_tipo, tip_resultado, tip_motivo, tip_submotivo,
+            created_at
+        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
         """,
         (
-            sale.message_id, sale.agente, sale.producto, sale.tipo_venta,
+            sale.message_id, sale.agente, producto, sale.tipo_venta,
             sale.tipo_venta_original, sale.cliente_nombre, sale.cliente_cedula,
             sale.cliente_email, sale.cliente_telefono,
             sale.dir_depto, sale.dir_ciudad, sale.dir_barrio, sale.dir_calle,

@@ -10,129 +10,132 @@ router = APIRouter()
 
 @router.get("/dashboard")
 def get_dashboard():
-    """Return live stats for all coordinator sections."""
-    # 1. Queue (NUEVO leads)
-    queue = fetchone(
-        "SELECT COUNT(*) AS total FROM leads WHERE estado = 'NUEVO' AND agente IS NULL"
-    )
-    
-    # 2. Agents Monitor
+    """Return all data for the Coordinator Dashboard tabs."""
+    # 1. Agents (Torre de Control)
     agents = execute(
         """
-        SELECT a.email, a.estado, a.last_seen, a.max_leads,
-               COUNT(l.id) FILTER (WHERE l.estado = 'ASIGNADO') AS open_leads
-        FROM agents a
-        LEFT JOIN leads l ON l.agente = a.email
-        GROUP BY a.email, a.estado, a.last_seen, a.max_leads
-        ORDER BY a.email
+        SELECT 
+            email, estado, last_seen, max_leads, last_assigned,
+            (SELECT COUNT(*) FROM leads WHERE leads.agente = agents.email AND leads.estado = 'ASIGNADO') as open_leads,
+            EXTRACT(EPOCH FROM (now() - last_seen))::int as last_seen_ago_sec,
+            EXTRACT(EPOCH FROM (now() - last_assigned))::int as last_assigned_ago_sec
+        FROM agents
+        ORDER BY estado DESC, last_seen DESC
         """,
         fetch=True
     )
-    
-    # 3. Rescue Leads (Stuck > 15 min)
-    rescue = execute(
+
+    # 2. Stuck Leads (Rescue)
+    # Leads assigned for more than 15 minutes
+    stuck = execute(
         """
-        SELECT message_id, linea, nombre, agente, 
-               EXTRACT(EPOCH FROM (now() - updated_at))/60 AS minutes_stuck
+        SELECT *, EXTRACT(EPOCH FROM (now() - fecha_asignacion))::int / 60 as minutos_asignado
         FROM leads
-        WHERE estado = 'ASIGNADO' 
-          AND updated_at < now() - interval '15 minutes'
-        ORDER BY updated_at ASC
+        WHERE estado = 'ASIGNADO'
+          AND fecha_asignacion < now() - interval '15 minutes'
+        ORDER BY fecha_asignacion ASC
         """,
         fetch=True
     )
-    
-    # 4. Seguimientos (DUE soon or past)
+
+    # 3. Seguimientos (Today)
     seguimientos = execute(
         """
-        SELECT message_id, nombre, linea, plan, agente_original, rellamar_en, resultado, nocontacto_intentos
-        FROM leads
-        WHERE estado = 'SEGUIMIENTO'
-          AND (rellamar_en < now() + interval '8 hours' OR rellamar_en IS NULL)
-        ORDER BY rellamar_en ASC NULLS LAST
-        LIMIT 50
+        SELECT * FROM leads 
+        WHERE estado = 'SEGUIMIENTO' 
+          AND (rellamar_en::date <= now()::date OR rellamar_en IS NULL) 
+        ORDER BY rellamar_en ASC
         """,
         fetch=True
     )
-    
-    # 5. Backoffice (Pending validation)
+
+    # 4. Backoffice (Pending Sales)
     backoffice = execute(
         """
-        SELECT message_id, producto, cliente_nombre, venta_plan, agente, tipo_venta
-        FROM sales
-        WHERE backoffice_status = 'Pendiente de carga' OR backoffice_status IS NULL
+        SELECT * FROM sales 
+        WHERE backoffice_status IS NULL OR backoffice_status = 'Pendiente de carga' 
         ORDER BY created_at ASC
-        LIMIT 50
         """,
         fetch=True
     )
-    
-    # 6. KPIs (Today's summary matched to mockup)
-    kpis_raw = fetchone(
-        """
-        SELECT 
-            COUNT(*) FILTER (WHERE estado = 'NUEVO') AS queue,
-            COUNT(*) FILTER (WHERE resultado = 'Venta' AND fecha_cierre::date = now()::date) AS sales_today,
-            COUNT(*) FILTER (WHERE (resultado != 'Venta' OR resultado IS NULL) AND estado = 'CERRADO' AND fecha_cierre::date = now()::date) AS no_sales_today,
-            COUNT(*) FILTER (WHERE estado = 'NUEVO' AND created_at < now() - interval '5 minutes') AS sla_breach,
-            COUNT(*) FILTER (WHERE estado = 'SEGUIMIENTO' AND (rellamar_en::date = now()::date OR rellamar_en IS NULL)) AS followups_today,
-            COUNT(*) FILTER (WHERE backoffice_status = 'Pendiente de carga') AS pending_backoffice,
-            COUNT(*) FILTER (WHERE backoffice_status = 'Aprobado' AND backoffice_at::date = now()::date) AS approved_bo_today,
-            COUNT(*) FILTER (WHERE resultado = 'Venta' AND seguimiento_tomado_en IS NOT NULL AND fecha_cierre::date = now()::date) AS followup_sales_today
-        FROM (
-            SELECT estado, resultado, fecha_cierre, created_at, rellamar_en, seguimiento_tomado_en, NULL as backoffice_status, NULL as backoffice_at FROM leads
-            UNION ALL
-            SELECT NULL, NULL, NULL, NULL, NULL, NULL, backoffice_status, backoffice_at FROM sales
-        ) combined
-        """
-    )
-    
-    # 7. Sales by Agent
-    sales_by_agent = execute(
-        """
-        SELECT agente, COUNT(*) as total 
-        FROM sales 
-        WHERE created_at::date = now()::date 
-        GROUP BY agente 
-        ORDER BY total DESC 
-        LIMIT 5
-        """,
-        fetch=True
-    )
-    
-    # 8. Sales by Product
-    sales_by_product = execute(
-        """
-        SELECT COALESCE(venta_plan, 'Otros') as producto, COUNT(*) as total 
-        FROM sales 
-        WHERE created_at::date = now()::date 
-        GROUP BY venta_plan 
-        ORDER BY total DESC 
-        LIMIT 5
-        """,
-        fetch=True
-    )
-    
-    # Calculate conversion: Sales / Closed
-    closed_today = (kpis_raw["sales_today"] or 0) + (kpis_raw["no_sales_today"] or 0)
-    conversion = round((kpis_raw["sales_today"] / closed_today * 100), 2) if closed_today > 0 else 0
 
-    kpis = {
-        **kpis_raw,
-        "conversion": conversion,
-        "sales_by_agent": sales_by_agent,
-        "sales_by_product": sales_by_product
-    }
+    # 5. KPIs
+    # Today's stats
+    kpi_queue = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO'")
+    kpi_sales = fetchone("SELECT COUNT(*) as total FROM sales WHERE created_at::date = now()::date")
+    kpi_approved = fetchone("SELECT COUNT(*) as total FROM sales WHERE backoffice_status = 'OK' AND backoffice_at::date = now()::date")
+    kpi_nosale = fetchone("SELECT COUNT(*) as total FROM leads WHERE resultado = 'No Venta' AND updated_at::date = now()::date")
     
+    # SLA Breach (NUEVO > 5 min)
+    kpi_sla = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '5 minutes'")
+
+    # Sales by agent
+    sales_by_agent = execute(
+        "SELECT agente, COUNT(*) as total FROM sales WHERE created_at::date = now()::date GROUP BY agente ORDER BY total DESC LIMIT 10",
+        fetch=True
+    )
+    
+    # Sales by product
+    sales_by_product = execute(
+        "SELECT producto, COUNT(*) as total FROM sales WHERE created_at::date = now()::date GROUP BY producto ORDER BY total DESC LIMIT 10",
+        fetch=True
+    )
+
+    # Calculate conversion: Sales / (Sales + NoSales)
+    sales = kpi_sales["total"] if kpi_sales else 0
+    nosales = kpi_nosale["total"] if kpi_nosale else 0
+    total_closed = sales + nosales
+    conversion = round((sales / total_closed * 100), 2) if total_closed > 0 else 0
+
+    from datetime import datetime
     return {
         "success": True,
-        "queueCount": queue["total"] if queue else 0,
         "agents": agents,
-        "rescueLeads": rescue,
+        "stuckLeads": stuck,
         "seguimientos": seguimientos,
-        "backoffice": backoffice,
-        "kpis": kpis
+        "backofficePending": backoffice,
+        "kpis": {
+            "queueNew": kpi_queue["total"] if kpi_queue else 0,
+            "ventasCantadasHoy": sales,
+            "aprobadasPorBOHoy": kpi_approved["total"] if kpi_approved else 0,
+            "noVentasHoy": nosales,
+            "salesByAgent": {r["agente"]: r["total"] for r in sales_by_agent},
+            "salesByProduct": {r["producto"]: r["total"] for r in sales_by_product},
+            "conversion": conversion,
+            "slaBreached": kpi_sla["total"] if kpi_sla else 0,
+            "followupsToday": len(seguimientos)
+        },
+        "serverNow": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
+
+
+@router.post("/agents/{email}/force-offline")
+def force_offline(email: str):
+    """Force an agent to OFFLINE status."""
+    execute(
+        "UPDATE agents SET estado = 'OFFLINE', updated_at = now() WHERE email = %s",
+        (email,)
+    )
+    return {"success": True}
+
+
+@router.post("/agents/{email}/rescue-all")
+def rescue_all_leads(email: str):
+    """Release all ASIGNADO leads from an agent back to NUEVO."""
+    execute(
+        """
+        UPDATE leads 
+        SET estado = 'NUEVO', 
+            agente = NULL, 
+            fecha_asignacion = NULL,
+            liberado_por = 'COORDINADOR',
+            liberado_en = now(),
+            liberado_motivo = 'Rescate Masivo'
+        WHERE agente = %s AND estado = 'ASIGNADO'
+        """,
+        (email,)
+    )
+    return {"success": True}
 
 
 @router.post("/assign")
@@ -146,6 +149,11 @@ def assign_manual(message_id: str, agent_email: str):
         """,
         (agent_email, message_id)
     )
+    # Also update agent's last_assigned
+    execute(
+        "UPDATE agents SET last_assigned = now(), updated_at = now() WHERE email = %s",
+        (agent_email,)
+    )
     return {"success": True}
 
 
@@ -155,7 +163,7 @@ def approve_sale(message_id: str, note: str = ""):
     execute(
         """
         UPDATE sales
-        SET backoffice_status = 'Aprobado', backoffice_notas = %s, backoffice_at = now()
+        SET backoffice_status = 'OK', backoffice_notas = %s, backoffice_at = now()
         WHERE message_id = %s
         """,
         (note, message_id)
@@ -183,7 +191,8 @@ def release_lead(message_id: str):
     execute(
         """
         UPDATE leads
-        SET estado = 'NUEVO', agente = NULL, fecha_asignacion = NULL, updated_at = now()
+        SET estado = 'NUEVO', agente = NULL, fecha_asignacion = NULL, 
+            liberado_por = 'COORDINADOR', liberado_en = now(), updated_at = now()
         WHERE message_id = %s
         """,
         (message_id,)
@@ -193,12 +202,11 @@ def release_lead(message_id: str):
 
 @router.post("/clean", dependencies=[Depends(verify_apps_script_key)])
 def clean_database():
-    """TRUNCATE all main tables for a fresh start. Called by Migration script."""
-    # Order matters due to potential (though currently not defined) FKs or just logic
-    # schema.sql doesn't have explicit FKs between these, but it's good practice.
-    tables = ["leads", "sales", "agents"]
+    """TRUNCATE all main tables for a fresh start AND ensure schema updates."""
+    # 1. Self-healing migration
+    execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS tipo_venta_original TEXT")
     
-    for table in tables:
+    # 2. Cleanup
+    for table in ["leads", "sales", "agents"]:
         execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE")
-    
-    return {"success": True, "message": "Database cleaned successfully"}
+    return {"success": True, "message": "Database cleaned and schema updated"}

@@ -1,11 +1,19 @@
 -- ============================================================
--- schema.sql — Full updated schema for Tigo Leads
+-- RESET_DATABASE.SQL
+-- Run this in Supabase SQL Editor to wipe and recreate everything.
 -- ============================================================
 
+-- DANGER: This will delete ALL data.
+DROP VIEW IF EXISTS vw_daily_queue;
+DROP TABLE IF EXISTS leads CASCADE;
+DROP TABLE IF EXISTS sales CASCADE;
+DROP TABLE IF EXISTS agents CASCADE;
+
+-- Enable UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ── LEADS ──────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS leads (
+CREATE TABLE leads (
   id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   message_id              TEXT UNIQUE NOT NULL,
   nombre                  TEXT,
@@ -22,6 +30,7 @@ CREATE TABLE IF NOT EXISTS leads (
   nocontacto_intentos     INT NOT NULL DEFAULT 0,
   sla_asignacion          TEXT,
   
+  -- Additional fields from lead sheets
   fecha_cierre            TIMESTAMPTZ,
   notas                   TEXT,
   minutos_asignacion      TEXT,
@@ -36,6 +45,7 @@ CREATE TABLE IF NOT EXISTS leads (
   gaid                    TEXT,
   cantidad_ventas         TEXT,
   
+  -- Context metadata
   origen                  TEXT,
   url                     TEXT,
   equipo                  TEXT,
@@ -59,7 +69,7 @@ CREATE TABLE IF NOT EXISTS leads (
 );
 
 -- ── AGENTS ─────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS agents (
+CREATE TABLE agents (
   email         TEXT PRIMARY KEY,
   estado        TEXT NOT NULL DEFAULT 'OFFLINE',
   last_seen     TIMESTAMPTZ,
@@ -69,12 +79,13 @@ CREATE TABLE IF NOT EXISTS agents (
 );
 
 -- ── SALES ──────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS sales (
+CREATE TABLE sales (
   id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   message_id              TEXT,
   agente                  TEXT,
   fecha                   TIMESTAMPTZ DEFAULT now(),
   
+  -- Info from Sheet
   cliente_gmail           TEXT,
   origen                  TEXT,
   url                     TEXT,
@@ -117,10 +128,10 @@ CREATE TABLE IF NOT EXISTS sales (
   tracking                TEXT,
   gaid                    TEXT,
   
+  -- Specific Sale fields
   cliente_nacimiento      TEXT,
   producto                TEXT,
   tipo_venta              TEXT,
-  tipo_venta_original     TEXT,
   cliente_cedula          TEXT,
   cliente_celular         TEXT,
   dir_depto               TEXT,
@@ -136,6 +147,7 @@ CREATE TABLE IF NOT EXISTS sales (
   vendedor_comentarios    TEXT,
   vendedor_comentarios_extra TEXT,
   
+  -- BO fields
   backoffice_status       TEXT DEFAULT 'Pendiente de carga',
   backoffice_notas        TEXT,
   backoffice_at           TIMESTAMPTZ,
@@ -144,10 +156,15 @@ CREATE TABLE IF NOT EXISTS sales (
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_leads_estado        ON leads(estado);
-CREATE INDEX IF NOT EXISTS idx_leads_agente        ON leads(agente);
-CREATE INDEX IF NOT EXISTS idx_sales_message_id     ON sales(message_id);
+-- ── INDICES ────────────────────────────────────────────────
+CREATE INDEX idx_leads_estado        ON leads(estado);
+CREATE INDEX idx_leads_agente        ON leads(agente);
+CREATE INDEX idx_leads_message_id    ON leads(message_id);
+CREATE INDEX idx_sales_message_id     ON sales(message_id);
+CREATE INDEX idx_sales_agente        ON sales(agente);
+CREATE INDEX idx_agents_estado       ON agents(estado);
 
+-- ── VIEWS ──────────────────────────────────────────────────
 CREATE OR REPLACE VIEW vw_daily_queue AS
 SELECT
   DATE_TRUNC('day', created_at) AS dia,

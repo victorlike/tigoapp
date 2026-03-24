@@ -20,12 +20,26 @@ OPEN_STATES = {"ASIGNADO", "SEGUIMIENTO"}
 @router.post("", dependencies=[Depends(verify_apps_script_key)])
 def create_lead(lead: LeadCreate):
     """Create a new lead from Gmail. Called by Apps Script."""
+    from utils.logic import get_phone_suffix
+    
+    # 1. Message ID Check
     existing = fetchone(
         "SELECT id FROM leads WHERE message_id = %s",
         (lead.message_id,)
     )
     if existing:
         return {"success": True, "message": "Lead already exists", "id": str(existing["id"])}
+    
+    # 2. Phone Suffix Check (Deduplication)
+    suffix = get_phone_suffix(lead.linea)
+    if suffix:
+        # Check for other leads with same suffix created today
+        dup = fetchone(
+            "SELECT id, message_id FROM leads WHERE RIGHT(linea, 8) = %s AND created_at > now() - interval '24 hours' LIMIT 1",
+            (suffix,)
+        )
+        if dup:
+             logger.info(f"Duplicate phone detected: {suffix} matching {dup['message_id']}")
 
     execute(
         """
@@ -96,18 +110,27 @@ def get_queue():
 @router.patch("/{message_id}/status")
 def update_lead_status(message_id: str, body: LeadStatusUpdate):
     """Update lead estado, resultado, rellamar_en, etc."""
-    lead = fetchone("SELECT id FROM leads WHERE message_id = %s", (message_id,))
+    lead = fetchone("SELECT * FROM leads WHERE message_id = %s", (message_id,))
     if not lead:
         raise HTTPException(404, "Lead not found")
+
+    # 1. No Contact Logic Parity
+    nocontacto = body.nocontacto_intentos if body.nocontacto_intentos is not None else lead.get("nocontacto_intentos", 0)
+    estado = body.estado
+    
+    if nocontacto >= 3 and estado == "SEGUIMIENTO":
+        # Force close as No Venta -> Límite de intentos reached
+        estado = "CERRADO"
+        logger.info(f"Forcing closure of {message_id} due to 3 no-contact attempts")
 
     execute(
         """
         UPDATE leads
         SET estado = %s,
             resultado = COALESCE(%s, resultado),
-            rellamar_en = COALESCE(%s, rellamar_en),
+            rellamar_en = %s, -- Overwrite if provided, null if clearing
             reagendar_tipo = COALESCE(%s, reagendar_tipo),
-            nocontacto_intentos = COALESCE(%s, nocontacto_intentos),
+            nocontacto_intentos = %s,
             tip_tipo = COALESCE(%s, tip_tipo),
             tip_resultado = COALESCE(%s, tip_resultado),
             tip_motivo = COALESCE(%s, tip_motivo),
@@ -116,11 +139,11 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate):
         WHERE message_id = %s
         """,
         (
-            body.estado,
+            estado,
             body.resultado,
             body.rellamar_en,
             body.reagendar_tipo,
-            body.nocontacto_intentos,
+            nocontacto,
             body.tip_tipo,
             body.tip_resultado,
             body.tip_motivo,
