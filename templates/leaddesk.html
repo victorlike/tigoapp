@@ -64,6 +64,20 @@
     .loader { position: fixed; inset: 0; background: rgba(5,8,20,.6); display: none; justify-content: center; align-items: center; z-index: 4000; }
     .spinner { width: 44px; height: 44px; border: 3px solid transparent; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Premium Form Styling */
+    .form-group { background: rgba(148, 163, 184, .04); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; transition: 0.3s; }
+    .form-group:focus-within { background: rgba(0, 174, 240, .05); border-color: var(--accent); }
+    .form-label { display: block; font-size: 10px; font-weight: 800; color: var(--txt-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .form-section-title { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-input { width: 100%; border: none !important; background: transparent !important; padding: 0 !important; font-size: 13px !important; color: var(--txt); }
+    .form-input:focus { outline: none; }
+    .form-select { width: 100%; border: none !important; background: transparent !important; padding: 0 !important; font-size: 13px !important; color: var(--txt); cursor: pointer; }
+    .form-select option { background: var(--bg2); color: var(--txt); }
+    .form-select:focus { outline: none; }
+    .form-textarea { width: 100%; border: none !important; background: transparent !important; padding: 0 !important; font-size: 13px !important; color: var(--txt); resize: none; min-height: 40px; }
+    .form-textarea:focus { outline: none; }
   </style>
 </head>
 <body>
@@ -115,41 +129,67 @@
         <div class="modal-title">Gestión Cliente</div>
         <button class="btn" onclick="closeModal()">✕</button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body p-0">
         <div class="modal-split">
-          <div class="info-col" id="info-container"></div>
-          <div class="action-col">
-            <div class="typification-box">
-              <label class="lbl">1. Tipo</label>
-              <select id="tip-type" onchange="updateResultTypes()"><option value="">-</option></select>
-              <label class="lbl">2. Resultado</label>
-              <select id="tip-result-type" onchange="updateResults()"><option value="">-</option></select>
-              <label class="lbl">3. Res</label>
-              <select id="tip-res" onchange="updateMotives()"><option value="">-</option></select>
-              <label class="lbl">4. Motivo</label>
-              <select id="tip-motive" onchange="checkSale()"><option value="">-</option></select>
-              <div id="fu-wrap" style="display:none; margin-top:10px;">
-                <label class="lbl">Rellamar</label><input type="datetime-local" id="fu-datetime">
+          <div class="info-col overflow-y-auto" id="info-container" style="max-height: 75vh;"></div>
+          <div class="action-col overflow-y-auto" style="max-height: 75vh;">
+            <div class="mb-6">
+              <div class="form-section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>Tipificación</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">1. Tipo Consulta</label>
+                  <select id="tip-type" class="form-select" onchange="updateResultTypes()"><option value="">- Seleccionar -</option></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">2. Resultado</label>
+                  <select id="tip-result-type" class="form-select" onchange="updateResults()"><option value="">- Seleccionar -</option></select>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">3. Sub-Resultado</label>
+                  <select id="tip-res" class="form-select" onchange="updateMotives()"><option value="">- Seleccionar -</option></select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">4. Motivo Detallado</label>
+                  <select id="tip-motive" class="form-select" onchange="checkSale()"><option value="">- Seleccionar -</option></select>
+                </div>
+              </div>
+              <div id="fu-wrap" style="display:none;" class="form-group">
+                <label class="form-label">Rellamar / Recordatorio</label>
+                <input type="datetime-local" id="fu-datetime" class="form-input">
               </div>
             </div>
-            <div id="sale-container" style="display:none;">
-              <select id="sale-form-selector" onchange="renderSaleForm(this.value)">
-                <option value="">- Tipo Venta -</option>
-                <option value="migracion">Migración</option>
-                <option value="alta">Alta</option>
-                <option value="porta">Porta</option>
-              </select>
-              <textarea id="seller-comment" placeholder="Comentario vendedor..."></textarea>
-              <div id="dynamic-form"></div>
+
+            <div id="sale-container" style="display:none;" class="animate-in fade-in slide-in-from-top duration-300">
+               <div class="form-section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>Detalles de Venta</div>
+               <div class="form-group">
+                 <label class="form-label">Modelo de Venta</label>
+                 <select id="sale-form-selector" class="form-select" onchange="renderSaleForm(this.value)">
+                   <option value="">- Seleccionar Tipo Venta -</option>
+                   <option value="migracion">Migración</option>
+                   <option value="alta">Alta Nueva</option>
+                   <option value="porta">Portabilidad</option>
+                 </select>
+               </div>
+               <div class="form-group">
+                 <label class="form-label">Observaciones Vendedor</label>
+                 <textarea id="seller-comment" class="form-textarea" placeholder="Comentarios internos del vendedor..."></textarea>
+               </div>
+               <div id="dynamic-form"></div>
+            </div>
+            
+            <div class="mt-4">
+              <div class="form-section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>Notas Adicionales</div>
+              <div class="form-group">
+                 <textarea id="notes" class="form-textarea" style="min-height: 80px;" placeholder="Escribe notas adicionales sobre la gestión..."></textarea>
+              </div>
             </div>
           </div>
         </div>
-        <div style="padding:16px; border-top:1px solid var(--line);">
-          <textarea id="notes" placeholder="Notas..."></textarea>
-          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-            <button class="btn" onclick="closeModal()">Cancelar</button>
-            <button class="btn btn-primary" onclick="save()">GUARDAR</button>
-          </div>
+        <div style="padding:16px; border-top:1px solid var(--line); background: rgba(5,8,20,.3); display:flex; justify-content:flex-end; gap:12px;">
+          <button class="btn px-6" onclick="closeModal()">CERRAR</button>
+          <button class="btn btn-primary px-8 py-3 text-[14px]" onclick="save()">GUARDAR GESTIÓN</button>
         </div>
       </div>
     </div>
@@ -505,18 +545,35 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
     }
 
     function renderModalInfo(l) {
-      const h = (f, v) => v ? `<div style="padding:10px; border-bottom:1px solid rgba(148,163,184,.08);"><span style="color:var(--txt-dim); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">${f}</span><div style="font-size:13px; margin-top:3px; color:var(--txt);">${v}</div></div>` : '';
-      let html = `<div style="display:grid; grid-template-columns:1fr 1fr; background:rgba(5,8,20,.2); border-radius:12px; overflow:hidden; border:1px solid var(--line);">`;
-      html += h('Nombre', l.nombre || l.cliente_nombre);
-      html += h('Teléfono', l.linea || l.cliente_telefono);
-      html += h('Documento', l.documento || l.cliente_cedula);
-      html += h('Plan Interés', l.plan || l.venta_plan);
-      html += h('Origen', l.origen);
-      html += h('Fecha', l.fecha_gmail || l.created_at);
-      html += h('Gaid', l.gaid);
-      html += h('Dirección', l.direccion);
-      html += `</div>`;
-      if (l.url) html += `<div style="margin-top:12px;"><a href="${l.url}" target="_blank" class="btn" style="width:100%; justify-content:center; background:rgba(148,163,184,.15); font-weight:700;">Ver Original en Gmail</a></div>`;
+      const h = (f, v) => v ? `
+        <div class="flex flex-col p-3 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+          <span class="text-[9px] font-extrabold text-blue-400 uppercase tracking-widest mb-1">${f}</span>
+          <div class="text-[13px] font-medium text-slate-200 leading-tight">${v}</div>
+        </div>` : '';
+      
+      let html = `<div class="bg-slate-900/40 rounded-2xl border border-white/10 overflow-hidden backdrop-blur-md">`;
+      html += `<div class="p-4 border-b border-white/10 bg-white/[0.03] flex items-center gap-2">
+                 <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                 <span class="text-[11px] font-bold text-slate-400">DATOS DEL LEAD</span>
+               </div>`;
+      html += `<div class="grid grid-cols-1 md:grid-cols-2">`;
+      html += h('Nombre Completo', l.nombre || l.cliente_nombre);
+      html += h('Teléfono / Línea', l.linea || l.cliente_telefono);
+      html += h('Documento / CI', l.documento || l.cliente_cedula);
+      html += h('Modelo Interés', l.plan || l.venta_plan);
+      html += h('Canal Origen', l.origen);
+      html += h('Ingreso / Registro', l.fecha_gmail || l.created_at);
+      html += h('ID Google Ads', l.gaid);
+      html += h('Dirección Ref.', l.direccion);
+      html += `</div></div>`;
+      
+      if (l.url) html += `
+        <div class="mt-4">
+          <a href="${l.url}" target="_blank" class="flex items-center justify-center gap-2 w-full p-3 rounded-xl bg-slate-800 border border-white/10 text-[12px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition-all">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            VER CORREO ORIGINAL
+          </a>
+        </div>`;
       document.getElementById('info-container').innerHTML = html;
     }
 
@@ -547,10 +604,13 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
     }
 
     const UI = {
-      inp: (id, lbl, ph) => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--muted);">${lbl}</label><input type="text" id="f-${id}" placeholder="${ph||''}"></div>`,
-      date: (id, lbl) => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--muted);">${lbl}</label><input type="date" id="f-${id}"></div>`,
-      sel: (id, lbl, opts) => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--muted);">${lbl}</label><select id="f-${id}" onchange="if('${id}'==='venta_plan'||'${id}'==='venta_equipo') autoFillPrice('${id}', this.value);"><option value="">-</option>${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`,
-      numb: (id, lbl, ph) => `<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:var(--muted);">${lbl}</label><input type="number" id="f-${id}" placeholder="${ph||''}"></div>`,
+      wrap: (content) => `<div class="form-group">${content}</div>`,
+      grid: (content) => `<div class="form-grid">${content}</div>`,
+      inp: (id, lbl, ph, req) => `<div class="form-group flex-1"><label class="form-label">${lbl} ${req?'<span class="text-rose-500">*</span>':''}</label><input type="text" id="f-${id}" class="form-input" placeholder="${ph||''}" ${req?'data-required="true"':''}></div>`,
+      date: (id, lbl, req) => `<div class="form-group flex-1"><label class="form-label">${lbl} ${req?'<span class="text-rose-500">*</span>':''}</label><input type="date" id="f-${id}" class="form-input" ${req?'data-required="true"':''}></div>`,
+      sel: (id, lbl, opts, req) => `<div class="form-group flex-1"><label class="form-label">${lbl} ${req?'<span class="text-rose-500">*</span>':''}</label><select id="f-${id}" class="form-select" ${req?'data-required="true"':''} onchange="if('${id}'==='venta_plan'||'${id}'==='venta_equipo') autoFillPrice('${id}', this.value);"><option value="">-</option>${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`,
+      numb: (id, lbl, ph, req) => `<div class="form-group flex-1"><label class="form-label">${lbl} ${req?'<span class="text-rose-500">*</span>':''}</label><input type="number" id="f-${id}" class="form-input" placeholder="${ph||''}" ${req?'data-required="true"':''}></div>`,
+      title: (lbl) => `<div class="form-section-title mt-4">${lbl}</div>`
     };
 
     function autoFillPrice(sourceId, nameSelected) {
@@ -567,26 +627,25 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
       const pPago = ['Contraentrega', 'Tarjeta de credito', 'Financiacion en la factura', 'Link de pago'];
       let html = '';
       
-      html += UI.inp('cliente_cedula', 'Cédula', 'Documento del cliente');
-      html += UI.inp('cliente_nombre', 'Nombre', 'Nombre del cliente');
-      html += UI.inp('cliente_telefono', 'Teléfono de Contacto', '');
-      html += UI.inp('cliente_email', 'Email', '');
-      html += UI.date('cliente_nacimiento', 'Fecha de Nacimiento');
-      html += UI.inp('direccion', 'Dirección de Entrega', '');
-      html += UI.inp('departamento', 'Departamento', '');
-      html += UI.inp('ciudad', 'Ciudad/Localidad', '');
+      html += UI.title('Datos del Cliente');
+      html += UI.grid(UI.inp('cliente_cedula', 'Cédula', 'Obligatorio', true) + UI.inp('cliente_nombre', 'Nombre Completo', 'Obligatorio', true));
+      html += UI.grid(UI.inp('cliente_telefono', 'Teléfono Contacto', 'Obligatorio', true) + UI.inp('cliente_email', 'Email', 'Opcional', false));
+      html += UI.date('cliente_nacimiento', 'Fecha de Nacimiento', false);
       
+      html += UI.title('Dirección y Envío');
+      html += UI.inp('direccion', 'Dirección Principal', 'Calle, Numero, Apto...', true);
+      html += UI.grid(UI.inp('departamento', 'Departamento', '', true) + UI.inp('ciudad', 'Ciudad', '', true));
+      
+      html += UI.title('Detalles Producto');
       if (type === 'alta' || type === 'migracion' || type === 'porta') {
-          html += UI.sel('venta_plan', 'Plan Vendido', ACTIVE_PLANS);
-          html += UI.sel('venta_equipo', 'Equipo', ACTIVE_EQUIPMENT);
-          html += UI.numb('venta_precio', 'Precio/Valor Final', '0');
-          html += UI.sel('venta_pago', 'Método de Pago', pPago);
+          html += UI.grid(UI.sel('venta_plan', 'Plan Vendido', ACTIVE_PLANS, true) + UI.sel('venta_equipo', 'Equipo terminal', ACTIVE_EQUIPMENT, false));
+          html += UI.grid(UI.numb('venta_precio', 'Precio Final', '0', true) + UI.sel('venta_pago', 'Forma Pago', pPago, true));
       }
       
       if (type === 'porta') {
-          html += UI.inp('porta_numero', 'Línea a Portar', 'Ej: 09...');
-          html += UI.sel('porta_operador', 'Operador Donante', ['Claro', 'Antel']);
-          html += UI.inp('porta_nip', 'NIP / PIN', '');
+          html += UI.title('Datos Portabilidad');
+          html += UI.inp('porta_numero', 'Línea a Portar', 'Ej: 09...', true);
+          html += UI.grid(UI.sel('porta_operador', 'Operador Donante', ['Claro', 'Antel'], true) + UI.inp('porta_nip', 'NIP / PIN Portabilidad', '', true));
       }
 
       document.getElementById('dynamic-form').innerHTML = html;
@@ -607,18 +666,25 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
       
       if (isSale) {
         const formType = document.getElementById('sale-form-selector').value;
-        if (!formType) { alert("Selecciona el Tipo de Venta para habilitar el formulario"); return; }
+        if (!formType) { toast("Selecciona el Tipo de Venta", 'err'); return; }
         
         saleData.Producto = formType;
         saleData.VendedorComentarios = document.getElementById('seller-comment').value;
+        
         const inputs = document.querySelectorAll('#dynamic-form [id^="f-"]');
+        let missing = [];
         inputs.forEach(i => {
            const key = i.id.replace('f-', '');
            saleData[key] = i.value;
+           if (i.dataset.required === 'true' && !i.value) {
+             const label = i.closest('.form-group')?.querySelector('.form-label')?.innerText.replace('*', '').trim();
+             missing.push(label || key);
+           }
         });
         
-        if (!saleData.cliente_cedula || !saleData.cliente_telefono) { 
-           alert("Cédula y Teléfono son obligatorios para registrar una venta"); return; 
+        if (missing.length > 0) {
+           toast("Faltan campos obligatorios: " + missing.join(', '), 'err');
+           return;
         }
       }
 
