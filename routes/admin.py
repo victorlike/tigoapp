@@ -33,6 +33,19 @@ def migrate_admin_schema():
 
 
 # ─── Endpoints ───────────────────────────────────────────
+from pydantic import BaseModel
+
+class PinRequest(BaseModel):
+    pin: str
+
+@router.post("/verify-pin")
+def verify_pin(data: PinRequest):
+    """Verify the admin PIN to unlock the dashboard."""
+    from utils.settings import get_setting
+    correct_pin = get_setting("admin_pin", "1234")
+    if data.pin == correct_pin:
+        return {"success": True}
+    return {"success": False, "error": "PIN incorrecto"}
 
 @router.get("/users")
 def get_users():

@@ -327,8 +327,8 @@ def get_agent_stats(email: str):
     sla = fetchone(
         """
         SELECT COUNT(*) AS total FROM leads 
-        WHERE (estado = 'NUEVO' AND created_at < now() - interval '5 minutes')
-           OR (estado = 'ASIGNADO' AND agente = %s AND updated_at < now() - interval '15 minutes')
+        WHERE (estado = 'NUEVO' AND created_at < now() - interval '5 minutes' AND created_at >= current_date)
+           OR (estado = 'ASIGNADO' AND agente = %s AND updated_at < now() - interval '15 minutes' AND updated_at >= current_date)
         """, 
         (email,)
     )

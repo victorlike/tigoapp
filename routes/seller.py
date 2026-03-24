@@ -77,7 +77,7 @@ def get_initial_data(email: str):
     
     # 3. SLA Breaches (Queue > 5 min)
     sla = fetchone(
-        "SELECT COUNT(*) AS total FROM leads WHERE estado = 'NUEVO' AND agente IS NULL AND created_at < now() - interval '5 minutes'"
+        "SELECT COUNT(*) AS total FROM leads WHERE estado = 'NUEVO' AND agente IS NULL AND created_at < now() - interval '5 minutes' AND created_at >= current_date"
     )
 
     return {

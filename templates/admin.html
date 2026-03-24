@@ -33,6 +33,23 @@
   </style>
 </head>
 <body class="min-h-screen text-slate-100">
+  <!-- PIN Overlay -->
+  <div id="pinOverlay" class="fixed inset-0 z-[100] bg-[#050814]/95 backdrop-blur-md flex flex-col items-center justify-center p-4">
+    <div class="card p-8 rounded-3xl w-full max-w-sm text-center shadow-2xl border border-white/10">
+      <div class="w-16 h-16 rounded-full bg-sky-500/20 flex items-center justify-center mx-auto mb-4">
+        <span class="text-3xl text-sky-400">🔒</span>
+      </div>
+      <h2 class="text-2xl font-bold text-white mb-2">Puesto de Comando</h2>
+      <p class="text-sm text-slate-400 mb-6">Ingresa tu PIN de seguridad para continuar</p>
+      
+      <input type="password" id="adminPinInput" class="w-full px-4 py-4 rounded-xl text-center tracking-[0.5em] text-2xl font-black bg-[#0b1220] border border-[rgba(148,163,184,.18)] outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 mb-4 transition-all" placeholder="••••">
+      
+      <button id="btnVerifyPin" class="btn w-full py-4 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 hover:opacity-90 text-white font-bold shadow-lg shadow-sky-500/20 transition-all">Desbloquear</button>
+      
+      <button class="mt-4 text-xs font-semibold text-slate-500 hover:text-slate-300" onclick="location.href='/'">← Volver al Login</button>
+    </div>
+  </div>
+
   <div class="max-w-[1200px] mx-auto p-4 md:p-8">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -314,7 +331,40 @@
       setTimeout(() => el.remove(), 4000);
     }
 
-    load();
+    $('btnVerifyPin').onclick = async () => {
+      const pin = $('adminPinInput').value.trim();
+      if (!pin) return;
+      
+      const btn = $('btnVerifyPin');
+      btn.textContent = 'Verificando...';
+      btn.disabled = true;
+      
+      try {
+        const res = await fetch('/api/admin/verify-pin', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({pin})
+        }).then(r => r.json());
+        
+        if (res.success) {
+          $('pinOverlay').classList.add('hidden');
+          load();
+        } else {
+          toast(res.error || 'PIN incorrecto', 'err');
+          $('adminPinInput').value = '';
+          btn.textContent = 'Desbloquear';
+          btn.disabled = false;
+        }
+      } catch (e) {
+        toast('Error de conexión', 'err');
+        btn.textContent = 'Desbloquear';
+        btn.disabled = false;
+      }
+    };
+    
+    $('adminPinInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') $('btnVerifyPin').click();
+    });
   </script>
 </body>
 </html>

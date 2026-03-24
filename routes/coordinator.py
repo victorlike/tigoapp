@@ -116,7 +116,7 @@ def get_dashboard():
     
     # SLA Breach (NUEVO > 5 min)
     sla_min = get_int_setting("sla_min", 5)
-    kpi_sla = fetchone(f"SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '{sla_min} minutes'")
+    kpi_sla = fetchone(f"SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '{sla_min} minutes' AND created_at >= current_date")
 
     # 6. Sales by agent and product (Including SEGUIMIENTO breakdown)
     detailed_sales = execute(

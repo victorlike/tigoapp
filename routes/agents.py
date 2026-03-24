@@ -7,6 +7,7 @@ from database import execute, fetchone
 from auth import verify_apps_script_key
 from datetime import datetime, timezone
 import auto_assign
+from typing import Dict, Any
 
 router = APIRouter()
 
@@ -83,7 +84,7 @@ def get_agent_init(email: str):
     q_count = q_row["n"] if q_row else 0
     
     # SLA breached (NUEVO leads > 15 mins)
-    sla_row = fetchone("SELECT COUNT(*) AS n FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '15 minutes'")
+    sla_row = fetchone("SELECT COUNT(*) AS n FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '15 minutes' AND created_at >= current_date")
     sla_count = sla_row["n"] if sla_row else 0
     
     # My leads (ASIGNADO)
