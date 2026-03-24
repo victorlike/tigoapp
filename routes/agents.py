@@ -98,7 +98,7 @@ def get_agent_init(email: str):
     is_bo = (agent["role"] in ["COORD", "ADMIN"])
     
     # BO Status list (can be hardcoded or from another table)
-    from sales import DEFAULT_BO_STATUS_LIST
+    from routes.sales import DEFAULT_BO_STATUS_LIST
 
     # Catalog
     catalog = execute("SELECT * FROM catalog WHERE active = TRUE ORDER BY item_type, name", fetch=True)

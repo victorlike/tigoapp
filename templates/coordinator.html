@@ -496,7 +496,8 @@
         subtitle: email,
         hint: 'Esto marcará al agente como Offline inmediatamente.',
         action: async (motivo) => {
-          await fetch(`/api/coordinator/agents/${encodeURIComponent(email)}/force-offline`, {method:'POST'});
+          const actor = encodeURIComponent(localStorage.getItem('agent_email') || 'Coordinador');
+          await fetch(`/api/coordinator/agents/${encodeURIComponent(email)}/force-offline?actor=${actor}`, {method:'POST'});
           toast('Agente Offline', 'ok');
           load();
         }
@@ -506,7 +507,8 @@
     async function releaseLead(mid) {
       const mot = prompt('Motivo de liberación:', 'Rescate (coord)');
       if (mot === null) return;
-      await fetch(`/api/coordinator/release/${mid}?motivo=${encodeURIComponent(mot)}`, {method:'POST'});
+      const actor = encodeURIComponent(localStorage.getItem('agent_email') || 'Coordinador');
+      await fetch(`/api/coordinator/release/${mid}?motivo=${encodeURIComponent(mot)}&actor=${actor}`, {method:'POST'});
       toast('Lead liberado', 'ok');
       load();
     }
@@ -514,7 +516,8 @@
     async function closeLeadCoord(mid) {
       const mot = prompt('Motivo de cierre:', 'Duplicado');
       if (mot === null) return;
-      await fetch(`/api/coordinator/close/${mid}?motivo=${encodeURIComponent(mot)}`, {method:'POST'});
+      const actor = encodeURIComponent(localStorage.getItem('agent_email') || 'Coordinador');
+      await fetch(`/api/coordinator/close/${mid}?motivo=${encodeURIComponent(mot)}&actor=${actor}`, {method:'POST'});
       toast('Lead cerrado', 'warn');
       load();
     }
@@ -544,7 +547,8 @@
          isSelect: true,
          options: agentsRes.items.map(a => ({value: a.email, label: `${a.email} (${a.open_leads}/${a.max_leads})`})),
          action: async (email) => {
-           const res = await fetch(`/api/coordinator/followups/assign?message_id=${mid}&agent_email=${encodeURIComponent(email)}`, {method:'POST'}).then(r => r.json());
+           const actor = encodeURIComponent(localStorage.getItem('agent_email') || 'Coordinador');
+           const res = await fetch(`/api/coordinator/followups/assign?message_id=${mid}&agent_email=${encodeURIComponent(email)}&actor=${actor}`, {method:'POST'}).then(r => r.json());
            if (res.success) toast('Asignado a ' + email, 'ok');
            else toast(res.message, 'err');
            load();
@@ -576,7 +580,8 @@
 
     $('btnRescueAll').onclick = async () => {
        if (!DRAWER_AGENT) return;
-       await fetch(`/api/coordinator/agents/${encodeURIComponent(DRAWER_AGENT)}/rescue-all`, {method:'POST'});
+       const actor = encodeURIComponent(localStorage.getItem('agent_email') || 'Coordinador');
+       await fetch(`/api/coordinator/agents/${encodeURIComponent(DRAWER_AGENT)}/rescue-all?actor=${actor}`, {method:'POST'});
        toast('Todos los leads liberados', 'ok');
        openDrawerAgent(DRAWER_AGENT);
        load();
@@ -584,7 +589,8 @@
 
     $('btnOfflineRescue').onclick = async () => {
        if (!DRAWER_AGENT) return;
-       await fetch(`/api/coordinator/agents/${encodeURIComponent(DRAWER_AGENT)}/force-offline-and-rescue`, {method:'POST'});
+       const actor = encodeURIComponent(localStorage.getItem('agent_email') || 'Coordinador');
+       await fetch(`/api/coordinator/agents/${encodeURIComponent(DRAWER_AGENT)}/force-offline-and-rescue?actor=${actor}`, {method:'POST'});
        toast('Agente Offline + Leads Rescatados', 'warn');
        $('drawer').classList.add('hidden');
        load();

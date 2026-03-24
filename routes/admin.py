@@ -66,39 +66,57 @@ def get_users():
 @router.post("/users/update")
 def update_user(data: Dict[str, Any]):
     """Update role or max_leads for a user."""
+    from database import log_audit
+    
     email = data.get("email")
     role = data.get("role")
     max_leads = data.get("max_leads")
+    actor = data.get("actor", "Sistema")
     
     if not email:
         raise HTTPException(status_code=400, detail="Email is required")
         
     if role:
         execute("UPDATE agents SET role = %s WHERE email = %s", (role.upper(), email))
+        log_audit(actor, "CAMBIO_ROL", email, f"Rol actualizado a {role.upper()}")
+        
     if max_leads is not None:
         execute("UPDATE agents SET max_leads = %s WHERE email = %s", (max_leads, email))
+        log_audit(actor, "CAPACIDAD", email, f"Límite Leads actualizado a {max_leads}")
         
     return {"success": True}
 
 @router.get("/settings")
 def get_settings():
     """Fetch all global system settings."""
-    rows = execute("SELECT key, value FROM settings")
+    rows = execute("SELECT key, value FROM settings", fetch=True)
     settings = {r['key']: r['value'] for r in rows}
     return {"success": True, "settings": settings}
 
 @router.post("/settings/update")
 def update_settings(data: Dict[str, Any]):
     """Update global system settings."""
+    from database import log_audit
+    actor = data.pop("actor", "Sistema")
+    
     for key, value in data.items():
         execute(
             "INSERT INTO settings (key, value, updated_at) VALUES (%s, %s, now()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()",
             (key, str(value))
         )
+        log_audit(actor, "AJUSTES", key, f"Valor modificado a: {value}")
+        
     return {"success": True}
 
 @router.get("/audit-logs")
 def get_audit_logs():
-    """Placeholder for critical action logs."""
-    # This could query a separate audit table if implemented
-    return {"success": True, "items": []}
+    """Fetch recent critical action logs."""
+    logs = execute("""
+        SELECT actor, action, target, details, 
+               EXTRACT(EPOCH FROM (now() - timestamp))::int as ago_sec,
+               to_char(timestamp at time zone 'UTC' at time zone 'America/Montevideo', 'DD/MM HH24:MI') as fecha_fmt
+        FROM audit_logs 
+        ORDER BY timestamp DESC 
+        LIMIT 150
+    """, fetch=True)
+    return {"success": True, "items": logs}

@@ -164,13 +164,34 @@
     </section>
 
     <!-- TAB: AUDIT -->
-    <section id="tab-audit" class="mt-4 hidden">
-       <div class="card rounded-3xl p-8 flex flex-col items-center justify-center min-h-[300px]">
-         <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-           <span class="text-2xl">📜</span>
+    <section id="tab-audit" class="mt-4 hidden animate-slide-up">
+       <div class="card rounded-3xl overflow-hidden border border-white/5 relative">
+         <div class="p-6 md:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+           <div>
+             <h2 class="text-xl md:text-2xl font-bold font-display tracking-tight text-white mb-2 shadow-text">Logs de Auditoría</h2>
+             <p class="text-slate-400 text-xs flex gap-3">
+               <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-sky-500/80 animate-pulse"></span> Últimos 150 eventos</span>
+             </p>
+           </div>
+           <button class="btn px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold border border-white/10 text-white shadow-soft transition-all active:scale-95" onclick="load()">Refrescar</button>
          </div>
-         <h3 class="text-lg font-bold">Próximamente: Historial de Auditoría</h3>
-         <p class="text-slate-500 text-sm mt-1 text-center max-w-sm">Aquí podrás ver quién liberó leads, quién forzó offline y qué cambios se hicieron en la configuración.</p>
+
+         <div class="overflow-x-auto">
+           <table class="w-full text-left text-sm whitespace-nowrap">
+             <thead class="text-[10px] uppercase font-bold text-slate-500 bg-slate-800/50 sticky top-0 backdrop-blur-md">
+               <tr>
+                 <th class="px-8 py-4 font-bold tracking-widest">Actor</th>
+                 <th class="px-8 py-4 font-bold tracking-widest">Acción</th>
+                 <th class="px-8 py-4 font-bold tracking-widest">Objetivo</th>
+                 <th class="px-8 py-4 font-bold tracking-widest">Detalles</th>
+                 <th class="px-8 py-4 font-bold tracking-widest">Fecha</th>
+               </tr>
+             </thead>
+             <tbody id="auditTbody" class="divide-y divide-white/5">
+                <!-- Log event rows -->
+             </tbody>
+           </table>
+         </div>
        </div>
     </section>
   </div>
@@ -207,18 +228,21 @@
   <script>
     let USERS = [];
     let SETTINGS = {};
+    let AUDIT = [];
 
     const $ = (id) => document.getElementById(id);
 
     async function load() {
       try {
-        const [uRes, sRes] = await Promise.all([
+        const [uRes, sRes, aRes] = await Promise.all([
           fetch('/api/admin/users').then(r => r.json()),
-          fetch('/api/admin/settings').then(r => r.json())
+          fetch('/api/admin/settings').then(r => r.json()),
+          fetch('/api/admin/audit-logs').then(r => r.json())
         ]);
         
         if (uRes.success) USERS = uRes.items;
         if (sRes.success) SETTINGS = sRes.settings;
+        if (aRes && aRes.success) AUDIT = aRes.items;
         
         render();
       } catch (e) {
@@ -255,6 +279,19 @@
       $('set_auto_assign').checked = SETTINGS.auto_assign_enabled === 'true';
       if ($('set_allowed_domain')) $('set_allowed_domain').value = SETTINGS.allowed_domain || '@xtendo-it.com';
       if ($('set_admin_pin')) $('set_admin_pin').value = SETTINGS.admin_pin || '2777';
+
+      // Audit
+      if ($('auditTbody')) {
+        $('auditTbody').innerHTML = AUDIT.length ? AUDIT.map(a => `
+          <tr class="hover:bg-white/5 transition-all">
+            <td class="px-8 py-4 font-bold text-slate-300">${a.actor}</td>
+            <td class="px-8 py-4"><span class="px-2 py-1 bg-slate-700/50 rounded-lg text-[10px] font-bold tracking-widest">${a.action}</span></td>
+            <td class="px-8 py-4 text-sky-400 font-bold max-w-[200px] truncate">${a.target || '--'}</td>
+            <td class="px-8 py-4 text-xs text-slate-400 max-w-[300px] truncate" title="${a.details}">${a.details || '--'}</td>
+            <td class="px-8 py-4 text-xs font-bold text-slate-500">${a.fecha_fmt}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="5" class="py-8 text-center text-slate-500 font-bold text-xs">Sin registros</td></tr>';
+      }
     }
 
     function editUser(email) {
@@ -271,10 +308,11 @@
       const role = $('editRole').value;
       const max_leads = parseInt($('editMaxLeads').value);
       
+      const actor = localStorage.getItem('agent_email') || 'Admin';
       const res = await fetch('/api/admin/users/update', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({email, role, max_leads})
+        body: JSON.stringify({email, role, max_leads, actor})
       }).then(r => r.json());
       
       if (res.success) {
@@ -288,10 +326,11 @@
       const sla_min = $('set_sla_min').value;
       const stuck_min = $('set_stuck_min').value;
       
+      const actor = localStorage.getItem('agent_email') || 'Admin';
       const res = await fetch('/api/admin/settings/update', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({sla_min, stuck_min})
+        body: JSON.stringify({sla_min, stuck_min, actor})
       }).then(r => r.json());
       
       if (res.success) toast('Tiempos actualizados', 'ok');
@@ -299,10 +338,11 @@
 
     $('btnSaveEngine').onclick = async () => {
       const auto_assign_enabled = $('set_auto_assign').checked ? 'true' : 'false';
+      const actor = localStorage.getItem('agent_email') || 'Admin';
       const res = await fetch('/api/admin/settings/update', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({auto_assign_enabled})
+        body: JSON.stringify({auto_assign_enabled, actor})
       }).then(r => r.json());
       
       if (res.success) toast('Motor sincronizado', 'ok');
@@ -312,10 +352,11 @@
         $('btnSaveSecurity').onclick = async () => {
           const allowed_domain = $('set_allowed_domain').value.trim();
           const admin_pin = $('set_admin_pin').value.trim();
+          const actor = localStorage.getItem('agent_email') || 'Admin';
           const res = await fetch('/api/admin/settings/update', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({allowed_domain, admin_pin})
+            body: JSON.stringify({allowed_domain, admin_pin, actor})
           }).then(r => r.json());
           
           if (res.success) toast('Seguridad y Acceso actualizado', 'ok');

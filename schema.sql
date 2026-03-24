@@ -145,6 +145,16 @@ CREATE TABLE IF NOT EXISTS sales (
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ── AUDIT LOGS ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id          SERIAL PRIMARY KEY,
+  timestamp   TIMESTAMPTZ DEFAULT now(),
+  actor       TEXT NOT NULL,
+  action      TEXT NOT NULL,
+  target      TEXT,
+  details     TEXT
+);
+
 CREATE INDEX IF NOT EXISTS idx_leads_estado        ON leads(estado);
 CREATE INDEX IF NOT EXISTS idx_leads_agente        ON leads(agente);
 CREATE INDEX IF NOT EXISTS idx_sales_message_id     ON sales(message_id);

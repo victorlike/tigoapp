@@ -181,17 +181,19 @@ def get_dashboard():
 
 
 @router.post("/agents/{email}/force-offline")
-def force_offline(email: str):
+def force_offline(email: str, actor: str = "Coordinador"):
     """Force an agent to OFFLINE status."""
     execute(
         "UPDATE agents SET estado = 'OFFLINE', updated_at = now() WHERE email = %s",
         (email,)
     )
+    from database import log_audit
+    log_audit(actor, "OFFLINE_FORZADO", email, "El agente fue desconectado forzosamente.")
     return {"success": True}
 
 
 @router.post("/agents/{email}/rescue-all")
-def rescue_all_leads(email: str):
+def rescue_all_leads(email: str, actor: str = "Coordinador"):
     """Release all ASIGNADO leads from an agent back to NUEVO."""
     execute(
         """
@@ -206,11 +208,13 @@ def rescue_all_leads(email: str):
         """,
         (email,)
     )
+    from database import log_audit
+    log_audit(actor, "RESCATE_MASIVO", email, "Rescatados todos los leads del agente.")
     return {"success": True}
 
 
 @router.post("/agents/{email}/force-offline-and-rescue")
-def force_offline_and_rescue(email: str):
+def force_offline_and_rescue(email: str, actor: str = "Coordinador"):
     """Combined action: force agent OFFLINE and rescue all their leads."""
     execute("UPDATE agents SET estado = 'OFFLINE', updated_at = now() WHERE email = %s", (email,))
     execute(
@@ -226,11 +230,13 @@ def force_offline_and_rescue(email: str):
         """,
         (email,)
     )
+    from database import log_audit
+    log_audit(actor, "EXPULSION_Y_RESCATE", email, "Agente desconectado y leads rescatados de su poder.")
     return {"success": True}
 
 
 @router.post("/assign")
-def assign_manual(message_id: str, agent_email: str):
+def assign_manual(message_id: str, agent_email: str, actor: str = "Coordinador"):
     """Manually assign a lead to an agent."""
     execute(
         """
@@ -245,6 +251,8 @@ def assign_manual(message_id: str, agent_email: str):
         "UPDATE agents SET last_assigned = now(), updated_at = now() WHERE email = %s",
         (agent_email,)
     )
+    from database import log_audit
+    log_audit(actor, "ASIGNACION_MANUAL", message_id, f"El coordinador asignó este lead al agente {agent_email}.")
     return {"success": True}
 
 
@@ -277,7 +285,7 @@ def reject_sale(message_id: str, note: str = ""):
 
 
 @router.post("/release/{message_id}")
-def release_lead(message_id: str, motivo: str = "Rescate (coord)"):
+def release_lead(message_id: str, motivo: str = "Rescate (coord)", actor: str = "Coordinador"):
     """Release a lead back to the queue (coordinator action)."""
     execute(
         """
@@ -289,11 +297,13 @@ def release_lead(message_id: str, motivo: str = "Rescate (coord)"):
         """,
         (motivo, message_id)
     )
+    from database import log_audit
+    log_audit(actor, "LIBERACION", message_id, f"Lead quitado del agente actual y vuelto a la cola. Motivo: {motivo}")
     return {"success": True}
 
 
 @router.post("/close/{message_id}")
-def close_lead_coord(message_id: str, motivo: str = "Cierre (coord)"):
+def close_lead_coord(message_id: str, motivo: str = "Cierre (coord)", actor: str = "Coordinador"):
     """Force close a lead (e.g. duplicate)."""
     execute(
         """
@@ -305,6 +315,8 @@ def close_lead_coord(message_id: str, motivo: str = "Cierre (coord)"):
         """,
         (motivo, message_id)
     )
+    from database import log_audit
+    log_audit(actor, "CIERRE", message_id, f"Lead forzado a cerrado como duplicado. Motivo: {motivo}")
     return {"success": True}
 
 

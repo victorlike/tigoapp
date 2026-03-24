@@ -145,3 +145,14 @@ def rollback_and_release(conn):
         except:
             pass
         release_conn(conn)
+
+
+def log_audit(actor: str, action: str, target: str = None, details: str = None):
+    """Log an audit event asynchronously via execute."""
+    try:
+        execute(
+            "INSERT INTO audit_logs (actor, action, target, details) VALUES (%s, %s, %s, %s)",
+            (actor, action, target, details)
+        )
+    except Exception as e:
+        logger.error(f"Failed to write audit log [{action}]: {e}")
