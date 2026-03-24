@@ -65,7 +65,9 @@
       try {
         const res = await fetch(`/api/agent/info?email=${encodeURIComponent(email)}`).then(r => r.json());
         if (!res.success || !res.agent) {
-          alert('No se pudo verificar tu cuenta. Contacta al administrador.');
+          alert(res.error || 'No se pudo verificar tu cuenta. Contacta al administrador.');
+          document.getElementById('loader').style.display = 'none';
+          document.getElementById('btnLogin').disabled = false;
           return;
         }
 
