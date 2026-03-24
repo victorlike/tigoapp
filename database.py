@@ -30,6 +30,17 @@ def get_pool():
         
         try:
             logger.info("Initializing connection pool...")
+            
+            # Diagnostic: log parsed params (WITHOUT password)
+            try:
+                from psycopg2.extensions import parse_dsn
+                params = parse_dsn(DATABASE_URL)
+                # Mask sensitive info
+                safe_params = {k: (v if k != 'password' else '********') for k, v in params.items()}
+                logger.info(f"Connecting with params: {safe_params}")
+            except Exception as de:
+                logger.warning(f"Could not parse DSN for logging: {de}")
+
             _pool = psycopg2.pool.ThreadedConnectionPool(
                 minconn=1,
                 maxconn=10,
