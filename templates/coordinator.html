@@ -106,7 +106,14 @@
           <span class="pill px-3 py-1 rounded-full text-xs text-slate-200">SLA &gt; <span id="slaMinLabel">5</span> min</span>
         </div>
         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
-          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Cola (NUEVOS)</div><div id="kpiQueue" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Leads en espera sin agente</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft border border-white/5 relative group">
+            <div class="text-xs text-slate-300">Cola (NUEVOS)</div>
+            <div id="kpiQueue" class="text-3xl font-bold mono mt-1">--</div>
+            <div class="text-xs text-slate-400 mt-1">Leads en espera sin agente</div>
+            <button onclick="bulkCloseQueue()" class="absolute top-2 right-2 p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/90 text-rose-500 hover:text-white transition-all opacity-0 group-hover:opacity-100" title="Cerrar todos los leads en cola">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </div>
           <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Ventas cantadas hoy</div><div id="kpiSales" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Cerrados como VENTA por agentes</div></div>
           <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">No ventas hoy</div><div id="kpiNoSales" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Cerrados con resultado ≠ venta</div></div>
           <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Conversión hoy</div><div id="kpiConv" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Ventas / Cerrados</div></div>
@@ -595,6 +602,24 @@
        $('drawer').classList.add('hidden');
        load();
     };
+
+    async function bulkCloseQueue() {
+      if (!confirm('¿Estás seguro de que deseas CERRAR TODOS los leads que están actualmente en la cola? Esta acción no se puede deshacer.')) return;
+      
+      const actor = localStorage.getItem('agent_email') || 'Coordinador';
+      try {
+        const res = await fetch(`/api/coordinator/bulk-close-queue?actor=${encodeURIComponent(actor)}`, { method: 'POST' }).then(r => r.json());
+        if (res.success) {
+          toast(res.closed ? `Se cerraron ${res.closed} leads.` : 'La cola ya estaba vacía.', 'ok');
+          load(); // reload dashboard
+        } else {
+          toast(res.error || 'Error al cerrar cola', 'err');
+        }
+      } catch (e) {
+        console.error(e);
+        toast('Error de conexión', 'err');
+      }
+    }
 
     // UI Wire
     document.querySelectorAll('.tab').forEach(b => b.onclick = (e) => {

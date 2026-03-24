@@ -423,3 +423,32 @@ def clean_database():
     for table in ["leads", "sales", "agents"]:
         execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE")
     return {"success": True, "message": "Database cleaned and schema updated"}
+@router.post("/bulk-close-queue")
+def bulk_close_queue(actor: str = "Sistema"):
+    """Close all leads currently in the queue (NUEVO)."""
+    # 1. Count them first for the audit log
+    row = fetchone("SELECT COUNT(*) as n FROM leads WHERE estado = 'NUEVO'")
+    num = row['n'] if row else 0
+    
+    if num == 0:
+        return {"success": True, "message": "No hay leads en cola para cerrar."}
+
+    # 2. Update
+    execute(
+        """
+        UPDATE leads 
+        SET estado = 'CERRADO', 
+            resultado = 'No Venta', 
+            tip_tipo = 'No Venta', 
+            tip_resultado = 'Cierre Administrativo',
+            tip_motivo = 'Cierre masivo de cola solicitado por usuario',
+            updated_at = now() 
+        WHERE estado = 'NUEVO'
+        """
+    )
+    
+    # 3. Audit
+    from database import log_audit
+    log_audit(actor, "CIERRE_MASIVO_COLA", "COLA", f"Se cerraron {num} leads que estaban en estado NUEVO.")
+    
+    return {"success": True, "closed": num}
