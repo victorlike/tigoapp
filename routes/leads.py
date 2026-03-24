@@ -121,11 +121,6 @@ def duplicate_check(phone: str, message_id: str):
         "today": len(items), 
         "items": items
     }
-        "active": active,
-        "followups": followups,
-        "sales": sales,
-        "backoffice": backoffice
-    }
 
 
 # ─── GET /api/leads/queue  ─────────────────────────────
