@@ -102,25 +102,29 @@ function migrateLeads() {
   const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
   const map = getHeaderMapFromArray_(headers);
 
-  const leads = data.map(row => ({
-    message_id: row[map['message_id']] || row[map['messageid']] || ('mig_' + row[map['línea']] + '_' + row[map['fecha']]),
-    nombre: row[map['nombre']] || '',
-    linea: String(row[map['línea']] || row[map['linea']] || ''),
-    plan: row[map['plan']] || '',
-    estado: row[map['estado']] || 'NUEVO',
-    agente: row[map['agente']] || null,
-    agente_original: row[map['agenteoriginal']] || row[map['agente']] || null,
-    fecha_gmail: row[map['fecha']] ? new Date(row[map['fecha']]).toISOString() : null,
-    resultado: row[map['resultado']] || null,
-    rellamar_en: row[map['rellamaren']] ? new Date(row[map['rellamaren']]).toISOString() : null,
-    // New fields
-    tracking: row[map['tracking']] || '',
-    gaid: row[map['gaid']] || '',
-    tip_tipo: row[map['tip_tipo']] || row[map['tiptipo']] || '',
-    tip_resultado: row[map['tip_resultado']] || row[map['tipresultado']] || '',
-    tip_motivo: row[map['tip_motivo']] || row[map['tipmotivo']] || '',
-    tip_submotivo: row[map['tip_submotivo']] || row[map['tipsubmotivo']] || ''
-  })).filter(l => l.message_id);
+  const leads = data.map(row => {
+    const messageId = row[map['message_id']] || row[map['messageid']] || ('mig_' + row[map['línea']] + '_' + row[map['fecha']]);
+    const estado = String(row[map['estado']] || row[map['Estado']] || 'NUEVO').trim().toUpperCase();
+    
+    return {
+      message_id: messageId,
+      nombre: String(row[map['nombre']] || ''),
+      linea: String(row[map['línea']] || row[map['linea']] || ''),
+      plan: String(row[map['plan']] || ''),
+      estado: estado,
+      agente: row[map['agente']] || null,
+      agente_original: row[map['agenteoriginal']] || row[map['agente']] || null,
+      fecha_gmail: row[map['fecha']] ? new Date(row[map['fecha']]).toISOString() : null,
+      resultado: row[map['resultado']] || null,
+      rellamar_en: row[map['rellamaren']] ? new Date(row[map['rellamaren']]).toISOString() : null,
+      tracking: String(row[map['tracking']] || ''),
+      gaid: String(row[map['gaid']] || ''),
+      tip_tipo: row[map['tip_tipo']] || row[map['tiptipo']] || '',
+      tip_resultado: row[map['tip_resultado']] || row[map['tipresultado']] || '',
+      tip_motivo: row[map['tip_motivo']] || row[map['tipmotivo']] || '',
+      tip_submotivo: row[map['tip_submotivo']] || row[map['tipsubmotivo']] || ''
+    };
+  }).filter(l => l.message_id);
 
   for (let i = 0; i < leads.length; i += BATCH_SIZE) {
     const chunk = leads.slice(i, i + BATCH_SIZE);

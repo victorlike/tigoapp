@@ -17,6 +17,9 @@ class LeadCreate(BaseModel):
     tracking: Optional[str] = None
     gaid: Optional[str] = None
 
+    class Config:
+        coerce_numbers_to_str = True
+
 
 class LeadStatusUpdate(BaseModel):
     estado: str
@@ -61,6 +64,9 @@ class LeadOut(BaseModel):
     tracking: Optional[str] = None
     gaid: Optional[str] = None
     cantidad_ventas: int = 0
+
+    class Config:
+        coerce_numbers_to_str = True
 
 
 # ─── AGENTS ─────────────────────────────────────────────
