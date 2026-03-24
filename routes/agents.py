@@ -76,7 +76,7 @@ def set_agent_status(email: str, body: AgentStatusUpdate):
 
 # ─── GET /api/agent/init  ──────────────────────────────
 @router.get("/init")
-def get_agent_init(email: str):
+def get_agent_init(email: str, login: bool = False):
     """
     Called on page load. Aggregates data needed for the Agent Portal.
     """
@@ -88,6 +88,12 @@ def get_agent_init(email: str):
         return {"success": False, "error": f"Dominio de correo no permitido. Debe terminar en {allowed_domain}"}
 
     agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
+    
+    # Force OFFLINE if login=True is passed
+    if agent and login:
+        execute("UPDATE agents SET estado = 'OFFLINE', updated_at = now() WHERE email = %s", (email,))
+        agent["estado"] = "OFFLINE"
+
     if not agent:
         try:
             # Auto-create on first access

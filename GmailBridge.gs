@@ -4,8 +4,7 @@
  * No more Sheets writes. Replace RAILWAY_URL and API_KEY below.
  */
 
-const RAILWAY_URL = 'https://YOUR_APP.railway.app';  // ← change this
-const API_KEY     = 'your-apps-script-api-key';       // ← must match APPS_SCRIPT_KEY in Railway env
+// Config now provided by Config.gs
 
 const GMAIL_LABEL = 'TIGO-LEADS';   // Gmail label to scan
 const PROCESSED   = 'TIGO-DONE';    // Label to mark processed
@@ -47,28 +46,51 @@ function extractLeadFromEmail_(msg) {
   const body    = msg.getPlainBody() || '';
   const date    = msg.getDate();
 
-  // ─── Parse fields from email body ────────────────────
-  // Adjust these regexes to match your actual email format
-  const nombre  = match_(body, /(?:Nombre|Name)[:\s]+(.+)/i);
-  const linea   = match_(body, /(?:Teléfono|Línea|Phone)[:\s]+([+\d\s\-]+)/i);
-  const plan    = match_(body, /(?:Plan)[:\s]+(.+)/i);
+  // ─── Parse "Key=Value||" format ────────────────────
+  const data = {};
+  body.split('||').forEach(part => {
+    const pieces = part.split('=');
+    if (pieces.length >= 2) {
+      const key = pieces[0].trim().toLowerCase();
+      const val = pieces.slice(1).join('=').trim();
+      data[key] = val;
+    }
+  });
 
   // Use Gmail Message-Id as unique identifier
   const messageId = 'gmail_' + Utilities.base64Encode(msg.getId());
 
   return {
     message_id: messageId,
-    nombre: nombre || subject,
-    linea: linea || null,
-    plan: plan || null,
-    fecha_gmail: date ? date.toISOString() : new Date().toISOString()
+    nombre: data.nombre || subject,
+    linea: data.linea || null,
+    plan: data.plan || null,
+    fecha_gmail: date ? date.toISOString() : new Date().toISOString(),
+    tracking: data.tracking || null,
+    gaid: data.gaid || null,
+    origen: data.origen || null,
+    url: data.url || null,
+    equipo: data.equipo || null,
+    utm: data.utm || null,
+    horario: data.horario || null,
+    timestamp_sheet: data.timestamp || null,
+    documento: data.documento || null,
+    compania: data.compania || null,
+    operacion: data.operacion || null,
+    tsource: data.tsource || null,
+    modal: data.modal || null,
+    direccion: data.direccion || null,
+    email: data.email || null
   };
 }
 
 
 function postToRailway_(lead) {
   try {
-    const res = UrlFetchApp.fetch(RAILWAY_URL + '/api/leads', {
+    const baseUrl = RAILWAY_URL.replace(/\/+$/, '');
+    const finalUrl = baseUrl + '/api/leads';
+
+    const res = UrlFetchApp.fetch(finalUrl, {
       method: 'POST',
       contentType: 'application/json',
       headers: { 'X-Api-Key': API_KEY },
@@ -107,6 +129,6 @@ function installTrigger() {
     if (t.getHandlerFunction() === 'processNewLeads') ScriptApp.deleteTrigger(t);
   });
   ScriptApp.newTrigger('processNewLeads')
-    .timeBased().everyMinutes(5).create();
+    .timeBased().everyMinutes(1).create();
   Logger.log('✅ Trigger installed: processNewLeads every 5 min');
 }

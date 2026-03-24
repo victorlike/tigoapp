@@ -160,87 +160,102 @@
       window.location.href = "/login.html";
     }
 
+    // --- FastAPI Adaptation: Fixes race conditions and ensures loader cleanup ---
     const google = {
       script: {
         run: {
-          withSuccessHandler: function(callback) { this._success = callback; return this; },
-          withFailureHandler: function(callback) { this._failure = callback; return this; },
-          apiGetInitialData: async function() {
-            const r = await fetch(`/api/agent/init?email=${encodeURIComponent(agentEmail)}`).then(res => res.json());
-            if (this._success) this._success(r);
+          _call: function(apiName, ...args) {
+            const runner = {
+              _success: null,
+              _failure: null,
+              withSuccessHandler: function(cb) { this._success = cb; return this; },
+              withFailureHandler: function(cb) { this._failure = cb; return this; }
+            };
+
+            // Execute the fetch immediately but wait for handlers to be attached if needed
+            // Actually, in Apps Script style, the handlers are attached BEFORE the call? 
+            // No, google.script.run.withSuccessHandler(cb).apiMethod()
+            // So we need to return the runner which has the methods.
+            return runner;
           },
-          apiSetAgentStatus: async function(s) {
-            const r = await fetch(`/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
-              method: 'PATCH', headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({estado: s})
-            }).then(res => res.json());
-            if (this._success) this._success(r);
+          withSuccessHandler: function(cb) {
+            const runner = this._getRunner();
+            runner._success = cb;
+            return runner;
           },
-          apiTakeNextLead: async function() {
-            const r = await fetch(`/api/agent/take?email=${encodeURIComponent(agentEmail)}`, {method: 'POST'}).then(res => res.json());
-            if (this._success) this._success(r);
+          withFailureHandler: function(cb) {
+            const runner = this._getRunner();
+            runner._failure = cb;
+            return runner;
           },
-          apiGetFollowups: async function() {
-            const r = await fetch(`/api/leads/followups?email=${encodeURIComponent(agentEmail)}`).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-          apiListSalesForSeller: async function() {
-            const r = await fetch(`/api/seller/sales?email=${encodeURIComponent(agentEmail)}`).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-          apiListSalesForBackoffice: async function(filter) {
-            const r = await fetch(`/api/sales/backoffice?q=${encodeURIComponent(filter?.q || '')}`).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-          apiGetLeadDetails: async function(id) {
-            const r = await fetch(`/api/leads/${id}`).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-          apiPhoneDupContext: async function(phone, mid) {
-            const r = await fetch(`/api/leads/dup_check?phone=${phone}&message_id=${mid}`).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-          apiReleaseLead: async function(mid, reason) {
-            const r = await fetch(`/api/leads/${mid}/release?email=${encodeURIComponent(agentEmail)}`, {
-              method: 'POST', headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({motivo: reason})
-            }).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-          apiCloseLead: async function(mid, status, notes, saleData, tip, resType, res, motive, fuWhen, fuType) {
-             const r = await fetch(`/api/leads/${mid}/status`, {
-              method: 'PATCH', headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                estado: status, notas: notes, sale_data: saleData,
-                tip_tipo: tip, tip_resultado: resType, tip_motivo: res, tip_submotivo: motive,
-                rellamar_en: fuWhen, reagendar_tipo: fuType
+          _getRunner: function() {
+            const runner = {
+              _success: null,
+              _failure: null,
+              withSuccessHandler: function(cb) { this._success = cb; return this; },
+              withFailureHandler: function(cb) { this._failure = cb; return this; }
+            };
+
+            const apiMap = {
+              apiGetInitialData: (login) => fetch(`/api/agent/init?email=${encodeURIComponent(agentEmail)}${login ? '&login=true' : ''}`),
+              apiSetAgentStatus: (s) => fetch(`/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
+                method: 'PATCH', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({estado: s})
+              }),
+              apiTakeNextLead: () => fetch(`/api/agent/take?email=${encodeURIComponent(agentEmail)}`, {method: 'POST'}),
+              apiGetFollowups: () => fetch(`/api/leads/followups?email=${encodeURIComponent(agentEmail)}`),
+              apiListSalesForSeller: () => fetch(`/api/seller/sales?email=${encodeURIComponent(agentEmail)}`),
+              apiListSalesForBackoffice: (filter) => fetch(`/api/sales/backoffice?q=${encodeURIComponent(filter?.q || '')}`),
+              apiGetLeadDetails: (id) => fetch(`/api/leads/${id}`),
+              apiPhoneDupContext: (phone, mid) => fetch(`/api/leads/dup_check?phone=${phone}&message_id=${mid}`),
+              apiReleaseLead: (mid, reason) => fetch(`/api/leads/${mid}/release?email=${encodeURIComponent(agentEmail)}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({motivo: reason})
+              }),
+              apiCloseLead: (mid, status, notes, saleData, tip, resType, res, motive, fuWhen, fuType) => fetch(`/api/leads/${mid}/status`, {
+                method: 'PATCH', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                  estado: status, notas: notes, sale_data: saleData,
+                  tip_tipo: tip, tip_resultado: resType, tip_motivo: res, tip_submotivo: motive,
+                  rellamar_en: fuWhen, reagendar_tipo: fuType
+                })
+              }),
+              apiSaveManualSale: (saleData, notes, tip, resType, res, motive) => fetch(`/api/sales/manual`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                  ...saleData, agente: agentEmail, message_id: 'manual-' + Date.now(),
+                  producto: saleData.Producto || saleData.TipoVenta || 'VENTA',
+                  tipo_venta: saleData.TipoVenta || 'VENTA',
+                  vendedor_comentarios: saleData.VendedorComentarios,
+                  tip_tipo: tip, tip_resultado: resType, tip_motivo: res, tip_submotivo: motive
+                })
+              }),
+              apiSetSellerComment: (mid, txt) => fetch(`/api/seller/sales/${mid}/comment?email=${encodeURIComponent(agentEmail)}`, {
+                 method: 'PATCH', headers: {'Content-Type': 'application/json'},
+                 body: JSON.stringify({comentario: txt})
+              }),
+              apiMarkSaleReviewed: (mid, st, notas) => fetch(`/api/sales/${mid}/backoffice?status=${encodeURIComponent(st)}&notas=${encodeURIComponent(notas || '')}&agent=${encodeURIComponent(agentEmail)}`, {
+                method: 'PATCH'
               })
-            }).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-          apiSaveManualSale: async function(saleData, notes, tip, resType, res, motive) {
-             const r = await fetch(`/api/sales/manual`, {
-              method: 'POST', headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                ...saleData, agente: agentEmail, message_id: 'manual-' + Date.now(),
-                producto: saleData.Producto || saleData.TipoVenta || 'VENTA',
-                tipo_venta: saleData.TipoVenta || 'VENTA',
-                vendedor_comentarios: saleData.VendedorComentarios,
-                tip_tipo: tip, tip_resultado: resType, tip_motivo: res, tip_submotivo: motive
-              })
-            }).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-          apiSetSellerComment: async function(mid, txt) {
-             const r = await fetch(`/api/seller/sales/${mid}/comment?email=${encodeURIComponent(agentEmail)}`, {
-               method: 'PATCH', headers: {'Content-Type': 'application/json'},
-               body: JSON.stringify({comentario: txt})
-             }).then(res => res.json());
-            if (this._success) this._success(r);
-          },
-           apiMarkSaleReviewed: async function(mid, st, notas) {
-             const r = await fetch(`/api/sales/${mid}/backoffice?status=${encodeURIComponent(st)}&notas=${encodeURIComponent(notas || '')}&agent=${encodeURIComponent(agentEmail)}`, {method: 'PATCH'}).then(res => res.json());
-            if (this._success) this._success(r);
+            };
+
+            Object.keys(apiMap).forEach(method => {
+              runner[method] = async (...args) => {
+                try {
+                  const response = await apiMap[method](...args);
+                  const data = await response.json();
+                  if (runner._success) runner._success(data);
+                } catch (err) {
+                  console.error(`API Error (${method}):`, err);
+                  if (runner._failure) runner._failure(err);
+                  // Ensure loader is hidden on error if it was shown
+                  const loader = document.getElementById('loader');
+                  if (loader) loader.style.display = 'none';
+                }
+              };
+            });
+
+            return runner;
           }
         }
       }
@@ -405,7 +420,14 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
     function init() {
       const s = document.getElementById('tip-type');
       Object.keys(TYPES).sort().forEach(k => s.add(new Option(k, k)));
-      refresh();
+      
+      let isFirstLogin = false;
+      if (!sessionStorage.getItem('logged_in')) {
+        sessionStorage.setItem('logged_in', 'true');
+        isFirstLogin = true;
+      }
+      
+      refresh(isFirstLogin);
       setInterval(() => softRefresh(), 5000); // 5s polling for instant auto-assignment
     }
 
@@ -425,12 +447,12 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
         if (typeof renderActiveTab === 'function') renderActiveTab();
     }
 
-    function refresh() {
+    function refresh(isLogin = false) {
       document.getElementById('loader').style.display = 'flex';
       google.script.run.withSuccessHandler(res => {
         document.getElementById('loader').style.display = 'none';
         processInitData(res);
-      }).apiGetInitialData();
+      }).apiGetInitialData(isLogin);
     }
 
     function softRefresh() {

@@ -5,8 +5,7 @@
  */
 
 // ─── CONFIGURATION ──────────────────────────────────────
-const RAILWAY_URL = 'https://web-production-cbfe.up.railway.app/';
-const API_KEY     = 'gmail2railway2025';
+// Config now provided by Config.gs
 
 const BATCH_SIZE  = 100;
 
