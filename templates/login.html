@@ -7,67 +7,119 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; background: #0f1117; color: #e8eaf2; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .card { background: #1a1d27; border: 1px solid #2e3147; border-radius: 16px; padding: 40px 36px; width: 360px; text-align: center; }
-    h1 { font-size: 22px; font-weight: 700; color: #4f6ef7; margin-bottom: 8px; }
-    p  { font-size: 13px; color: #8b8fad; margin-bottom: 28px; }
+    body { font-family: 'Inter', sans-serif; background: #050814; color: #e8eaf2; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: rgba(15, 27, 51, .72); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, .18); border-radius: 20px; padding: 40px 36px; width: 380px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    h1 { font-size: 24px; font-weight: 800; color: #00aef0; margin-bottom: 8px; letter-spacing: -0.5px; }
+    p  { font-size: 14px; color: #64748b; margin-bottom: 28px; }
     input {
-      width: 100%; padding: 10px 14px; border-radius: 8px;
-      border: 1px solid #2e3147; background: #232637; color: #e8eaf2;
-      font-size: 14px; margin-bottom: 16px; font-family: inherit;
+      width: 100%; padding: 12px 16px; border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, .18); background: rgba(2, 6, 23, .35); color: #fff;
+      font-size: 15px; margin-bottom: 16px; font-family: inherit; transition: 0.2s;
     }
-    input:focus { outline: none; border-color: #4f6ef7; }
+    input:focus { outline: none; border-color: #00aef0; box-shadow: 0 0 0 4px rgba(0, 174, 240, 0.15); }
     button {
-      width: 100%; padding: 11px; background: #4f6ef7; color: #fff;
-      border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
-      cursor: pointer; transition: background 0.2s;
+      width: 100%; padding: 12px; background: #00aef0; color: #fff;
+      border: none; border-radius: 12px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: 0.2s;
     }
-    button:hover { background: #3d5ce0; }
-    .role-select { display: flex; gap: 8px; margin-bottom: 16px; }
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+    .hidden { display: none; }
     .role-btn {
-      flex: 1; padding: 8px; background: #232637; border: 1px solid #2e3147;
-      color: #8b8fad; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(148, 163, 184, 0.1);
+      color: #e2e8f0; margin-bottom: 8px; font-weight: 600; text-align: left; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
     }
-    .role-btn.active { background: #1e3a8a22; border-color: #4f6ef7; color: #93c5fd; }
+    .role-btn:hover { background: rgba(0, 174, 240, 0.1); border-color: #00aef0; }
+    .role-btn span { font-size: 11px; opacity: 0.5; font-weight: 400; }
+    #loader { border: 3px solid rgba(148,163,184,0.1); border-top: 3px solid #00aef0; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 20px; display: none; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" id="loginBox">
     <h1>🔵 Tigo Leads</h1>
     <p>Ingresa tu email corporativo para continuar</p>
-
-    <div class="role-select">
-      <button class="role-btn active" id="btnAgent" onclick="setRole('agent')">Agente</button>
-      <button class="role-btn" id="btnCoord" onclick="setRole('coordinator')">Coordinador</button>
-    </div>
-
+    
+    <div id="loader"></div>
     <input type="email" id="emailInput" placeholder="correo@empresa.com" autocomplete="email">
-    <button onclick="login()">Ingresar</button>
+    <button id="btnLogin" onclick="login()">Ingresar</button>
+  </div>
+
+  <div class="card hidden" id="roleBox">
+    <h1 id="welcomeTitle">👋 Hola</h1>
+    <p>Selecciona tu área de trabajo:</p>
+    <div id="roleButtons" style="display:flex; flex-direction:column; gap:4px"></div>
+    <button style="background:transparent; color:#64748b; font-size:12px; font-weight:500; margin-top:16px" onclick="location.reload()">← Usar otra cuenta</button>
   </div>
 
   <script>
-    let role = 'agent';
-    function setRole(r) {
-      role = r;
-      document.getElementById('btnAgent').classList.toggle('active', r === 'agent');
-      document.getElementById('btnCoord').classList.toggle('active', r === 'coordinator');
-    }
-
-    function login() {
-      const email = document.getElementById('emailInput').value.trim();
+    async function login() {
+      const email = document.getElementById('emailInput').value.trim().toLowerCase();
       if (!email || !email.includes('@')) {
-        alert('Ingresa un email válido.');
+        alert('Ingresa un email corporativo válido.');
         return;
       }
-      localStorage.setItem('agent_email', email);
-      location.href = role === 'coordinator'
-        ? `/coordinator?email=${encodeURIComponent(email)}`
-        : `/leaddesk?email=${encodeURIComponent(email)}`;
+
+      document.getElementById('loader').style.display = 'block';
+      document.getElementById('btnLogin').disabled = true;
+
+      try {
+        const res = await fetch(`/api/agent/info?email=${encodeURIComponent(email)}`).then(r => r.json());
+        if (!res.success || !res.agent) {
+          alert('No se pudo verificar tu cuenta. Contacta al administrador.');
+          return;
+        }
+
+        const agent = res.agent;
+        localStorage.setItem('agent_email', email);
+        
+        const role = (agent.role || 'AGENT').toUpperCase();
+
+        if (role === 'AGENT') {
+          // Redirect immediately
+          location.href = `/leaddesk?email=${encodeURIComponent(email)}`;
+          return;
+        }
+
+        // Multiple options for Coord/Admin
+        document.getElementById('loginBox').classList.add('hidden');
+        document.getElementById('roleBox').classList.remove('hidden');
+        document.getElementById('welcomeTitle').textContent = `👋 Hola, ${email.split('@')[0]}`;
+        
+        const btnBox = document.getElementById('roleButtons');
+        btnBox.innerHTML = '';
+
+        if (role === 'ADMIN') {
+          btnBox.innerHTML += createRoleBtn('Panel de Control', 'Administración Global', `/admin?email=${encodeURIComponent(email)}`);
+          btnBox.innerHTML += createRoleBtn('Torre de Control', 'Gestión de Equipos', `/coordinator?email=${encodeURIComponent(email)}`);
+          btnBox.innerHTML += createRoleBtn('Portal Agente', 'Gestión de Leads', `/leaddesk?email=${encodeURIComponent(email)}`);
+        } else if (role === 'COORD') {
+          btnBox.innerHTML += createRoleBtn('Torre de Control', 'Gestión de Equipos', `/coordinator?email=${encodeURIComponent(email)}`);
+          btnBox.innerHTML += createRoleBtn('Portal Agente', 'Gestión de Leads', `/leaddesk?email=${encodeURIComponent(email)}`);
+        }
+
+      } catch (e) {
+        console.error(e);
+        alert('Error de conexión con el servidor.');
+      } finally {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('btnLogin').disabled = false;
+      }
+    }
+
+    function createRoleBtn(title, sub, url) {
+      return `<button class="role-btn" onclick="location.href='${url}'">
+        <div>${title}<br><span>${sub}</span></div>
+        <div style="opacity:0.3">→</div>
+      </button>`;
     }
 
     document.getElementById('emailInput').addEventListener('keypress', e => {
       if (e.key === 'Enter') login();
     });
+    
+    // Auto-fill if exists
+    const saved = localStorage.getItem('agent_email');
+    if (saved) document.getElementById('emailInput').value = saved;
   </script>
 </body>
 </html>

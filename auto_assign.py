@@ -1,10 +1,9 @@
-"""
-auto_assign.py — Assign unassigned leads to available agents
-Runs after a new lead arrives or an agent goes ACTIVO.
-"""
+import logging
 from database import execute, fetchone
 from datetime import datetime, timezone
 from utils.settings import get_setting
+
+logger = logging.getLogger(__name__)
 
 CONNECTED_SECONDS = 90
 MAX_LEADS_DEFAULT = 1
@@ -17,7 +16,9 @@ def run():
     3. Find NUEVO leads with no agent
     4. Assign round-robin by (open_leads ASC, last_assigned ASC)
     """
-    if get_setting("auto_assign_enabled", "true") != "true":
+    enabled = get_setting("auto_assign_enabled", "true")
+    if enabled != "true":
+        logger.info("Auto-assign skipped: disabled in settings")
         return {"assigned": 0, "status": "disabled"}
 
     now = datetime.now(timezone.utc)
@@ -40,6 +41,7 @@ def run():
     )
 
     if not agents:
+        logger.info("Auto-assign: No eligible agents found (ACTIVO + seen in 90s)")
         return {"assigned": 0}
 
     # Load free leads
@@ -54,7 +56,10 @@ def run():
     )
 
     if not free_leads:
+        logger.info(f"Auto-assign: Found {len(agents)} agents but 0 NUEVO leads")
         return {"assigned": 0}
+
+    logger.info(f"Auto-assign: Starting assignment of {len(free_leads)} leads to {len(agents)} agents")
 
     assigned = 0
     agent_idx = 0

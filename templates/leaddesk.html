@@ -604,6 +604,7 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
     function updateResultados() {
       const c = document.getElementById('selConsultaIncial').value;
       const r = document.getElementById('selResultado').value;
+      gestType = r.toUpperCase();
       const selM = document.getElementById('selMotivo');
       selM.innerHTML = '<option value="">Selecciona Resultado...</option>' + Object.keys(TYPES[c][r]).map(m => `<option value="${m}">${m}</option>`).join('');
       document.getElementById('selSubMotivo').innerHTML = '<option value="-">-</option>';
@@ -646,22 +647,32 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
       const s = (id, l, opt) => `<div class="field-block"><label class="lbl">${l}</label><select id="${id}"><option value="">-</option>${opt.map(o => `<option value="${o}">${o}</option>`).join('')}</select></div>`;
 
       let html = `<div class="form-grid">
-        ${f('f_nombre', 'Nombre completo', currentLead.nombre)}
-        ${f('f_cedula', 'Cédula', currentLead.documento)}
-        ${f('f_tel', 'Teléfono contacto', currentLead.linea)}
-        ${f('f_email', 'Email')}
-        ${f('f_dpto', 'Departamento')}
+        ${f('f_nombre', 'Nombre completo', currentLead.nombre || '')}
+        ${f('f_cedula', 'Cédula', currentLead.documento || '')}
+        ${f('f_tel', 'Teléfono contacto', currentLead.linea || '')}
+        ${f('f_email', 'Email', currentLead.email || '')}
+        ${f('f_nacimiento', 'Fecha Nacimiento (dd/mm/aaaa)')}
+        ${s('f_dpto', 'Departamento', ['Montevideo', 'Canelones', 'Maldonado', 'Rocha', 'Treinta y Tres', 'Cerro Largo', 'Rivera', 'Artigas', 'Salto', 'Paysandú', 'Río Negro', 'Soriano', 'Colonia', 'San José', 'Flores', 'Florida', 'Lavalleja', 'Durazno', 'Tacuarembó'])}
         ${f('f_ciudad', 'Ciudad/Localidad')}
+        ${f('f_barrio', 'Barrio')}
         ${f('f_calle', 'Calle')}
-        ${f('f_nro', 'Puerta/Nro')}
-        ${s('f_pago', 'Forma de Pago', ['FACTURA', 'MERCADO PAGO', 'CONTADO'])}
-        ${f('f_plan', 'Plan Vendido')}
+        ${f('f_nro', 'Nro Puerta')}
+        ${f('f_apto', 'Apto/Piso')}
+        ${f('f_esq1', 'Esquina 1')}
+        ${f('f_esq2', 'Esquina 2')}
+        ${s('f_pago', 'Forma de Pago', ['FACTURA', 'MERCADO PAGO', 'CONTADO', 'TARJETA CREDITO', 'DEPOSITO GESTIONADO'])}
+        ${f('f_plan', 'Plan Vendido', currentLead.plan || '')}
+        ${f('f_equipo', 'Equipo Vendido', currentLead.equipo || '')}
       </div>`;
       
-      if (type === 'alta' || type === 'porta') {
-        html += `<div class="form-grid" style="margin-top:10px">
-          ${s('f_envio', 'Tipo Envío', ['DOMICILIO', 'PICKUP', 'CADETE'])}
-          ${f('f_envio_det', 'Detalles Envío')}
+      if (type === 'alta' || type === 'porta' || type === 'migracion') {
+        html += `<div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--line)">
+          <label class="lbl" style="color:var(--accent)">DATOS DE ENVÍO / PORTABILIDAD</label>
+          <div class="form-grid" style="margin-top:10px">
+            ${s('f_envio', 'Tipo Envío', ['DOMICILIO', 'PICKUP', 'CADETE', 'SIN ENVIO'])}
+            ${f('f_envio_det', 'Detalles/Observaciones Envío')}
+            ${type === 'porta' ? f('f_nip', 'NIP Portabilidad') : ''}
+          </div>
         </div>`;
       }
 
@@ -701,19 +712,29 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
           tipo_venta: resVal,
           cliente_nombre: document.getElementById('f_nombre')?.value || currentLead.nombre,
           cliente_cedula: document.getElementById('f_cedula')?.value || currentLead.documento,
-          cliente_email: document.getElementById('f_email')?.value,
-          cliente_telefono: document.getElementById('f_tel')?.value,
+          cliente_email: document.getElementById('f_email')?.value || currentLead.email,
+          cliente_telefono: document.getElementById('f_tel')?.value || currentLead.linea,
+          cliente_nacimiento: document.getElementById('f_nacimiento')?.value,
           dir_depto: document.getElementById('f_dpto')?.value,
           dir_ciudad: document.getElementById('f_ciudad')?.value,
+          dir_barrio: document.getElementById('f_barrio')?.value,
           dir_calle: document.getElementById('f_calle')?.value,
           dir_puerta: document.getElementById('f_nro')?.value,
+          dir_apto: document.getElementById('f_apto')?.value,
+          dir_esq1: document.getElementById('f_esq1')?.value,
+          dir_esq2: document.getElementById('f_esq2')?.value,
           venta_plan: document.getElementById('f_plan')?.value,
+          venta_equipo: document.getElementById('f_equipo')?.value,
           venta_pago: document.getElementById('f_pago')?.value,
+          envio_tipo: document.getElementById('f_envio')?.value,
+          envio_detalles: document.getElementById('f_envio_det')?.value,
+          porta_nip: document.getElementById('f_nip')?.value,
           vendedor_comentarios: notas,
           tip_tipo: consulta,
           tip_resultado: tipoRes,
           tip_motivo: resVal,
-          tip_submotivo: subMotivo !== '-' ? subMotivo : ''
+          tip_submotivo: subMotivo !== '-' ? subMotivo : '',
+          origen: currentLead.origen
         };
         await fetch('/api/sales', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(saleBody) });
       }

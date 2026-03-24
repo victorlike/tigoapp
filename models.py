@@ -16,6 +16,19 @@ class LeadCreate(BaseModel):
     fecha_gmail: Optional[datetime] = None
     tracking: Optional[str] = None
     gaid: Optional[str] = None
+    origen: Optional[str] = None
+    url: Optional[str] = None
+    equipo: Optional[str] = None
+    utm: Optional[str] = None
+    horario: Optional[str] = None
+    timestamp_sheet: Optional[str] = None
+    documento: Optional[str] = None
+    compania: Optional[str] = None
+    operacion: Optional[str] = None
+    tsource: Optional[str] = None
+    modal: Optional[str] = None
+    direccion: Optional[str] = None
+    email: Optional[str] = None
 
     class Config:
         coerce_numbers_to_str = True

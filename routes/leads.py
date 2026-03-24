@@ -43,14 +43,23 @@ def create_lead(lead: LeadCreate):
 
     execute(
         """
-        INSERT INTO leads (message_id, nombre, linea, plan, fecha_gmail, tracking, gaid)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO leads (
+            message_id, nombre, linea, plan, fecha_gmail, tracking, gaid,
+            origen, url, equipo, utm, horario, timestamp_sheet,
+            documento, compania, operacion, tsource, modal, direccion, email
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
-        (lead.message_id, lead.nombre, lead.linea, lead.plan, lead.fecha_gmail, lead.tracking, lead.gaid)
+        (
+            lead.message_id, lead.nombre, lead.linea, lead.plan, lead.fecha_gmail, lead.tracking, lead.gaid,
+            lead.origen, lead.url, lead.equipo, lead.utm, lead.horario, lead.timestamp_sheet,
+            lead.documento, lead.compania, lead.operacion, lead.tsource, lead.modal, lead.direccion, lead.email
+        )
     )
 
     # Try auto-assign immediately
-    auto_assign.run()
+    res = auto_assign.run()
+    logger.info(f"Auto-assign result for {lead.message_id}: {res}")
 
     return {"success": True, "message": "Lead created"}
 

@@ -1,10 +1,11 @@
 """
 routes/sales.py — Sales logging
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from models import SaleCreate
 from database import execute, fetchone
 from auth import verify_apps_script_key
+from utils.mailer import send_backoffice_email
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,8 +14,8 @@ router = APIRouter()
 
 
 @router.post("")
-def create_sale(sale: SaleCreate):
-    """Register a new sale."""
+def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
+    """Register a new sale with full metadata."""
     from utils.logic import normalize_product_group, get_phone_suffix
     
     # 1. Normalize Product
@@ -36,27 +37,49 @@ def create_sale(sale: SaleCreate):
         if existing:
             return {"success": False, "message": "Duplicado detectado: Ya registraste esta venta hace instantes."}
 
-    execute(
-        """
-        INSERT INTO sales (
-            message_id, agente, producto, tipo_venta, tipo_venta_original,
-            cliente_nombre, cliente_cedula, cliente_email, cliente_telefono,
-            dir_depto, dir_ciudad, dir_barrio, dir_calle,
-            venta_plan, venta_equipo, venta_pago, vendedor_comentarios,
-            tip_tipo, tip_resultado, tip_motivo, tip_submotivo,
-            created_at
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
-        """,
-        (
-            sale.message_id, sale.agente, producto, sale.tipo_venta,
-            sale.tipo_venta_original, sale.cliente_nombre, sale.cliente_cedula,
-            sale.cliente_email, sale.cliente_telefono,
-            sale.dir_depto, sale.dir_ciudad, sale.dir_barrio, sale.dir_calle,
-            sale.venta_plan, sale.venta_equipo, sale.venta_pago,
-            sale.vendedor_comentarios,
-            sale.tip_tipo, sale.tip_resultado, sale.tip_motivo, sale.tip_submotivo
-        )
+    # 3. Comprehensive Insert (60+ fields)
+    query = """
+    INSERT INTO sales (
+        message_id, agente, producto, tipo_venta, tipo_venta_original,
+        cliente_nombre, cliente_cedula, cliente_email, cliente_telefono,
+        dir_depto, dir_ciudad, dir_barrio, dir_calle,
+        venta_plan, venta_equipo, venta_pago, vendedor_comentarios,
+        tip_tipo, tip_resultado, tip_motivo, tip_submotivo,
+        cliente_vendedor, cliente_nacimiento, dir_loc, dir_puerta, dir_tipo,
+        dir_apto, dir_esq1, dir_esq2, venta_vigencia, venta_clc,
+        venta_llevaequipo, venta_precio, venta_cuotas, dg_solicita, dg_importe,
+        dg_corresponde, envio_tipo, envio_detalles, cobro_importe, cobro_motivo,
+        cobro_linkemail, link_enviado, nombre_link, plateran_cargado, plateran_so,
+        estado_pedido, controldoc_subido, controldoc_estado, porta_nip,
+        vendedor_comentarios_por, vendedor_comentarios_at, backoffice_status,
+        backoffice_sub_status, backoffice_agent, backoffice_at, backoffice_notas,
+        origen, valor_plan, valor_telefono, revenue, revenuedolar,
+        bo_email_enviado_at, suptipo_reco, created_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
+    """
+    params = (
+        sale.message_id, sale.agente, producto, sale.tipo_venta, sale.tipo_venta_original,
+        sale.cliente_nombre, sale.cliente_cedula, sale.cliente_email, sale.cliente_telefono,
+        sale.dir_depto, sale.dir_ciudad, sale.dir_barrio, sale.dir_calle,
+        sale.venta_plan, sale.venta_equipo, sale.venta_pago, sale.vendedor_comentarios,
+        sale.tip_tipo, sale.tip_resultado, sale.tip_motivo, sale.tip_submotivo,
+        sale.cliente_vendedor, sale.cliente_nacimiento, sale.dir_loc, sale.dir_puerta, sale.dir_tipo,
+        sale.dir_apto, sale.dir_esq1, sale.dir_esq2, sale.venta_vigencia, sale.venta_clc,
+        sale.venta_llevaequipo, sale.venta_precio, sale.venta_cuotas, sale.dg_solicita, sale.dg_importe,
+        sale.dg_corresponde, sale.envio_tipo, sale.envio_detalles, sale.cobro_importe, sale.cobro_motivo,
+        sale.cobro_linkemail, sale.link_enviado, sale.nombre_link, sale.plateran_cargado, sale.plateran_so,
+        sale.estado_pedido, sale.controldoc_subido, sale.controldoc_estado, sale.porta_nip,
+        sale.vendedor_comentarios_por, sale.vendedor_comentarios_at, sale.backoffice_status,
+        sale.backoffice_sub_status, sale.backoffice_agent, sale.backoffice_at, sale.backoffice_notas,
+        sale.origen, sale.valor_plan, sale.valor_telefono, sale.revenue, sale.revenuedolar,
+        sale.bo_email_enviado_at, sale.suptipo_reco
     )
+    
+    execute(query, params)
+    
+    # Send email to backoffice in background
+    background_tasks.add_task(send_backoffice_email, sale)
+    
     return {"success": True}
 
 
