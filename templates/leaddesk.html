@@ -3,403 +3,307 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tigo Leads — Agente</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <title>Tigo LeadDesk · Agente</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .agent-nav { background: var(--surface); padding: 12px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .status-group { display: flex; gap: 8px; }
+    .status-btn { padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); }
+    .status-btn.active-activo { background: var(--green); color: white; border-color: var(--green); }
+    .status-btn.active-pausa { background: var(--orange); color: white; border-color: var(--orange); }
+    .status-btn.active-offline { background: var(--surface2); color: white; border-color: var(--muted); }
 
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #232637;
-      --border: #2e3147;
-      --accent: #4f6ef7;
-      --accent-hover: #3d5ce0;
-      --green: #22c55e;
-      --red: #ef4444;
-      --orange: #f97316;
-      --yellow: #eab308;
-      --text: #e8eaf2;
-      --muted: #8b8fad;
-      --radius: 12px;
-    }
+    .control-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; }
+    .main-btn { padding: 12px 24px; border-radius: 8px; font-weight: 800; font-size: 14px; flex: 1; text-align: center; cursor: pointer; border: none; transition: 0.2s; }
+    .btn-green { background: var(--green); color: white; }
+    .btn-green:hover { filter: brightness(1.1); }
+    
+    .tabs { display: flex; gap: 4px; background: var(--surface2); padding: 4px; border-radius: 8px; margin-bottom: 20px; }
+    .tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; color: var(--muted); transition: 0.2s; }
+    .tab.active { background: var(--surface); color: white; box-shadow: var(--shadow); }
 
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    .lead-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border); }
+    .lead-info { display: flex; flex-direction: column; gap: 2px; }
+    .lead-info .name { font-weight: 700; font-size: 14px; }
+    .lead-info .sub { font-size: 11px; color: var(--muted); font-weight: 600; }
 
-    /* ─── Loader ─── */
-    #loader {
-      position: fixed; inset: 0; background: var(--bg);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 9999; gap: 16px;
-    }
-    .spinner {
-      width: 48px; height: 48px;
-      border: 4px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
+    #loader { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ─── Navbar ─── */
-    nav {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-      height: 56px;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .nav-brand { font-size: 18px; font-weight: 700; color: var(--accent); }
-    .nav-right { display: flex; align-items: center; gap: 12px; }
-    .agent-badge {
-      background: var(--surface2); border: 1px solid var(--border);
-      padding: 6px 14px; border-radius: 999px; font-size: 13px; color: var(--muted);
-    }
-    .agent-badge span { color: var(--text); font-weight: 600; }
-
-    /* ─── Status toggle ─── */
-    .status-btn {
-      padding: 7px 16px; border-radius: 999px; border: none; cursor: pointer;
-      font-size: 13px; font-weight: 600; transition: all 0.2s;
-    }
-    .status-btn.activo  { background: var(--green);  color: #fff; }
-    .status-btn.offline { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
-
-    /* ─── Main layout ─── */
-    main { padding: 24px; max-width: 1100px; margin: 0 auto; }
-
-    /* ─── Stats bar ─── */
-    .stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-    .stat-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 16px 22px; flex: 1; min-width: 130px;
-    }
-    .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-    .stat-card .value { font-size: 26px; font-weight: 700; }
-    .stat-card.accent .value { color: var(--accent); }
-    .stat-card.green  .value { color: var(--green);  }
-    .stat-card.orange .value { color: var(--orange); }
-
-    /* ─── Section title ─── */
-    .section-title { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
-
-    /* ─── Lead card ─── */
-    .leads-grid { display: flex; flex-direction: column; gap: 12px; }
-    .lead-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 18px 20px;
-      display: grid; grid-template-columns: 1fr auto;
-      gap: 12px; align-items: start;
-      transition: border-color 0.2s;
-    }
-    .lead-card:hover { border-color: var(--accent); }
-    .lead-name { font-size: 15px; font-weight: 600; }
-    .lead-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
-    .lead-meta b { color: var(--text); }
-
-    /* ─── Estado badge ─── */
-    .badge {
-      display: inline-block; padding: 3px 10px; border-radius: 999px;
-      font-size: 11px; font-weight: 600; letter-spacing: .04em;
-    }
-    .badge-asignado  { background: #1e3a8a22; color: #93c5fd; border: 1px solid #1e40af44; }
-    .badge-nuevo     { background: #14532d22; color: #86efac; border: 1px solid #16653344; }
-    .badge-seguimiento { background: #78350f22; color: #fcd34d; border: 1px solid #92400e44; }
-
-    /* ─── Actions ─── */
-    .lead-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .btn {
-      padding: 7px 16px; border-radius: 8px; border: none; cursor: pointer;
-      font-size: 13px; font-weight: 500; transition: all 0.15s;
-    }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-    .btn-ghost:hover { border-color: var(--accent); }
-    .btn-danger  { background: #7f1d1d22; color: #fca5a5; border: 1px solid #7f1d1d44; }
-    .btn-danger:hover { background: #7f1d1d44; }
-
-    /* ─── Empty state ─── */
-    .empty { text-align: center; padding: 60px 0; color: var(--muted); }
-    .empty-icon { font-size: 48px; margin-bottom: 12px; }
-
-    /* ─── Toast ─── */
-    #toast-root { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px; z-index: 9998; }
-    .toast {
-      background: var(--surface2); border: 1px solid var(--border);
-      padding: 12px 18px; border-radius: 10px; font-size: 13px;
-      animation: slideIn 0.25s ease;
-      max-width: 340px;
-    }
-    .toast.ok  { border-color: var(--green);  color: var(--green);  }
-    .toast.err { border-color: var(--red);    color: var(--red);    }
-    @keyframes slideIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-    /* ─── Modal ─── */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.65);
-      display: none; align-items: center; justify-content: center; z-index: 1000;
-    }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
     .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 16px; padding: 28px; width: 460px; max-width: 95vw;
-    }
-    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-    .form-group select, .form-group textarea, .form-group input {
-      width: 100%; background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); border-radius: 8px; padding: 8px 12px;
-      font-size: 14px; font-family: inherit;
-    }
-    .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--accent); }
-    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 400px; max-width: 90vw; }
+    select, textarea { width: 100%; padding: 10px; border-radius: 6px; background: var(--surface2); border: 1px solid var(--border); color: white; margin-top: 4px; font-family: inherit; }
   </style>
 </head>
 <body>
+  <div id="loader"><div class="spinner"></div><div>Preparando tu escritorio...</div></div>
 
-<!-- Loader -->
-<div id="loader">
-  <div class="spinner"></div>
-  <div style="color: var(--muted); font-size: 14px;">Cargando datos...</div>
-</div>
-
-<!-- Navbar -->
-<nav>
-  <div class="nav-brand">🔵 Tigo Leads</div>
-  <div class="nav-right">
-    <div class="agent-badge">Agente: <span id="agentEmail">—</span></div>
-    <button class="status-btn offline" id="statusBtn" onclick="toggleStatus()">● OFFLINE</button>
-  </div>
-</nav>
-
-<!-- Main -->
-<main>
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card accent">
-      <div class="label">En cola</div>
-      <div class="value" id="queueCount">—</div>
-    </div>
-    <div class="stat-card green">
-      <div class="label">Mis leads</div>
-      <div class="value" id="myLeadsCount">—</div>
+  <div class="agent-nav">
+    <div class="brand">🔵 Tigo LeadDesk</div>
+    <div class="status-group">
+      <div id="emailDisplay" style="margin-right:12px; font-size:12px; color:var(--muted); font-weight:700"></div>
+      <button class="status-btn" id="btn-ACTIVO" onclick="setStatus('ACTIVO')">ACTIVO</button>
+      <button class="status-btn" id="id-PAUSA" onclick="setStatus('PAUSA')">PAUSA</button>
+      <button class="status-btn" id="btn-OFFLINE" onclick="setStatus('OFFLINE')">OFFLINE</button>
     </div>
   </div>
 
-  <!-- My leads -->
-  <div class="section-title">Mis Leads Activos</div>
-  <div class="leads-grid" id="leadsGrid">
-    <div class="empty">
-      <div class="empty-icon">📭</div>
-      <div>Cargando leads...</div>
-    </div>
-  </div>
-</main>
-
-<!-- Close lead modal -->
-<div class="modal-overlay" id="closeModal">
-  <div class="modal">
-    <h3>Cerrar Lead</h3>
-    <input type="hidden" id="closeMid">
-    <div class="form-group">
-      <label>Estado</label>
-      <select id="closeEstado">
-        <option value="NO VENTA">No Venta</option>
-        <option value="VENTA">Venta</option>
-        <option value="SEGUIMIENTO">Seguimiento</option>
-        <option value="NO CONTACTO">No Contacto</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Resultado / Notas</label>
-      <textarea id="closeResultado" rows="3" placeholder="Opcional..."></textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="submitClose()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toasts -->
-<div id="toast-root"></div>
-
-<script>
-  const API = '';               // empty = same origin (Railway)
-  let agentEmail = '';
-  let agentEstado = 'OFFLINE';
-  let heartbeatInterval = null;
-
-  // ─── Init ───────────────────────────────────────────
-  async function init() {
-    // For now, ask email from URL param or prompt
-    const params = new URLSearchParams(location.search);
-    agentEmail = params.get('email') || localStorage.getItem('agent_email') || '';
-
-    if (!agentEmail) {
-      agentEmail = prompt('Ingresa tu email:');
-      if (!agentEmail) { document.getElementById('loader').innerHTML = '<p style="color:#ef4444">Email requerido.</p>'; return; }
-    }
-
-    localStorage.setItem('agent_email', agentEmail);
-    document.getElementById('agentEmail').textContent = agentEmail;
-
-    await loadData();
-    startHeartbeat();
-    document.getElementById('loader').style.display = 'none';
-  }
-
-  // ─── Load leads + queue ──────────────────────────────
-  async function loadData() {
-    try {
-      const [leadsRes, queueRes, agentRes] = await Promise.all([
-        fetch(`${API}/api/leads/mine?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
-        fetch(`${API}/api/leads/queue`).then(r => r.json()),
-        fetch(`${API}/api/agent/info?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
-      ]);
-
-      document.getElementById('queueCount').textContent = queueRes.count ?? '—';
-      document.getElementById('myLeadsCount').textContent = leadsRes.leads?.length ?? 0;
-
-      if (agentRes.agent) {
-        agentEstado = agentRes.agent.estado || 'OFFLINE';
-        updateStatusBtn();
-      }
-
-      renderLeads(leadsRes.leads || []);
-    } catch (e) {
-      showToast('Error de conexión: ' + e.message, 'err');
-    }
-  }
-
-  // ─── Render leads ────────────────────────────────────
-  function renderLeads(leads) {
-    const grid = document.getElementById('leadsGrid');
-    if (!leads.length) {
-      grid.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div>No tienes leads activos</div></div>';
-      return;
-    }
-
-    grid.innerHTML = leads.map(l => `
-      <div class="lead-card">
-        <div>
-          <div class="lead-name">${esc(l.nombre || 'Sin nombre')}</div>
-          <div class="lead-meta">
-            📞 <b>${esc(l.linea || '—')}</b> &nbsp;|&nbsp;
-            📦 <b>${esc(l.plan || '—')}</b> &nbsp;|&nbsp;
-            🕑 ${formatDate(l.fecha_gmail)}
-          </div>
-          <div style="margin-top:8px">
-            <span class="badge badge-${l.estado?.toLowerCase().replace(' ','-')}">${esc(l.estado)}</span>
-          </div>
-        </div>
-        <div class="lead-actions">
-          <button class="btn btn-primary" onclick="openCloseModal('${esc(l.message_id)}')">Gestionar</button>
-        </div>
+  <main>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="label">Leads en Cola</div>
+        <div class="value" id="statQueue" style="color:var(--accent)">0</div>
       </div>
-    `).join('');
-  }
+      <div class="kpi-card">
+        <div class="label">Mis Activos</div>
+        <div class="value" id="statActive">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Seguimientos para hoy</div>
+        <div class="value" id="statFollowups">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="label">Ventas hoy</div>
+        <div class="value" id="statSales" style="color:var(--green)">0</div>
+      </div>
+    </div>
 
-  // ─── Agent status ────────────────────────────────────
-  async function toggleStatus() {
-    const newState = agentEstado === 'ACTIVO' ? 'OFFLINE' : 'ACTIVO';
-    try {
-      const res = await fetch(`${API}/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: newState })
-      }).then(r => r.json());
+    <div class="control-panel">
+      <button class="main-btn btn-green" onclick="takeLead()">🚀 TOMAR LEAD</button>
+      <button class="main-btn btn-outline" onclick="manualSale()">➕ VENTA MANUAL</button>
+    </div>
 
-      if (res.success) {
-        agentEstado = newState;
-        updateStatusBtn();
-        showToast('Estado: ' + newState, 'ok');
-      } else {
-        showToast(res.detail || 'Error al cambiar estado', 'err');
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('active')">Mis Leads</div>
+      <div class="tab" onclick="switchTab('followups')">Seguimientos</div>
+      <div class="tab" onclick="switchTab('sales')">Mis Ventas</div>
+      <div class="tab" onclick="switchTab('backoffice')">Backoffice</div>
+    </div>
+
+    <div class="card">
+      <div class="card-body" id="tabContent">
+        <!-- Content injected via JS -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Gestionar -->
+  <div class="modal-overlay" id="gestionModal">
+    <div class="modal">
+       <h3 id="modalTitle" style="margin-bottom:16px; font-size:16px">Gestionar Lead</h3>
+       <input type="hidden" id="modalMid">
+       <div style="margin-bottom:12px">
+         <label style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase">Resultado</label>
+         <select id="modalStatusSelect">
+           <option value="NO VENTA">No Venta</option>
+           <option value="VENTA">Venta</option>
+           <option value="SEGUIMIENTO">Seguimiento / Rellamada</option>
+           <option value="NO CONTACTO">No contesta / Buzón</option>
+         </select>
+       </div>
+       <div style="margin-bottom:16px">
+         <label style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase">Observaciones</label>
+         <textarea id="modalNotes" rows="3" placeholder="Nota de la gestión..."></textarea>
+       </div>
+       <div style="display:flex; gap:8px; justify-content:flex-end">
+         <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+         <button class="btn btn-primary" onclick="submitGestion()">Guardar Gestión</button>
+       </div>
+    </div>
+  </div>
+
+  <script>
+    let agentEmail = '';
+    let agentState = 'OFFLINE';
+    let currentTab = 'active';
+    let data = { active: [], followups: [], sales: [], backoffice: [] };
+
+    async function init() {
+      const params = new URLSearchParams(location.search);
+      agentEmail = params.get('email') || localStorage.getItem('agent_email');
+      
+      if (!agentEmail) {
+        agentEmail = prompt('Por favor, ingresa tu email corporativo:');
+        if (!agentEmail) {
+          document.body.innerHTML = '<div style="padding:100px; text-align:center">Email requerido para operar.</div>';
+          return;
+        }
       }
-    } catch (e) {
-      showToast('Error: ' + e.message, 'err');
+      localStorage.setItem('agent_email', agentEmail);
+      document.getElementById('emailDisplay').textContent = agentEmail;
+
+      await load();
+      document.getElementById('loader').style.display = 'none';
+      setInterval(load, 15000);
+      setInterval(heartbeat, 10000);
     }
-  }
 
-  function updateStatusBtn() {
-    const btn = document.getElementById('statusBtn');
-    if (agentEstado === 'ACTIVO') {
-      btn.textContent = '● ACTIVO';
-      btn.className = 'status-btn activo';
-    } else {
-      btn.textContent = '● OFFLINE';
-      btn.className = 'status-btn offline';
+    async function load() {
+      try {
+        const [leadsRes, queueRes, agentRes] = await Promise.all([
+          fetch(`/api/leads/mine?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
+          fetch(`/api/leads/queue`).then(r => r.json()),
+          fetch(`/api/agent/info?email=${encodeURIComponent(agentEmail)}`).then(r => r.json())
+        ]);
+
+        if (leadsRes.success) data = leadsRes;
+        document.getElementById('statQueue').textContent = queueRes.count || 0;
+        document.getElementById('statActive').textContent = data.active.length;
+        document.getElementById('statFollowups').textContent = data.followups.length;
+        document.getElementById('statSales').textContent = data.sales.filter(s => {
+           const d = new Date(s.created_at || s.fecha);
+           return d.toDateString() === new Date().toDateString();
+        }).length;
+
+        if (agentRes.agent) {
+          agentState = agentRes.agent.estado;
+          updateStatusUI();
+        }
+
+        renderTab();
+      } catch (e) {
+        console.error(e);
+      }
     }
-  }
 
-  // ─── Heartbeat ───────────────────────────────────────
-  function startHeartbeat() {
-    heartbeatInterval = setInterval(async () => {
-      await fetch(`${API}/api/agent/touch?email=${encodeURIComponent(agentEmail)}`, { method: 'POST' });
-      await loadData();
-    }, 10000); // every 10s
-  }
+    function renderTab() {
+      const container = document.getElementById('tabContent');
+      const list = data[currentTab] || [];
+      
+      if (list.length === 0) {
+        container.innerHTML = '<div style="padding:40px; text-align:center; color:var(--muted); font-size:13px">Nada pendiente por aquí.</div>';
+        return;
+      }
 
-  // ─── Close modal ─────────────────────────────────────
-  function openCloseModal(mid) {
-    document.getElementById('closeMid').value = mid;
-    document.getElementById('closeEstado').value = 'NO VENTA';
-    document.getElementById('closeResultado').value = '';
-    document.getElementById('closeModal').classList.add('open');
-  }
+      if (currentTab === 'active' || currentTab === 'followups') {
+        container.innerHTML = list.map(l => `
+          <div class="lead-row">
+            <div class="lead-info">
+              <div class="name">${l.linea} · ${l.nombre || 'Sin nombre'}</div>
+              <div class="sub">${l.plan || 'Plan no especificado'} · ${l.operacion || ''}</div>
+              ${currentTab === 'followups' ? `<div style="color:var(--orange); font-size:10px; font-weight:800">RELLAMAR: ${formatTime(l.rellamar_en)}</div>` : ''}
+            </div>
+            <button class="btn btn-primary" onclick="openGestion('${l.message_id}', '${l.linea}')">Gestionar</button>
+          </div>
+        `).join('');
+      } else if (currentTab === 'sales') {
+        container.innerHTML = list.map(s => `
+          <div class="lead-row">
+            <div class="lead-info">
+              <div class="name">${s.cliente_nombre || 'Venta'}</div>
+              <div class="sub">${s.venta_plan} · ${formatDate(s.created_at || s.fecha)}</div>
+            </div>
+            <span class="badge badge-green">VENTA</span>
+          </div>
+        `).join('');
+      } else if (currentTab === 'backoffice') {
+        container.innerHTML = list.map(s => `
+          <div class="lead-row">
+            <div class="lead-info">
+              <div class="name">${s.producto} · ${s.message_id.substring(0,8)}</div>
+              <div class="sub">${s.backoffice_notas || 'Sin notas del BO'}</div>
+            </div>
+            <span class="badge ${s.backoffice_status === 'Rechazado' ? 'badge-red' : 'badge-orange'}">${s.backoffice_status || 'Pendiente'}</span>
+          </div>
+        `).join('');
+      }
+    }
 
-  function closeModal() {
-    document.getElementById('closeModal').classList.remove('open');
-  }
+    function switchTab(t) {
+      currentTab = t;
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      event.target.classList.add('active');
+      renderTab();
+    }
 
-  async function submitClose() {
-    const mid = document.getElementById('closeMid').value;
-    const estado = document.getElementById('closeEstado').value;
-    const resultado = document.getElementById('closeResultado').value;
-
-    try {
-      const res = await fetch(`${API}/api/leads/${encodeURIComponent(mid)}/status`, {
+    async function setStatus(s) {
+      const res = await fetch(`/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado, resultado })
+        body: JSON.stringify({ estado: s })
+      }).then(r => r.json());
+      if (res.success) {
+        agentState = s;
+        updateStatusUI();
+      }
+    }
+
+    function updateStatusUI() {
+      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active-activo', 'active-pausa', 'active-offline'));
+      const btn = document.getElementById('btn-' + agentState) || document.getElementById('id-PAUSA');
+      if (btn) btn.classList.add('active-' + agentState.toLowerCase());
+    }
+
+    async function takeLead() {
+      if (agentState !== 'ACTIVO') return alert('Debes estar en estado ACTIVO para tomar leads.');
+      const res = await fetch(`/api/agent/take?email=${encodeURIComponent(agentEmail)}`, { method: 'POST' }).then(r => r.json());
+      if (res.success) {
+        alert('Lead asignado: ' + res.lead.linea);
+        load();
+      } else {
+        alert('No hay leads disponibles o ya tienes el máximo permitido.');
+      }
+    }
+
+    async function manualSale() {
+      const linea = prompt('Ingrese el número de línea:');
+      if (!linea) return;
+      const nombre = prompt('Nombre del cliente (opcional):');
+      
+      const res = await fetch(`/api/agent/manual_sale?email=${encodeURIComponent(agentEmail)}&linea=${encodeURIComponent(linea)}&nombre=${encodeURIComponent(nombre || '')}`, {
+        method: 'POST'
+      }).then(r => r.json());
+      
+      if (res.success) {
+        alert('Lead manual creado. Ahora gestiónalo en "Mis Leads"');
+        load();
+      }
+    }
+
+    function openGestion(mid, linea) {
+      document.getElementById('modalMid').value = mid;
+      document.getElementById('modalTitle').textContent = 'Gestionar: ' + linea;
+      document.getElementById('gestionModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('gestionModal').classList.remove('open');
+    }
+
+    async function submitGestion() {
+      const mid = document.getElementById('modalMid').value;
+      const estado = document.getElementById('modalStatusSelect').value;
+      const notas = document.getElementById('modalNotes').value;
+
+      const res = await fetch(`/api/leads/${mid}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado, resultado: notas })
       }).then(r => r.json());
 
       if (res.success) {
         closeModal();
-        showToast('Lead cerrado: ' + estado, 'ok');
-        await loadData();
-      } else {
-        showToast('Error al cerrar lead', 'err');
+        load();
       }
-    } catch (e) {
-      showToast('Error: ' + e.message, 'err');
     }
-  }
 
-  // ─── Helpers ─────────────────────────────────────────
-  function showToast(msg, type = 'ok') {
-    const root = document.getElementById('toast-root');
-    const t = document.createElement('div');
-    t.className = 'toast ' + type;
-    t.textContent = msg;
-    root.appendChild(t);
-    setTimeout(() => t.remove(), 4000);
-  }
+    async function heartbeat() {
+      fetch(`/api/agent/touch?email=${encodeURIComponent(agentEmail)}`, { method: 'POST' });
+    }
 
-  function esc(s) {
-    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+    function formatTime(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleTimeString('es-UY', { hour:'2-digit', minute:'2-digit' });
+    }
+    function formatDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toLocaleDateString();
+    }
 
-  function formatDate(v) {
-    if (!v) return '—';
-    const d = new Date(v);
-    return isNaN(d) ? v : d.toLocaleString('es-BO', { dateStyle:'short', timeStyle:'short' });
-  }
-
-  init();
-</script>
+    init();
+  </script>
 </body>
 </html>

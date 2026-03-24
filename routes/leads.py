@@ -44,17 +44,42 @@ def create_lead(lead: LeadCreate):
 # ─── GET /api/leads/mine?email=...  ────────────────────
 @router.get("/mine")
 def get_my_leads(email: str):
-    """Return all open leads assigned to the given agent."""
-    rows = execute(
-        """
-        SELECT * FROM leads
-        WHERE agente = %s AND estado = ANY(%s::text[])
-        ORDER BY fecha_asignacion ASC
-        """,
-        (email, list(OPEN_STATES)),
+    """Return categorized leads and sales for the given agent."""
+    # 1. Active Leads (ASIGNADO)
+    active = execute(
+        "SELECT * FROM leads WHERE agente = %s AND estado = 'ASIGNADO' ORDER BY fecha_asignacion ASC",
+        (email,),
         fetch=True
     )
-    return {"success": True, "leads": rows}
+    
+    # 2. Seguimientos (SEGUIMIENTO)
+    followups = execute(
+        "SELECT * FROM leads WHERE agente = %s AND estado = 'SEGUIMIENTO' ORDER BY rellamar_en ASC",
+        (email,),
+        fetch=True
+    )
+    
+    # 3. Mis Ventas (RESULTADO = Venta)
+    sales = execute(
+        "SELECT * FROM sales WHERE agente = %s ORDER BY created_at DESC LIMIT 50",
+        (email,),
+        fetch=True
+    )
+    
+    # 4. Backoffice (Sales from this agent and their state)
+    backoffice = execute(
+        "SELECT message_id, producto, cliente_nombre, backoffice_status, backoffice_notas FROM sales WHERE agente = %s AND backoffice_status != 'Aprobado' ORDER BY updated_at DESC",
+        (email,),
+        fetch=True
+    )
+
+    return {
+        "success": True,
+        "active": active,
+        "followups": followups,
+        "sales": sales,
+        "backoffice": backoffice
+    }
 
 
 # ─── GET /api/leads/queue  ─────────────────────────────

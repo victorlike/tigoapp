@@ -3,79 +3,253 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tigo Leads — Coordinador</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <title>Tigo Leads · Coordinador</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --bg: #0f1117; --surface: #1a1d27; --surface2: #232637;
-      --border: #2e3147; --accent: #4f6ef7; --text: #e8eaf2;
-      --muted: #8b8fad; --green: #22c55e; --orange: #f97316;
-      --radius: 12px;
-    }
-    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 24px; }
-    h1 { font-size: 20px; font-weight: 700; color: var(--accent); margin-bottom: 24px; }
-    
-    .stats { display: flex; gap: 16px; margin-bottom: 32px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; flex: 1; }
-    .stat-card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
-    .stat-card .value { font-size: 28px; font-weight: 700; }
-
-    table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
-    th { text-align: left; padding: 12px 16px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
-    td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--border); }
-    .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-    .badge-activo { background: rgba(34,197,94,0.1); color: var(--green); }
-    .badge-offline { background: rgba(139,143,173,0.1); color: var(--muted); }
+    .kpi-card-important { border-top: 4px solid var(--accent); }
+    .kpi-card-danger { border-top: 4px solid var(--red); }
+    .kpi-card-success { border-top: 4px solid var(--green); }
   </style>
 </head>
 <body>
-  <h1>📊 Dashboard Coordinador</h1>
-  
-  <div class="stats" id="stats">
-    <div class="stat-card">
-      <div class="label">Leads en Cola</div>
-      <div class="value" id="qCount">—</div>
-    </div>
-    <div class="stat-card">
-      <div class="label">Agentes Activos</div>
-      <div class="value" id="aCount">—</div>
-    </div>
-  </div>
+  <div class="layout">
+    <header>
+      <div class="brand">🔵 Tigo Leads · <span>Coordinador</span></div>
+      <div class="top-stats">
+        <div class="top-stat-item">
+          <div class="label">Auto-Asignación</div>
+          <div class="value" style="color:var(--green)">ON</div>
+        </div>
+        <div class="top-stat-item">
+          <div class="label">SLA Breach</div>
+          <div class="value" id="topSlaBreach" style="color:var(--red)">0</div>
+        </div>
+        <button class="btn btn-outline" onclick="load()">Refrescar</button>
+      </div>
+    </header>
 
-  <h2 style="font-size:16px; margin-bottom:12px;">Estado de Agentes</h2>
-  <table id="agentsTable">
-    <thead>
-      <tr>
-        <th>Email</th>
-        <th>Estado</th>
-        <th>Leads Abiertos</th>
-        <th>Última Conexión</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+    <main>
+      <!-- KPIs -->
+      <div class="section-title" style="margin-bottom:12px">KPIs del día</div>
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-card-important">
+          <div class="label">Cola (Nuevos)</div>
+          <div class="value" id="kpiQueue">0</div>
+        </div>
+        <div class="kpi-card kpi-card-success">
+          <div class="label">Ventas Hoy</div>
+          <div class="value" id="kpiSales">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">No Ventas</div>
+          <div class="value" id="kpiNoSales">0</div>
+        </div>
+        <div class="kpi-card kpi-card-danger">
+          <div class="label">SLA Breach</div>
+          <div class="value" id="kpiSla">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Seguimientos Hoy</div>
+          <div class="value" id="kpiFollowups">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Pendientes BO</div>
+          <div class="value" id="kpiBackoffice">0</div>
+        </div>
+      </div>
+
+      <div class="section-grid">
+        <!-- Torre de Control -->
+        <div class="card" style="grid-column: span 2">
+          <div class="card-header">
+            <div class="card-title">🛡️ Torre de Control (Agentes)</div>
+            <div style="display:flex; gap:8px">
+               <input type="text" placeholder="Buscar agente..." class="search-bar" style="width:200px" id="agentSearch">
+            </div>
+          </div>
+          <div class="card-body">
+            <table id="agentsTable">
+              <thead>
+                <tr>
+                  <th>Agente</th>
+                  <th>Estado</th>
+                  <th>Open</th>
+                  <th>Últ. Actividad</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Rescue Leads -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🚨 Rescue Leads (Trabados)</div>
+          </div>
+          <div class="card-body">
+            <table id="rescueTable">
+              <thead>
+                <tr>
+                  <th>Línea</th>
+                  <th>Agente</th>
+                  <th>Min</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Seguimientos -->
+        <div class="card" style="grid-column: span 2">
+          <div class="card-header">
+            <div class="card-title">📅 Seguimientos (Pendientes)</div>
+          </div>
+          <div class="card-body">
+            <table id="followupsTable">
+              <thead>
+                <tr>
+                  <th>Lead</th>
+                  <th>Rellamar</th>
+                  <th>Plan</th>
+                  <th>Agente Original</th>
+                  <th>Intentos</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Backoffice -->
+        <div class="card" style="grid-column: span 2">
+          <div class="card-header">
+            <div class="card-title">📑 Backoffice Ventas (Validación)</div>
+          </div>
+          <div class="card-body">
+            <table id="backofficeTable">
+              <thead>
+                <tr>
+                  <th>MessageId</th>
+                  <th>Plan</th>
+                  <th>Cliente</th>
+                  <th>Agente</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 
   <script>
     async function load() {
       const res = await fetch('/api/coordinator/dashboard').then(r => r.json());
       if (!res.success) return;
 
-      document.getElementById('qCount').textContent = res.queueCount;
-      document.getElementById('aCount').textContent = res.agents.filter(a => a.estado === 'ACTIVO').length;
+      // KPIs
+      document.getElementById('topSlaBreach').textContent = res.kpis.sla_breach || 0;
+      document.getElementById('kpiQueue').textContent = res.kpis.queue || 0;
+      document.getElementById('kpiSales').textContent = res.kpis.sales_today || 0;
+      document.getElementById('kpiNoSales').textContent = res.kpis.no_sales_today || 0;
+      document.getElementById('kpiSla').textContent = res.kpis.sla_breach || 0;
+      document.getElementById('kpiFollowups').textContent = res.kpis.followups_today || 0;
+      document.getElementById('kpiBackoffice').textContent = res.kpis.pending_backoffice || 0;
 
-      const tbody = document.querySelector('#agentsTable tbody');
-      tbody.innerHTML = res.agents.map(a => `
+      // Agents
+      const agentsTable = document.querySelector('#agentsTable tbody');
+      agentsTable.innerHTML = res.agents.map(a => `
         <tr>
-          <td>${a.email}</td>
-          <td><span class="badge badge-${a.estado.toLowerCase()}">${a.estado}</span></td>
+          <td><div style="font-weight:600">${a.email}</div></td>
+          <td><span class="badge ${a.estado === 'ACTIVO' ? 'badge-green' : 'badge-orange'}">${a.estado}</span></td>
           <td>${a.open_leads}</td>
-          <td>${new Date(a.last_seen).toLocaleString()}</td>
+          <td>${formatTime(a.last_seen)}</td>
+          <td><button class="btn btn-outline">Llamar</button></td>
+        </tr>
+      `).join('');
+
+      // Rescue
+      const rescueTable = document.querySelector('#rescueTable tbody');
+      if (res.rescueLeads.length === 0) {
+        rescueTable.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted)">Sin leads trabados</td></tr>';
+      } else {
+        rescueTable.innerHTML = res.rescueLeads.map(l => `
+          <tr>
+            <td>${l.linea || l.message_id.substring(0,8)}</td>
+            <td>${l.agente}</td>
+            <td style="color:var(--red); font-weight:700">${Math.round(l.minutes_stuck)}m</td>
+            <td><button class="btn btn-danger" onclick="release('${l.message_id}')">Liberar</button></td>
+          </tr>
+        `).join('');
+      }
+
+      // Seguimientos
+      const followupsTable = document.querySelector('#followupsTable tbody');
+      followupsTable.innerHTML = res.seguimientos.map(l => `
+        <tr>
+          <td><div>${l.linea}</div><div style="font-size:10px; color:var(--muted)">${l.nombre}</div></td>
+          <td><div style="font-weight:700">${formatTime(l.rellamar_en)}</div></td>
+          <td>${l.plan || '—'}</td>
+          <td>${l.agente_original}</td>
+          <td>${l.nocontacto_intentos}</td>
+          <td>
+            <button class="btn btn-primary" onclick="assign('${l.message_id}')">Asignar</button>
+            <button class="btn btn-outline" onclick="autoAssign('${l.message_id}')">Auto</button>
+          </td>
+        </tr>
+      `).join('');
+
+      // Backoffice
+      const backofficeTable = document.querySelector('#backofficeTable tbody');
+      backofficeTable.innerHTML = res.backoffice.map(s => `
+        <tr>
+          <td style="font-family:monospace; font-size:11px">${s.message_id.substring(0,16)}</td>
+          <td>${s.venta_plan || '—'}</td>
+          <td>${s.cliente_nombre || '—'}</td>
+          <td>${s.agente}</td>
+          <td>
+            <button class="btn btn-green" onclick="boAction('${s.message_id}', 'approve')">Aprobar</button>
+            <button class="btn btn-danger" onclick="boAction('${s.message_id}', 'reject')">Rechazar</button>
+          </td>
         </tr>
       `).join('');
     }
+
+    async function release(mid) {
+      if (!confirm('¿Liberar lead a la cola?')) return;
+      await fetch('/api/coordinator/release/' + mid, { method: 'POST' });
+      load();
+    }
+
+    async function boAction(mid, action) {
+      const note = prompt('Nota (opcional):');
+      await fetch('/api/coordinator/backoffice/' + action + '?message_id=' + mid + '&note=' + encodeURIComponent(note || ''), { method: 'POST' });
+      load();
+    }
+
+    async function assign(mid) {
+      const email = prompt('Email del agente:');
+      if (!email) return;
+      await fetch('/api/coordinator/assign?message_id=' + mid + '&agent_email=' + encodeURIComponent(email), { method: 'POST' });
+      load();
+    }
+
+    function formatTime(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      return d.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+    }
+
     load();
-    setInterval(load, 15000);
+    setInterval(load, 10000);
   </script>
 </body>
 </html>

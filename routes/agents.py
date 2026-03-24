@@ -121,3 +121,65 @@ def list_agents():
         fetch=True
     )
     return {"success": True, "agents": rows}
+# ─── POST /api/agent/take  ─────────────────────────────
+@router.post("/take")
+def take_lead(email: str):
+    """Manually pull a lead from the queue."""
+    agent = fetchone(
+        """
+        SELECT a.email, a.max_leads,
+               COUNT(l.id) FILTER (WHERE l.estado = 'ASIGNADO') AS open_leads
+        FROM agents a
+        LEFT JOIN leads l ON l.agente = a.email
+        WHERE a.email = %s
+        GROUP BY a.email, a.max_leads
+        """,
+        (email,)
+    )
+    if not agent:
+        raise HTTPException(404, "Agent not found")
+    
+    if agent["open_leads"] >= agent["max_leads"]:
+        return {"success": False, "message": "Maximum leads reached"}
+
+    # Find the oldest unassigned lead
+    lead = fetchone(
+        "SELECT id, message_id, linea FROM leads WHERE estado = 'NUEVO' AND agente IS NULL ORDER BY fecha_gmail ASC LIMIT 1"
+    )
+    if not lead:
+        return {"success": False, "message": "No leads in queue"}
+
+    now = datetime.now(timezone.utc)
+    execute(
+        """
+        UPDATE leads
+        SET estado = 'ASIGNADO', agente = %s, agente_original = COALESCE(agente_original, %s),
+            fecha_asignacion = %s, updated_at = now()
+        WHERE id = %s
+        """,
+        (email, email, now, lead["id"])
+    )
+    execute(
+        "UPDATE agents SET last_assigned = %s, updated_at = %s WHERE email = %s",
+        (now, now, email)
+    )
+
+    return {"success": True, "lead": lead}
+
+
+# ─── POST /api/agent/manual_sale  ──────────────────────
+@router.post("/manual_sale")
+def create_manual_sale(email: str, linea: str, nombre: str = ""):
+    """Create a lead directly in ASIGNADO state for manual sale."""
+    now = datetime.now(timezone.utc)
+    message_id = f"manual-{int(now.timestamp() * 1000)}"
+    
+    execute(
+        """
+        INSERT INTO leads (message_id, nombre, linea, estado, agente, agente_original, fecha_asignacion, created_at, updated_at)
+        VALUES (%s, %s, %s, 'ASIGNADO', %s, %s, %s, %s, %s)
+        """,
+        (message_id, nombre, linea, email, email, now, now, now)
+    )
+    
+    return {"success": True, "message_id": message_id}
