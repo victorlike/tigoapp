@@ -133,6 +133,21 @@ def get_queue():
     return {"success": True, "count": row["total"] if row else 0}
 
 
+# ─── GET /api/leads/{message_id}  ──────────────────────
+@router.get("/{message_id}")
+def get_lead_details(message_id: str):
+    """Return full details for a specific lead or sale."""
+    lead = fetchone("SELECT * FROM leads WHERE message_id = %s", (message_id,))
+    if lead:
+        return {"success": True, "lead": lead}
+        
+    sale = fetchone("SELECT * FROM sales WHERE message_id = %s", (message_id,))
+    if sale:
+        return {"success": True, "sale": sale}
+        
+    raise HTTPException(404, "Lead/Sale not found")
+
+
 # ─── PATCH /api/leads/{message_id}/status  ─────────────
 @router.patch("/{message_id}/status")
 def update_lead_status(message_id: str, body: LeadStatusUpdate, background_tasks: BackgroundTasks):

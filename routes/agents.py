@@ -80,7 +80,13 @@ def get_agent_init(email: str):
     """
     Called on page load. Aggregates data needed for the Agent Portal.
     """
+    from utils.settings import get_setting
     email = email.lower().strip()
+    
+    allowed_domain = get_setting("allowed_domain", "@xtendo-it.com").strip().lower()
+    if not email.endswith(allowed_domain):
+        return {"success": False, "error": f"Dominio de correo no permitido. Debe terminar en {allowed_domain}"}
+
     agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
     if not agent:
         try:
@@ -134,15 +140,15 @@ def get_agent_info(email: str):
     from utils.settings import get_setting
     email = email.lower().strip()
     
+    allowed_domain = get_setting("allowed_domain", "@xtendo-it.com").strip().lower()
+    if not email.endswith(allowed_domain):
+        return {"success": False, "error": f"Dominio de correo no permitido. Por favor usa un correo que termine en {allowed_domain}"}
+    
     # Check if agent exists
     agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
     
-    # If not exists, check allowed domain before auto-creating
+    # If not exists, auto-create
     if not agent:
-        allowed_domain = get_setting("allowed_domain", "@xtendo-it.com").strip().lower()
-        if not email.endswith(allowed_domain):
-            return {"success": False, "error": f"Dominio de correo no permitido. Por favor usa un correo que termine en {allowed_domain}"}
-            
         now = datetime.now(timezone.utc)
         execute(
             "INSERT INTO agents (email, estado, last_seen, max_leads, updated_at, role) VALUES (%s, %s, %s, %s, %s, %s)",
