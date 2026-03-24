@@ -5,6 +5,9 @@ from fastapi import APIRouter, Depends
 from models import SaleCreate
 from database import execute, fetchone
 from auth import verify_apps_script_key
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -40,6 +43,8 @@ def create_sale(sale: SaleCreate):
 def bulk_create_sales(sales: list[SaleCreate]):
     """Bulk import sales. Used for migration."""
     if not sales: return {"success": True, "count": 0}
+    
+    logger.info(f"Bulk importing {len(sales)} sales")
     
     query = """
     INSERT INTO sales (

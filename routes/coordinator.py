@@ -1,8 +1,9 @@
 """
 routes/coordinator.py — Coordinator dashboard data
 """
-from fastapi import APIRouter
 from database import execute, fetchone
+from auth import verify_apps_script_key
+from fastapi import APIRouter, Depends
 
 router = APIRouter()
 
@@ -53,3 +54,16 @@ def release_lead(message_id: str):
         (message_id,)
     )
     return {"success": True}
+
+
+@router.post("/clean", dependencies=[Depends(verify_apps_script_key)])
+def clean_database():
+    """TRUNCATE all main tables for a fresh start. Called by Migration script."""
+    # Order matters due to potential (though currently not defined) FKs or just logic
+    # schema.sql doesn't have explicit FKs between these, but it's good practice.
+    tables = ["leads", "sales", "agents"]
+    
+    for table in tables:
+        execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE")
+    
+    return {"success": True, "message": "Database cleaned successfully"}

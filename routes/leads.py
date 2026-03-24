@@ -7,6 +7,9 @@ from models import LeadCreate, LeadStatusUpdate, LeadOut, ResponseOK
 from database import execute, fetchone
 from auth import verify_apps_script_key
 import auto_assign
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -108,6 +111,8 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate):
 def bulk_create_leads(leads: list[LeadOut]):
     """Bulk import leads."""
     if not leads: return {"success": True, "count": 0}
+    
+    logger.info(f"Bulk importing {len(leads)} leads")
     
     query = """
     INSERT INTO leads (

@@ -10,9 +10,18 @@ const API_KEY     = 'gmail2railway2025';    // ← Change this
 const BATCH_SIZE  = 100;
 
 function migrateAll() {
+  cleanDatabase();
   migrateAgents();
   migrateSales();
   migrateLeads();
+}
+
+/**
+ * 0. Clean Database (truncate all tables)
+ */
+function cleanDatabase() {
+  Logger.log('🧹 Limpiando la base de datos...');
+  postBulk_('/api/coordinator/clean', {});
 }
 
 /** 
@@ -25,7 +34,7 @@ function migrateAgents() {
 
   const data = sh.getDataRange().getValues();
   const headers = data.shift();
-  const map = getHeaderMap_(headers);
+  const map = getHeaderMapFromArray_(headers);
 
   const agents = data.map(row => ({
     email: row[map['Email']],
@@ -48,18 +57,23 @@ function migrateSales() {
 
   const data = sh.getDataRange().getValues();
   const headers = data.shift();
-  const map = getHeaderMap_(headers);
+  const map = getHeaderMapFromArray_(headers);
 
-  const sales = data.map(row => ({
-    message_id: row[map['MessageId']] || row[map['message_id']] || '',
-    agente: row[map['Agente']] || '',
-    producto: row[map['Producto']] || '',
-    tipo_venta: row[map['TipoVenta']] || '',
-    cliente_nombre: row[map['Nombre']] || '',
-    cliente_cedula: row[map['Cedula']] || '',
-    venta_plan: row[map['Plan']] || '',
-    venta_equipo: row[map['Equipo']] || ''
-  })).filter(s => s.agente);
+  const sales = data.map((row, index) => {
+    const agente = row[map['Agente']] || '';
+    const message_id = row[map['MessageId']] || row[map['message_id']] || ('sale_' + index + '_' + new Date().getTime());
+    
+    return {
+      message_id: message_id,
+      agente: agente,
+      producto: row[map['Producto']] || '',
+      tipo_venta: row[map['TipoVenta']] || '',
+      cliente_nombre: row[map['Nombre']] || '',
+      cliente_cedula: row[map['Cedula']] || '',
+      venta_plan: row[map['Plan']] || '',
+      venta_equipo: row[map['Equipo']] || ''
+    };
+  }).filter(s => s.agente);
 
   // Send in batches
   for (let i = 0; i < sales.length; i += BATCH_SIZE) {
@@ -86,7 +100,7 @@ function migrateLeads() {
   const startRow = 2; // skip header
   const data = sh.getRange(startRow, 1, lastRow - 1, sh.getLastColumn()).getValues();
   const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
-  const map = getHeaderMap_(headers);
+  const map = getHeaderMapFromArray_(headers);
 
   const leads = data.map(row => ({
     message_id: row[map['message_id']] || row[map['messageid']] || ('mig_' + row[map['línea']] + '_' + row[map['fecha']]),
@@ -140,7 +154,7 @@ function postBulk_(path, data) {
   }
 }
 
-function getHeaderMap_(headers) {
+function getHeaderMapFromArray_(headers) {
   const map = {};
   headers.forEach((h, i) => {
     // Store both the original and lowercased version for case-insensitive lookups
