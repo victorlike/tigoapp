@@ -18,8 +18,9 @@ def create_sale(sale: SaleCreate):
             message_id, agente, producto, tipo_venta, tipo_venta_original,
             cliente_nombre, cliente_cedula, cliente_email, cliente_telefono,
             dir_depto, dir_ciudad, dir_barrio, dir_calle,
-            venta_plan, venta_equipo, venta_pago, vendedor_comentarios
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            venta_plan, venta_equipo, venta_pago, vendedor_comentarios,
+            tip_tipo, tip_resultado, tip_motivo, tip_submotivo
+        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """,
         (
             sale.message_id, sale.agente, sale.producto, sale.tipo_venta,
@@ -27,7 +28,8 @@ def create_sale(sale: SaleCreate):
             sale.cliente_email, sale.cliente_telefono,
             sale.dir_depto, sale.dir_ciudad, sale.dir_barrio, sale.dir_calle,
             sale.venta_plan, sale.venta_equipo, sale.venta_pago,
-            sale.vendedor_comentarios
+            sale.vendedor_comentarios,
+            sale.tip_tipo, sale.tip_resultado, sale.tip_motivo, sale.tip_submotivo
         )
     )
     return {"success": True}
@@ -44,8 +46,9 @@ def bulk_create_sales(sales: list[SaleCreate]):
         message_id, agente, producto, tipo_venta, tipo_venta_original,
         cliente_nombre, cliente_cedula, cliente_email, cliente_telefono,
         dir_depto, dir_ciudad, dir_barrio, dir_calle,
-        venta_plan, venta_equipo, venta_pago, vendedor_comentarios, created_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
+        venta_plan, venta_equipo, venta_pago, vendedor_comentarios,
+        tip_tipo, tip_resultado, tip_motivo, tip_submotivo, created_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
     """
     params = [
         (
@@ -54,7 +57,8 @@ def bulk_create_sales(sales: list[SaleCreate]):
             s.cliente_email, s.cliente_telefono,
             s.dir_depto, s.dir_ciudad, s.dir_barrio, s.dir_calle,
             s.venta_plan, s.venta_equipo, s.venta_pago,
-            s.vendedor_comentarios
+            s.vendedor_comentarios,
+            s.tip_tipo, s.tip_resultado, s.tip_motivo, s.tip_submotivo
         )
         for s in sales
     ]

@@ -89,16 +89,23 @@ function migrateLeads() {
   const map = getHeaderMap_(headers);
 
   const leads = data.map(row => ({
-    message_id: row[map['message_id']] || row[map['MessageId']] || ('mig_' + row[map['Línea']] + '_' + row[map['Fecha']]),
-    nombre: row[map['Nombre']] || '',
-    linea: String(row[map['Línea']] || ''),
-    plan: row[map['Plan']] || '',
-    estado: row[map['Estado']] || 'NUEVO',
-    agente: row[map['Agente']] || null,
-    agente_original: row[map['AgenteOriginal']] || row[map['Agente']] || null,
-    fecha_gmail: row[map['Fecha']] ? new Date(row[map['Fecha']]).toISOString() : null,
-    resultado: row[map['Resultado']] || null,
-    rellamar_en: row[map['RellamarEn']] ? new Date(row[map['RellamarEn']]).toISOString() : null
+    message_id: row[map['message_id']] || row[map['messageid']] || ('mig_' + row[map['línea']] + '_' + row[map['fecha']]),
+    nombre: row[map['nombre']] || '',
+    linea: String(row[map['línea']] || row[map['linea']] || ''),
+    plan: row[map['plan']] || '',
+    estado: row[map['estado']] || 'NUEVO',
+    agente: row[map['agente']] || null,
+    agente_original: row[map['agenteoriginal']] || row[map['agente']] || null,
+    fecha_gmail: row[map['fecha']] ? new Date(row[map['fecha']]).toISOString() : null,
+    resultado: row[map['resultado']] || null,
+    rellamar_en: row[map['rellamaren']] ? new Date(row[map['rellamaren']]).toISOString() : null,
+    // New fields
+    tracking: row[map['tracking']] || '',
+    gaid: row[map['gaid']] || '',
+    tip_tipo: row[map['tip_tipo']] || row[map['tiptipo']] || '',
+    tip_resultado: row[map['tip_resultado']] || row[map['tipresultado']] || '',
+    tip_motivo: row[map['tip_motivo']] || row[map['tipmotivo']] || '',
+    tip_submotivo: row[map['tip_submotivo']] || row[map['tipsubmotivo']] || ''
   })).filter(l => l.message_id);
 
   for (let i = 0; i < leads.length; i += BATCH_SIZE) {
@@ -135,6 +142,12 @@ function postBulk_(path, data) {
 
 function getHeaderMap_(headers) {
   const map = {};
-  headers.forEach((h, i) => map[h.toString().trim()] = i);
+  headers.forEach((h, i) => {
+    // Store both the original and lowercased version for case-insensitive lookups
+    const key = h.toString().trim();
+    map[key] = i;
+    map[key.toLowerCase()] = i;
+    map[key.toUpperCase()] = i;
+  });
   return map;
 }

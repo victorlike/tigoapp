@@ -10,7 +10,7 @@ import auto_assign
 
 router = APIRouter()
 
-OPEN_STATES = {"ASIGNADO", "EN CURSO"}
+OPEN_STATES = {"ASIGNADO", "SEGUIMIENTO"}
 
 
 # ─── POST /api/leads  (called by Apps Script) ──────────
@@ -26,10 +26,10 @@ def create_lead(lead: LeadCreate):
 
     execute(
         """
-        INSERT INTO leads (message_id, nombre, linea, plan, fecha_gmail)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO leads (message_id, nombre, linea, plan, fecha_gmail, tracking, gaid)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """,
-        (lead.message_id, lead.nombre, lead.linea, lead.plan, lead.fecha_gmail)
+        (lead.message_id, lead.nombre, lead.linea, lead.plan, lead.fecha_gmail, lead.tracking, lead.gaid)
     )
 
     # Try auto-assign immediately
@@ -80,6 +80,10 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate):
             rellamar_en = COALESCE(%s, rellamar_en),
             reagendar_tipo = COALESCE(%s, reagendar_tipo),
             nocontacto_intentos = COALESCE(%s, nocontacto_intentos),
+            tip_tipo = COALESCE(%s, tip_tipo),
+            tip_resultado = COALESCE(%s, tip_resultado),
+            tip_motivo = COALESCE(%s, tip_motivo),
+            tip_submotivo = COALESCE(%s, tip_submotivo),
             updated_at = now()
         WHERE message_id = %s
         """,
@@ -89,6 +93,10 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate):
             body.rellamar_en,
             body.reagendar_tipo,
             body.nocontacto_intentos,
+            body.tip_tipo,
+            body.tip_resultado,
+            body.tip_motivo,
+            body.tip_submotivo,
             message_id
         )
     )
@@ -105,18 +113,24 @@ def bulk_create_leads(leads: list[LeadOut]):
     INSERT INTO leads (
         message_id, nombre, linea, plan, estado, agente, agente_original,
         fecha_gmail, fecha_asignacion, resultado, rellamar_en,
-        reagendar_tipo, nocontacto_intentos, sla_asignacion
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        reagendar_tipo, nocontacto_intentos, sla_asignacion,
+        tip_tipo, tip_resultado, tip_motivo, tip_submotivo,
+        tracking, gaid, cantidad_ventas
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     ON CONFLICT (message_id) DO UPDATE SET
         estado = EXCLUDED.estado,
+        agente = EXCLUDED.agente,
         resultado = EXCLUDED.resultado,
+        tip_resultado = EXCLUDED.tip_resultado,
         updated_at = now()
     """
     params = [
         (
             l.message_id, l.nombre, l.linea, l.plan, l.estado, l.agente, l.agente_original,
             l.fecha_gmail, l.fecha_asignacion, l.resultado, l.rellamar_en,
-            l.reagendar_tipo, l.nocontacto_intentos, l.sla_asignacion
+            l.reagendar_tipo, l.nocontacto_intentos, l.sla_asignacion,
+            l.tip_tipo, l.tip_resultado, l.tip_motivo, l.tip_submotivo,
+            l.tracking, l.gaid, l.cantidad_ventas
         )
         for l in leads
     ]

@@ -11,9 +11,11 @@ class LeadCreate(BaseModel):
     """Payload sent by Apps Script when a new email arrives."""
     message_id: str
     nombre: Optional[str] = None
-    linea: Optional[str] = None      # phone number
+    linea: Optional[str] = None
     plan: Optional[str] = None
     fecha_gmail: Optional[datetime] = None
+    tracking: Optional[str] = None
+    gaid: Optional[str] = None
 
 
 class LeadStatusUpdate(BaseModel):
@@ -22,6 +24,11 @@ class LeadStatusUpdate(BaseModel):
     rellamar_en: Optional[datetime] = None
     reagendar_tipo: Optional[str] = None
     nocontacto_intentos: Optional[int] = None
+    # Tipificación
+    tip_tipo: Optional[str] = None
+    tip_resultado: Optional[str] = None
+    tip_motivo: Optional[str] = None
+    tip_submotivo: Optional[str] = None
 
 
 class LeadOut(BaseModel):
@@ -42,6 +49,18 @@ class LeadOut(BaseModel):
     sla_asignacion: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    
+    # New fields for alignment
+    tip_tipo: Optional[str] = None
+    tip_resultado: Optional[str] = None
+    tip_motivo: Optional[str] = None
+    tip_submotivo: Optional[str] = None
+    liberado_por: Optional[str] = None
+    liberado_en: Optional[datetime] = None
+    liberado_motivo: Optional[str] = None
+    tracking: Optional[str] = None
+    gaid: Optional[str] = None
+    cantidad_ventas: int = 0
 
 
 # ─── AGENTS ─────────────────────────────────────────────
@@ -61,12 +80,12 @@ class AgentOut(BaseModel):
 # ─── FOLLOWUPS ──────────────────────────────────────────
 class FollowupOut(BaseModel):
     message_id: str
-    nombre: Optional[str]
-    linea: Optional[str]
-    plan: Optional[str]
-    rellamar_en: Optional[datetime]
-    agente_original: Optional[str]
-    reagendar_tipo: Optional[str]
+    nombre: Optional[str] = None
+    linea: Optional[str] = None
+    plan: Optional[str] = None
+    rellamar_en: Optional[datetime] = None
+    agente_original: Optional[str] = None
+    reagendar_tipo: Optional[str] = None
     nocontacto_intentos: int = 0
     due_now: bool = False
 
@@ -90,6 +109,12 @@ class SaleCreate(BaseModel):
     venta_equipo: Optional[str] = None
     venta_pago: Optional[str] = None
     vendedor_comentarios: Optional[str] = None
+    
+    # New fields for alignment
+    tip_tipo: Optional[str] = None
+    tip_resultado: Optional[str] = None
+    tip_motivo: Optional[str] = None
+    tip_submotivo: Optional[str] = None
 
 
 # ─── GENERIC ────────────────────────────────────────────
