@@ -144,13 +144,22 @@ CREATE TABLE sales (
   venta_equipo            TEXT,
   venta_pago              TEXT,
   revenue                 TEXT,
+  revenuedolar            TEXT,
   vendedor_comentarios    TEXT,
-  vendedor_comentarios_extra TEXT,
+  vendedor_comentarios_por TEXT,
+  vendedor_comentarios_at TIMESTAMPTZ,
   
   -- BO fields
   backoffice_status       TEXT DEFAULT 'Pendiente de carga',
-  backoffice_notas        TEXT,
+  backoffice_sub_status   TEXT,
+  backoffice_agent        TEXT,
   backoffice_at           TIMESTAMPTZ,
+  backoffice_notas        TEXT,
+  bo_email_enviado_at     TIMESTAMPTZ,
+  suptipo_reco            TEXT,
+  producto                TEXT,
+  tipo_venta              TEXT,
+  tipo_venta_original     TEXT,
 
   created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()

@@ -1,7 +1,7 @@
 """
 routes/sales.py — Sales logging
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from models import SaleCreate
 from database import execute, fetchone
 from auth import verify_apps_script_key
@@ -58,6 +58,15 @@ def create_sale(sale: SaleCreate):
         )
     )
     return {"success": True}
+
+
+@router.get("/{message_id}")
+def get_sale_details(message_id: str):
+    """Fetch full details for a single sale (Backoffice modal)."""
+    sale = fetchone("SELECT * FROM sales WHERE message_id = %s", (message_id,))
+    if not sale:
+        raise HTTPException(404, "Venta no encontrada")
+    return {"success": True, "sale": sale}
 
 
 # ─── POST /api/sales/bulk  ─────────────────────────────

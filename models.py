@@ -34,6 +34,11 @@ class LeadStatusUpdate(BaseModel):
     tip_submotivo: Optional[str] = None
 
 
+class LeadRelease(BaseModel):
+    """Payload for agent-led lead release."""
+    motivo: str
+
+
 class LeadOut(BaseModel):
     id: Optional[str] = None
     message_id: str
@@ -193,6 +198,11 @@ class SaleCreate(BaseModel):
 
     class Config:
         coerce_numbers_to_str = True
+
+
+# ─── SALES/SELLER ──────────────────────────────────────
+class SaleCommentUpdate(BaseModel):
+    comentario: str
 
 
 # ─── GENERIC ────────────────────────────────────────────

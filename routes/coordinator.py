@@ -69,23 +69,36 @@ def get_dashboard():
     # SLA Breach (NUEVO > 5 min)
     kpi_sla = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '5 minutes'")
 
-    # Sales by agent
-    sales_by_agent = execute(
-        "SELECT agente, COUNT(*) as total FROM sales WHERE created_at::date = now()::date GROUP BY agente ORDER BY total DESC LIMIT 10",
+    # 6. Sales by agent and product (Including SEGUIMIENTO breakdown)
+    detailed_sales = execute(
+        """
+        SELECT 
+            s.agente, s.producto, s.backoffice_status, s.backoffice_at,
+            (SELECT COUNT(*) FROM leads l WHERE l.message_id = s.message_id AND l.resultado = 'Seguimiento') > 0 as is_seguimiento
+        FROM sales s
+        WHERE s.created_at::date = now()::date
+        """,
         fetch=True
     )
     
-    # Sales by product
-    sales_by_product = execute(
-        "SELECT producto, COUNT(*) as total FROM sales WHERE created_at::date = now()::date GROUP BY producto ORDER BY total DESC LIMIT 10",
-        fetch=True
-    )
-
-    # Calculate conversion: Sales / (Sales + NoSales)
-    sales = kpi_sales["total"] if kpi_sales else 0
-    nosales = kpi_nosale["total"] if kpi_nosale else 0
-    total_closed = sales + nosales
-    conversion = round((sales / total_closed * 100), 2) if total_closed > 0 else 0
+    sales_by_agent = {}
+    sales_by_product = {}
+    sales_by_agent_seg = {}
+    sales_by_product_seg = {}
+    ventas_seg_hoy = 0
+    
+    for s in detailed_sales:
+        ag = s["agente"] or "Sin agente"
+        pr = s["producto"] or "Sin producto"
+        is_seg = s["is_seguimiento"]
+        
+        sales_by_agent[ag] = sales_by_agent.get(ag, 0) + 1
+        sales_by_product[pr] = sales_by_product.get(pr, 0) + 1
+        
+        if is_seg:
+            ventas_seg_hoy += 1
+            sales_by_agent_seg[ag] = sales_by_agent_seg.get(ag, 0) + 1
+            sales_by_product_seg[pr] = sales_by_product_seg.get(pr, 0) + 1
 
     from datetime import datetime
     return {
@@ -97,13 +110,17 @@ def get_dashboard():
         "kpis": {
             "queueNew": kpi_queue["total"] if kpi_queue else 0,
             "ventasCantadasHoy": sales,
+            "ventasSeguimientoHoy": ventas_seg_hoy,
             "aprobadasPorBOHoy": kpi_approved["total"] if kpi_approved else 0,
             "noVentasHoy": nosales,
-            "salesByAgent": {r["agente"]: r["total"] for r in sales_by_agent},
-            "salesByProduct": {r["producto"]: r["total"] for r in sales_by_product},
+            "salesByAgent": sales_by_agent,
+            "salesByProduct": sales_by_product,
+            "salesByAgentSeguimiento": sales_by_agent_seg,
+            "salesByProductSeguimiento": sales_by_product_seg,
             "conversion": conversion,
             "slaBreached": kpi_sla["total"] if kpi_sla else 0,
-            "followupsToday": len(seguimientos)
+            "followupsToday": len(seguimientos),
+            "pendingInBackoffice": len(backoffice)
         },
         "serverNow": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
@@ -131,6 +148,26 @@ def rescue_all_leads(email: str):
             liberado_por = 'COORDINADOR',
             liberado_en = now(),
             liberado_motivo = 'Rescate Masivo'
+        WHERE agente = %s AND estado = 'ASIGNADO'
+        """,
+        (email,)
+    )
+    return {"success": True}
+
+
+@router.post("/agents/{email}/force-offline-and-rescue")
+def force_offline_and_rescue(email: str):
+    """Combined action: force agent OFFLINE and rescue all their leads."""
+    execute("UPDATE agents SET estado = 'OFFLINE', updated_at = now() WHERE email = %s", (email,))
+    execute(
+        """
+        UPDATE leads 
+        SET estado = 'NUEVO', 
+            agente = NULL, 
+            fecha_asignacion = NULL,
+            liberado_por = 'COORDINADOR',
+            liberado_en = now(),
+            liberado_motivo = 'Rescate Masivo (Offline Force)'
         WHERE agente = %s AND estado = 'ASIGNADO'
         """,
         (email,)
@@ -186,19 +223,113 @@ def reject_sale(message_id: str, note: str = ""):
 
 
 @router.post("/release/{message_id}")
-def release_lead(message_id: str):
+def release_lead(message_id: str, motivo: str = "Rescate (coord)"):
     """Release a lead back to the queue (coordinator action)."""
     execute(
         """
         UPDATE leads
         SET estado = 'NUEVO', agente = NULL, fecha_asignacion = NULL, 
-            liberado_por = 'COORDINADOR', liberado_en = now(), updated_at = now()
+            liberado_por = 'COORDINADOR', liberado_en = now(), 
+            liberado_motivo = %s, updated_at = now()
         WHERE message_id = %s
         """,
-        (message_id,)
+        (motivo, message_id)
     )
     return {"success": True}
 
+
+@router.post("/close/{message_id}")
+def close_lead_coord(message_id: str, motivo: str = "Cierre (coord)"):
+    """Force close a lead (e.g. duplicate)."""
+    execute(
+        """
+        UPDATE leads
+        SET estado = 'CERRADO', resultado = 'No Venta', 
+            tip_tipo = 'No Venta', tip_resultado = 'Duplicado',
+            tip_motivo = %s, updated_at = now()
+        WHERE message_id = %s
+        """,
+        (motivo, message_id)
+    )
+    return {"success": True}
+
+
+@router.get("/agents/{email}/leads")
+def get_agent_leads(email: str):
+    """Get list of active leads for a specific agent."""
+    rows = execute(
+        """
+        SELECT message_id, nombre, linea, plan, fecha_asignacion,
+               EXTRACT(EPOCH FROM (now() - fecha_asignacion))::int / 60 as minutos_asignado,
+               estado
+        FROM leads
+        WHERE agente = %s AND estado = 'ASIGNADO'
+        ORDER BY fecha_asignacion ASC
+        """,
+        (email,),
+        fetch=True
+    )
+    return {"success": True, "items": rows}
+
+
+@router.get("/eligible-agents")
+def get_eligible_agents():
+    """List agents ready to receive a manual assignment (Followup)."""
+    rows = execute(
+        """
+        SELECT 
+            email, max_leads,
+            (SELECT COUNT(*) FROM leads WHERE leads.agente = agents.email AND leads.estado = 'ASIGNADO') as open_leads
+        FROM agents
+        WHERE estado = 'ACTIVO' AND last_seen > now() - interval '90 seconds'
+        ORDER BY email ASC
+        """,
+        fetch=True
+    )
+    # Filter only those with capacity
+    eligible = [a for a in rows if a["open_leads"] < a["max_leads"]]
+    return {"success": True, "items": eligible}
+
+@router.post("/followups/auto-assign")
+def auto_assign_followup(message_id: str, motivo: str = "Auto-asignación (coord)"):
+    """Auto-assign a followup lead to the 'best' available agent."""
+    rows = execute(
+        """
+        SELECT 
+            email, max_leads,
+            (SELECT COUNT(*) FROM leads WHERE leads.agente = agents.email AND leads.estado = 'ASIGNADO') as open_leads
+        FROM agents
+        WHERE estado = 'ACTIVO' AND last_seen > now() - interval '90 seconds'
+        ORDER BY open_leads ASC, email ASC
+        """,
+        fetch=True
+    )
+    eligible = [a for a in rows if a["open_leads"] < a["max_leads"]]
+    if not eligible:
+        return {"success": False, "message": "No hay agentes elegibles (ACTIVO + conectado + cupo)."}
+    
+    best_agent = eligible[0]["email"]
+    return assign_followup_to_agent(message_id, best_agent, motivo)
+
+
+@router.post("/followups/assign")
+def assign_followup_to_agent(message_id: str, agent_email: str, motivo: str = "Asignación manual (coord)"):
+    """Manually assign a followup lead to a specific agent."""
+    execute(
+        """
+        UPDATE leads
+        SET estado = 'ASIGNADO', agente = %s, fecha_asignacion = now(), 
+            seguimiento_tomado_por = %s, seguimiento_tomado_en = now(),
+            updated_at = now()
+        WHERE message_id = %s AND estado = 'SEGUIMIENTO'
+        """,
+        (agent_email, agent_email, message_id)
+    )
+    execute(
+        "UPDATE agents SET last_assigned = now(), updated_at = now() WHERE email = %s",
+        (agent_email,)
+    )
+    return {"success": True}
 
 @router.post("/clean", dependencies=[Depends(verify_apps_script_key)])
 def clean_database():
@@ -212,13 +343,13 @@ def clean_database():
         "link_enviado", "nombre_link", "plateran_cargado", "plateran_so", "estado_pedido",
         "controldoc_subido", "controldoc_estado", "porta_nip", "vendedor_comentarios_por",
         "backoffice_sub_status", "backoffice_agent", "valor_plan", "valor_telefono",
-        "revenuedolar", "suptipo_reco", "tipo_venta_original"
+        "revenue", "revenuedolar", "suptipo_reco", "tipo_venta_original"
     ]
     for col in columns:
         execute(f"ALTER TABLE sales ADD COLUMN IF NOT EXISTS {col} TEXT")
     
     # Timestamptz columns
-    ts_columns = ["vendedor_comentarios_at", "bo_email_enviado_at"]
+    ts_columns = ["vendedor_comentarios_at", "bo_email_enviado_at", "backoffice_at"]
     for col in ts_columns:
         execute(f"ALTER TABLE sales ADD COLUMN IF NOT EXISTS {col} TIMESTAMPTZ")
 

@@ -4,306 +4,603 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tigo Leads · Coordinador</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .server-tag { background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 99px; font-size: 11px; color: var(--muted); border: 1px solid var(--border); }
-    .auto-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; }
-    .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
-    
-    .kpi-container {
-      background: rgba(12, 20, 33, 0.6);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      margin-top: 8px;
+    :root {
+      --bg0: #050814;
+      --bg1: #0b1220;
+      --card: rgba(15, 27, 51, .72);
+      --line: rgba(148, 163, 184, .18);
+      --muted: #93a4c7;
+      --accent: #00aef0;
+      --danger: #fb7185;
+      --ok: #34d399;
+      --warn: #fbbf24;
     }
-    .kpi-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
-    .kpi-title { font-size: 18px; font-weight: 700; }
-    .kpi-subtitle { font-size: 12px; color: var(--muted); margin-top: 4px; }
-    
-    .kpi-main-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-    }
-    
-    .kpi-card-inner {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      min-height: 140px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-    }
-    .kpi-card-inner .value { font-size: 32px; font-weight: 800; margin: 8px 0; }
-    .kpi-card-inner .label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
-    .kpi-card-inner .subtext { font-size: 11px; color: var(--muted); }
-    
-    .progress-bar-bg { background: var(--surface2); height: 4px; border-radius: 2px; margin-top: 8px; position: relative; }
-    .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
 
-    .list-item { display: flex; justify-content: space-between; font-size: 11px; margin-top: 4px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .list-item:last-child { border-bottom: none; }
+    body {
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(0, 174, 240, .12), transparent 55%),
+        radial-gradient(900px 500px at 90% 20%, rgba(52, 211, 153, .10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      font-family: 'Inter', sans-serif;
+    }
+
+    .card { background: var(--card); border: 1px solid var(--line); backdrop-filter: blur(12px); }
+    .pill { border: 1px solid var(--line); background: rgba(2, 6, 23, .35); }
+    .btn { transition: transform .03s ease; }
+    .btn:active { transform: translateY(1px); }
+    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, monospace; }
+    .soft-scroll::-webkit-scrollbar { height: 10px; width: 10px; }
+    .soft-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, .25); border-radius: 999px; }
+    .soft-scroll::-webkit-scrollbar-track { background: rgba(148, 163, 184, .06); border-radius: 999px; }
+    .shadow-soft { box-shadow: 0 18px 50px rgba(0, 0, 0, .35); }
+
+    select, option { background-color: #0b1220 !important; color: #e2e8f0 !important; }
+
+    .tab-badge {
+      margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10px;
+      background: rgba(15, 23, 42, 0.55); color: #e5e7eb; min-width: 22px; text-align: center;
+    }
+    .tab.active { background: rgba(0, 174, 240, 0.15); border-color: var(--accent); color: var(--accent); }
   </style>
 </head>
-<body>
-  <header>
-    <div class="brand-container">
-      <div class="logo-box">M</div>
-      <div class="brand-text">
-        <div class="brand-title">Tigo Leads · Coordinador</div>
-        <div class="brand-sub">Panel operativo (monitor + rescate + seguimientos + backoffice + KPIs)</div>
+
+<body class="min-h-screen text-slate-100">
+  <div class="max-w-[1400px] mx-auto p-4 md:p-6">
+    <!-- Topbar -->
+    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-sky-500/20 border border-sky-500/30 flex items-center justify-center">
+          <span class="text-sky-200 font-bold">M</span>
+        </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight">Tigo Leads · Coordinador</h1>
+          <p class="text-xs md:text-sm text-slate-300">Panel operativo (monitor + rescate + seguimientos + backoffice + KPIs)</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <span id="serverNow" class="pill px-3 py-1 rounded-full text-xs text-slate-200">Server: --</span>
+        <span id="refreshPill" class="pill px-3 py-1 rounded-full text-xs text-slate-200 flex items-center gap-2">
+          <span class="inline-block w-2 h-2 rounded-full bg-emerald-400" id="autoDot"></span>
+          <span id="autoLabel">Auto ON</span>
+          <span class="text-slate-400">·</span>
+          <span class="mono" id="countdown">--s</span>
+        </span>
+        <button id="btnRefresh" class="btn px-3 py-2 rounded-xl bg-sky-500/90 hover:bg-sky-400 text-sm font-semibold">Refrescar</button>
+        <button id="btnAuto" class="btn px-3 py-2 rounded-xl bg-slate-700/70 hover:bg-slate-600 text-sm font-semibold">Auto: ON</button>
       </div>
     </div>
-    
-    <div style="display:flex; align-items:center; gap:16px">
-      <div class="server-tag">Server: <span id="serverDate">—</span></div>
-      <div class="auto-badge"><div class="dot"></div> Auto ON · <span id="refreshTimer">3s</span></div>
-      <button class="btn btn-primary" style="height:36px; padding:0 20px" onclick="load()">Refrescar</button>
-      <div class="auto-badge">Auto: <span style="color:var(--accent)">ON</span></div>
-    </div>
-  </header>
 
-  <main style="padding: 24px 40px">
-    <div class="tabs-container">
-      <button class="tab-btn active" onclick="switchTab('monitor')">Torre de Control <span class="tab-badge" id="badgeMonitor">0</span></button>
-      <button class="tab-btn" onclick="switchTab('rescue')">Rescue Leads <span class="tab-badge" id="badgeRescue">0</span></button>
-      <button class="tab-btn" onclick="switchTab('seguimientos')">Seguimientos <span class="tab-badge" id="badgeSeguimientos">0</span></button>
-      <button class="tab-btn" onclick="switchTab('backoffice')">Backoffice <span class="tab-badge" id="badgeBackoffice">0</span></button>
-      <button class="tab-btn" onclick="switchTab('kpis')">KPIs</button>
-    </div>
+    <!-- Toasts -->
+    <div id="toastWrap" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+    <div id="alertBox" class="hidden mt-4 p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-100 text-sm"></div>
 
-    <!-- TABS CONTENT -->
-    <div id="tab-monitor" class="tab-content active">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Monitor en vivo · agentes activos</div></div>
-          <div class="card-body">
-            <table id="agentsTable">
-              <thead><tr><th>Agente</th><th>Estado</th><th>Open</th><th>Últ. lead</th><th>Acciones</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
+    <!-- Tabs -->
+    <div class="mt-6 flex flex-wrap gap-2">
+      <button class="tab btn px-4 py-2 rounded-xl pill text-sm font-semibold active" data-tab="tab-torre">
+        Torre de Control <span id="tab-count-torre" class="tab-badge">--</span>
+      </button>
+      <button class="tab btn px-4 py-2 rounded-xl pill text-sm font-semibold" data-tab="tab-rescue">
+        Rescue Leads <span id="tab-count-rescue" class="tab-badge">--</span>
+      </button>
+      <button class="tab btn px-4 py-2 rounded-xl pill text-sm font-semibold" data-tab="tab-followups">
+        Seguimientos <span id="tab-count-followups" class="tab-badge">--</span>
+      </button>
+      <button class="tab btn px-4 py-2 rounded-xl pill text-sm font-semibold" data-tab="tab-backoffice">
+        Backoffice <span id="tab-count-backoffice" class="tab-badge">--</span>
+      </button>
+      <button class="tab btn px-4 py-2 rounded-xl pill text-sm font-semibold" data-tab="tab-kpi">KPIs</button>
     </div>
 
-    <div id="tab-rescue" class="tab-content">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Leads Trabados (> 15 min)</div></div>
-          <div class="card-body">
-            <table id="rescueTable">
-              <thead><tr><th>Línea</th><th>Agente</th><th>Minutos</th><th>Acción</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-    </div>
-
-    <div id="tab-seguimientos" class="tab-content">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Seguimientos para re-asignación</div></div>
-          <div class="card-body">
-            <table id="followupsTable">
-              <thead><tr><th>Lead</th><th>Programado</th><th>Agente Original</th><th>Acción</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-    </div>
-
-    <div id="tab-backoffice" class="tab-content">
-        <div class="card">
-          <div class="card-header"><div class="card-title">Ventas pendientes de Backoffice</div></div>
-          <div class="card-body">
-            <table id="backofficeTable">
-              <thead><tr><th>MessageId</th><th>Plan</th><th>Agente</th><th>Validar</th></tr></thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-    </div>
-
-    <div id="tab-kpis" class="tab-content">
-      <div class="kpi-container">
-        <div class="kpi-header">
+    <!-- Content -->
+    <div class="mt-4 grid gap-4">
+      <!-- TAB: KPI -->
+      <section id="tab-kpi" class="card rounded-2xl p-4 hidden">
+        <div class="flex items-start justify-between gap-3">
           <div>
-            <div class="kpi-title">KPIs del día</div>
-            <div class="kpi-subtitle">Cola, conversión, SLA breach</div>
+            <h2 class="text-lg font-semibold">KPIs del día</h2>
+            <p class="text-xs text-slate-300">Cola, conversión, SLA breach</p>
           </div>
-          <div class="server-tag" style="background:#ef444415; color:var(--red); border-color:#ef444433">SLA > 5 min</div>
+          <span class="pill px-3 py-1 rounded-full text-xs text-slate-200">SLA &gt; <span id="slaMinLabel">5</span> min</span>
         </div>
-        
-        <div class="kpi-main-grid">
-          <div class="kpi-card-inner">
-             <div class="label">Cola (NUEVOS)</div>
-             <div class="value" id="kpiQueue" style="color:var(--orange)">0</div>
-             <div class="subtext">Leads en espera sin agente</div>
-          </div>
-          <div class="kpi-card-inner">
-             <div class="label">Ventas cantadas hoy</div>
-             <div class="value" id="kpiSales">0</div>
-             <div class="subtext">Cerrados como VENTA por agentes</div>
-          </div>
-          <div class="kpi-card-inner">
-             <div class="label">No ventas hoy</div>
-             <div class="value" id="kpiNoSales">0</div>
-             <div class="subtext">Cerrados con resultado ≠ venta</div>
-          </div>
-          <div class="kpi-card-inner">
-             <div class="label">Conversión hoy</div>
-             <div class="value" id="kpiConversion">0%</div>
-             <div class="progress-bar-bg"><div class="progress-bar-fill" id="kpiConvBar" style="width:0%"></div></div>
-             <div class="subtext" style="margin-top:12px">Ventas / Cerrados</div>
-          </div>
-          <div class="kpi-card-inner">
-             <div class="label">SLA breach</div>
-             <div class="value" id="kpiSla" style="color:var(--red)">0</div>
-             <div class="subtext">NUEVOS con espera > SLA</div>
-          </div>
-          
-          <div class="kpi-card-inner">
-             <div class="label">Aprobadas BO hoy</div>
-             <div class="value" id="kpiApproved">0</div>
-             <div class="subtext">Ventas con OK de Backoffice</div>
-          </div>
-          <div class="kpi-card-inner">
-             <div class="label">Ventas de seguimiento hoy</div>
-             <div class="value" id="kpiFollowupSales">0</div>
-             <div class="subtext">Ventas cuyo lead proviene de seguimientos</div>
-          </div>
-          <div class="kpi-card-inner">
-             <div class="label">Ventas por agente</div>
-             <div id="kpiByAgent" style="margin-top:8px"></div>
-          </div>
-          <div class="kpi-card-inner">
-             <div class="label">Ventas por producto</div>
-             <div id="kpiByProduct" style="margin-top:8px"></div>
-          </div>
-          <div class="kpi-card-inner">
-             <div class="label">Seguimientos para hoy</div>
-             <div class="value" id="kpiFollowupsCount">0</div>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Cola (NUEVOS)</div><div id="kpiQueue" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Leads en espera sin agente</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Ventas cantadas hoy</div><div id="kpiSales" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Cerrados como VENTA por agentes</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">No ventas hoy</div><div id="kpiNoSales" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Cerrados con resultado ≠ venta</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Conversión hoy</div><div id="kpiConv" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Ventas / Cerrados</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">SLA breach</div><div id="kpiSla" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">NUEVOS con espera &gt; SLA</div></div>
+        </div>
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Aprobadas BO hoy</div><div id="kpiApprovedSales" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Ventas con OK de Backoffice</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Ventas de seguimiento hoy</div><div id="kpiFollowupSales" class="text-3xl font-bold mono mt-1">--</div><div class="text-xs text-slate-400 mt-1">Ventas cuyo lead proviene de seguimientos</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Ventas por agente</div><div id="kpiSalesByAgent" class="text-[10px] mono mt-1 max-h-32 overflow-auto soft-scroll">--</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft"><div class="text-xs text-slate-300">Ventas por producto</div><div id="kpiSalesByProduct" class="text-[10px] mono mt-1 max-h-32 overflow-auto soft-scroll">--</div></div>
+          <div class="card rounded-2xl p-4 shadow-soft">
+            <div class="text-xs text-slate-300">Seguimientos hoy</div><div id="kpiFollowupsToday" class="text-3xl font-bold mono mt-1">--</div>
+            <div class="text-xs text-slate-300 mt-2">Pendientes BO</div><div id="kpiPendingInBackoffice" class="text-xl font-bold mono">--</div>
           </div>
         </div>
+      </section>
 
-        <div style="margin-top:16px; width:20%">
-           <div class="kpi-card-inner">
-             <div class="label">Pendientes en Backoffice</div>
-             <div class="value" id="kpiPendingBO">0</div>
-           </div>
+      <!-- TAB: TORRE -->
+      <section id="tab-torre" class="card rounded-2xl p-4 tab-pane">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+          <div><h2 class="text-lg font-semibold">Torre de Control (Agentes)</h2><p class="text-xs text-slate-300">Monitor en vivo · acciones remotas · detalle por agente</p></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 w-full lg:w-[780px]">
+            <input id="agentSearch" class="w-full px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none" placeholder="Buscar agente por email..." />
+            <select id="agentStateFilter" class="w-full px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none">
+              <option value="ALL">Estado: Todos</option><option value="ACTIVO">ACTIVO</option><option value="break">break</option><option value="OFFLINE">OFFLINE</option>
+            </select>
+            <div class="flex items-center justify-between gap-2 pill px-3 py-2 rounded-xl">
+              <label class="text-sm text-slate-200 flex items-center gap-2"><input id="onlyConnected" type="checkbox" class="accent-sky-400" />Conectados</label>
+              <label class="text-sm text-slate-200 flex items-center gap-2"><input id="onlyWithOpen" type="checkbox" class="accent-sky-400" />Con leads</label>
+            </div>
+          </div>
         </div>
+        <div class="mt-3 flex flex-wrap items-center gap-2"><span id="agentsCount" class="pill px-3 py-1 rounded-full text-xs bg-slate-900/40">-- agentes</span></div>
+        <div class="mt-3 overflow-auto soft-scroll">
+          <table class="w-full text-sm"><thead class="text-slate-300 tracking-wider font-bold"><tr class="border-b border-slate-500/20 text-left cursor-pointer"><th class="py-2 pr-3 sort" data-sort="email">Agente</th><th class="py-2 pr-3 sort" data-sort="estado">Estado</th><th class="py-2 pr-3 sort" data-sort="open_leads">Open</th><th class="py-2 pr-3 sort" data-sort="last_assigned_ago_sec">Últ. lead</th><th class="py-2 pr-3 sort" data-sort="last_seen_ago_sec">Señal</th><th class="text-right py-2">Acciones</th></tr></thead>
+          <tbody id="agentsTbody" class="align-top"></tbody></table>
+        </div>
+      </section>
+
+      <!-- TAB: RESCUE -->
+      <section id="tab-rescue" class="card rounded-2xl p-4 tab-pane hidden">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+          <div><h2 class="text-lg font-semibold">Rescue Leads (Trabados)</h2><p class="text-xs text-slate-300">ASIGNADO &gt; <span id="stuckMinLabel">15</span> min · liberar a cola</p></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 w-full lg:w-[520px]">
+             <input id="stuckSearch" class="w-full px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none" placeholder="Buscar por agente / línea / nombre..." />
+             <label class="pill px-3 py-2 rounded-xl text-sm flex items-center justify-between"><span class="text-slate-200">Solo minutos conocidos</span><input id="stuckOnlyWithMinutes" type="checkbox" class="accent-sky-400" /></label>
+          </div>
+        </div>
+        <div class="mt-3 overflow-auto soft-scroll">
+          <table class="w-full text-sm"><thead class="text-slate-300 font-bold"><tr class="border-b border-slate-500/20 text-left"><th class="py-2 pr-3 sort-stuck" data-sort="nombre">Nombre</th><th class="py-2 pr-3">Línea</th><th class="py-2 pr-3 sort-stuck" data-sort="agente">Agente</th><th class="py-2 pr-3 sort-stuck" data-sort="minutos_asignado">Min</th><th class="text-right py-2">Acciones</th></tr></thead>
+          <tbody id="stuckTbody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- TAB: SEGUIMIENTOS -->
+      <section id="tab-followups" class="card rounded-2xl p-4 tab-pane hidden">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+          <div><h2 class="text-lg font-semibold">Seguimientos</h2><p class="text-xs text-slate-300">Leads en estado SEGUIMIENTO</p></div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2 w-full lg:w-[780px]">
+            <input id="fuSearch" class="w-full px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none" placeholder="Buscar siguiendo..." />
+            <select id="fuFilter" class="w-full px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none"><option value="ALL">Mostrar: Todos</option><option value="DUE">Solo vencidos</option></select>
+            <button id="btnFuReload" class="btn px-3 py-2 rounded-xl bg-sky-500/90 text-sm font-semibold">Recargar lista</button>
+          </div>
+        </div>
+        <div class="mt-3 overflow-auto soft-scroll">
+          <table class="w-full text-sm"><thead class="text-slate-300 font-bold"><tr class="border-b border-slate-500/20 text-left"><th class="py-2 pr-3">Lead</th><th class="py-2 pr-3">Rellamar</th><th class="py-2 pr-3">Info</th><th class="py-2 pr-3">Agente Org.</th><th class="text-right py-2">Acciones</th></tr></thead>
+          <tbody id="fuTbody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- TAB: BACKOFFICE -->
+      <section id="tab-backoffice" class="card rounded-2xl p-4 tab-pane hidden">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+          <div><h2 class="text-lg font-semibold">Backoffice Ventas</h2><p class="text-xs text-slate-300">Pendientes de validación</p></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 w-full lg:w-[520px]">
+            <input id="boSearch" class="w-full px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none" placeholder="Buscar en backoffice..." />
+            <select id="boQuickFilter" class="w-full px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none"><option value="ALL">Mostrar: Todos</option><option value="HAS_AGENT">Con agente</option><option value="NO_AGENT">Sin agente</option></select>
+          </div>
+        </div>
+        <div class="mt-3 overflow-auto soft-scroll">
+          <table class="w-full text-sm"><thead class="text-slate-300 font-bold"><tr class="border-b border-slate-500/20 text-left"><th class="py-2 pr-3">MessageId</th><th class="py-2 pr-3">Tipo</th><th class="py-2 pr-3">Cliente</th><th class="py-2 pr-3">Plan</th><th class="py-2 pr-3">Vendedor</th><th class="text-right py-2">Acción</th></tr></thead>
+          <tbody id="boTbody"></tbody></table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="card rounded-2xl w-full max-w-lg p-4 shadow-soft relative z-10">
+      <div class="flex items-start justify-between gap-3">
+        <div><div id="modalTitle" class="text-lg font-semibold">Acción</div><div id="modalSubtitle" class="text-xs text-slate-300 mt-1">--</div></div>
+        <button id="modalClose" class="btn px-3 py-2 rounded-xl pill text-sm">Cerrar</button>
+      </div>
+      <div class="mt-4">
+        <label id="modalLabel" for="modalText" class="text-xs text-slate-300">Motivo / Nota / Email</label>
+        <textarea id="modalText" class="mt-2 w-full min-h-[110px] px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none" placeholder="Escribe el motivo..."></textarea>
+        <select id="modalSelect" class="hidden mt-2 w-full px-3 py-2 rounded-xl pill text-sm bg-transparent outline-none"></select>
+        <div id="modalHint" class="text-xs text-slate-400 mt-2"></div>
+      </div>
+      <div class="mt-4 flex items-center justify-end gap-2">
+        <button id="modalCancel" class="btn px-4 py-2 rounded-xl pill text-sm font-semibold">Cancelar</button>
+        <button id="modalOk" class="btn px-4 py-2 rounded-xl bg-sky-500/90 text-sm font-semibold">Confirmar</button>
       </div>
     </div>
-  </main>
+  </div>
+
+  <!-- Drawer -->
+  <div id="drawer" class="hidden fixed inset-0 z-50 flex justify-end">
+    <div class="absolute inset-0 bg-black/60"></div>
+    <div class="w-full max-w-xl card border-l border-slate-500/20 p-4 overflow-auto soft-scroll relative z-10 animate-slide-in">
+      <div class="flex items-start justify-between gap-3">
+        <div><div class="text-lg font-semibold">Detalle del agente</div><div class="text-xs text-slate-300 mt-1 mono" id="drawerAgentEmail">--</div><div class="text-xs text-slate-400 mt-1" id="drawerAgentSummary">&nbsp;</div></div>
+        <button id="drawerClose" class="btn px-3 py-2 rounded-xl pill text-sm">Cerrar</button>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button id="btnRescueAll" class="btn px-4 py-2 rounded-xl bg-sky-500/90 text-sm font-semibold">Liberar TODOS</button>
+        <button id="btnOfflineRescue" class="btn px-4 py-2 rounded-xl bg-rose-600 font-bold text-sm flex items-center gap-2">OFFLINE + Liberar</button>
+      </div>
+      <div class="mt-4 overflow-auto soft-scroll">
+        <table class="w-full text-sm"><thead class="text-slate-300 font-bold"><tr class="border-b border-slate-500/20 text-left"><th class="py-2 pr-3">Cliente</th><th class="py-2 pr-3">Línea</th><th class="py-2 pr-3">Estado</th><th class="py-2 pr-3">Min</th><th class="text-right py-2">Acción</th></tr></thead>
+        <tbody id="drawerLeadsTbody"></tbody></table>
+      </div>
+    </div>
+  </div>
 
   <script>
-    function switchTab(t) {
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + t).classList.add('active');
-      event.target.classList.add('active');
-    }
+    let DASH = null;
+    let AUTO_ON = true;
+    let REFRESH_SEC = 15;
+    let COUNTDOWN = 15;
+    let TIMER = null;
+    let DRAWER_AGENT = null;
+    
+    // Sorting state
+    let sortAgents = { key: 'estado', dir: 'asc' };
+    let sortStuck = { key: 'minutos_asignado', dir: 'desc' };
+    let sortBO = { key: 'message_id', dir: 'asc' };
+
+    const $ = (id) => document.getElementById(id);
 
     async function load() {
-      const res = await fetch('/api/coordinator/dashboard').then(r => r.json());
-      if (!res.success) return;
-
-      document.getElementById('serverDate').textContent = res.serverNow || new Date().toLocaleDateString('es-UY');
-      
-      // Update counts in tabs
-      document.getElementById('badgeMonitor').textContent = res.agents.length;
-      document.getElementById('badgeRescue').textContent = res.stuckLeads.length;
-      document.getElementById('badgeSeguimientos').textContent = res.seguimientos.length;
-      document.getElementById('badgeBackoffice').textContent = res.backofficePending.length;
-
-      // Update KPI Tab
-      const k = res.kpis;
-      document.getElementById('kpiQueue').textContent = k.queueNew;
-      document.getElementById('kpiSales').textContent = k.ventasCantadasHoy;
-      document.getElementById('kpiNoSales').textContent = k.noVentasHoy;
-      document.getElementById('kpiConversion').textContent = k.conversion + '%';
-      document.getElementById('kpiConvBar').style.width = k.conversion + '%';
-      document.getElementById('kpiSla').textContent = k.slaBreached;
-      document.getElementById('kpiApproved').textContent = k.aprobadasPorBOHoy;
-      document.getElementById('kpiFollowupSales').textContent = k.followupSalesToday || 0;
-      document.getElementById('kpiFollowupsCount').textContent = k.followupsToday;
-      document.getElementById('kpiPendingBO').textContent = res.backofficePending.length;
-
-      // Lists for byAgent and byProduct
-      if (k.salesByAgent) {
-        document.getElementById('kpiByAgent').innerHTML = Object.entries(k.salesByAgent).map(([agente, total]) => `
-          <div class="list-item"><span>${agente}</span> <span style="font-weight:700">${total}</span></div>
-        `).join('');
+      try {
+        const res = await fetch('/api/coordinator/dashboard').then(r => r.json());
+        if (!res.success) {
+            toast(res.message || 'Error cargando dashboard', 'err');
+            return;
+        }
+        DASH = res;
+        COUNTDOWN = REFRESH_SEC;
+        renderAll();
+      } catch (e) {
+        console.error(e);
+        toast('Fallo de conexión', 'err');
       }
-      if (k.salesByProduct) {
-        document.getElementById('kpiByProduct').innerHTML = Object.entries(k.salesByProduct).map(([prod, total]) => `
-          <div class="list-item"><span>${prod}</span> <span style="font-weight:700">${total}</span></div>
-        `).join('');
-      }
-
-      // Tables
-      renderTables(res);
     }
 
-    function renderTables(res) {
-      const agentsTable = document.querySelector('#agentsTable tbody');
-      agentsTable.innerHTML = res.agents.map(a => {
-        const lastSeen = a.last_seen_ago_sec < 90 ? '<span style="color:var(--green)">Online</span>' : '<span style="color:var(--muted)">Offline</span>';
-        return `
-        <tr>
-          <td><div style="font-weight:600">${a.email}</div><div style="font-size:10px; opacity:0.6">Visto hace ${a.last_seen_ago_sec}s</div></td>
-          <td><span class="badge ${a.estado === 'ACTIVO' ? 'badge-green' : 'badge-orange'}">${a.estado}</span> ${lastSeen}</td>
-          <td>${a.open_leads}</td>
-          <td>${a.last_assigned_ago_sec ? Math.round(a.last_assigned_ago_sec/60) + ' min' : '—'}</td>
-          <td style="display:flex; gap:6px">
-             <button class="btn btn-outline" style="padding:4px 8px; font-size:10px" onclick="forceOffline('${a.email}')">Forzar Offline</button>
-             <button class="btn btn-danger" style="padding:4px 8px; font-size:10px" onclick="rescueAll('${a.email}')">Rescatar Leads</button>
+    function renderAll() {
+      if (!DASH) return;
+      $('serverNow').textContent = 'Server: ' + (DASH.serverNow || '--');
+      renderKPIs(DASH.kpis);
+      renderAgents(DASH.agents);
+      renderStuck(DASH.stuckLeads);
+      renderBackoffice(DASH.backofficePending);
+      renderFollowupsList(DASH.seguimientos);
+      updateTabCounts();
+    }
+
+    function renderKPIs(k) {
+      if (!k) return;
+      $('kpiQueue').textContent = k.queueNew;
+      $('kpiSales').textContent = k.ventasCantadasHoy;
+      $('kpiNoSales').textContent = k.noVentasHoy;
+      $('kpiConv').textContent = k.conversion + '%';
+      $('kpiSla').textContent = k.slaBreached;
+      $('kpiApprovedSales').textContent = k.aprobadasPorBOHoy;
+      $('kpiFollowupSales').textContent = k.ventasSeguimientoHoy;
+      $('kpiFollowupsToday').textContent = k.followupsToday;
+      $('kpiPendingInBackoffice').textContent = k.pendingInBackoffice;
+
+      // Sales breakdowns
+      if (k.salesByAgent) {
+        $('kpiSalesByAgent').innerHTML = Object.entries(k.salesByAgent).map(([ag, val]) => `<div>${ag}: <span class="font-bold">${val}</span></div>`).join('');
+      }
+      if (k.salesByProduct) {
+        $('kpiSalesByProduct').innerHTML = Object.entries(k.salesByProduct).map(([pr, val]) => `<div>${pr}: <span class="font-bold">${val}</span></div>`).join('');
+      }
+    }
+
+    function updateTabCounts() {
+      $('tab-count-torre').textContent = DASH.agents.length;
+      $('tab-count-rescue').textContent = DASH.stuckLeads.length;
+      $('tab-count-followups').textContent = DASH.seguimientos.length;
+      $('tab-count-backoffice').textContent = DASH.backofficePending.length;
+    }
+
+    function badgeEstado(st) {
+      const v = String(st || '').toUpperCase();
+      let cls = 'bg-slate-700/50 text-slate-100 border border-slate-500/20';
+      if (v === 'ACTIVO') cls = 'bg-emerald-500/15 text-emerald-50 border border-emerald-500/25';
+      if (v === 'break') cls = 'bg-amber-500/15 text-amber-50 border border-amber-500/25';
+      if (v === 'OFFLINE') cls = 'bg-rose-500/15 text-rose-50 border border-rose-500/25';
+      if (v === 'ASIGNADO') cls = 'bg-sky-500/15 text-sky-50 border border-sky-500/25';
+      return `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${cls}">${v}</span>`;
+    }
+
+    function renderAgents(list) {
+      const q = $('agentSearch').value.toLowerCase();
+      const st = $('agentStateFilter').value;
+      const conn = $('onlyConnected').checked;
+      const leads = $('onlyWithOpen').checked;
+
+      let arr = list.filter(a => {
+        if (q && !a.email.toLowerCase().includes(q)) return false;
+        if (st !== 'ALL' && a.estado !== st) return false;
+        if (conn && a.last_seen_ago_sec > 90) return false;
+        if (leads && a.open_leads === 0) return false;
+        return true;
+      });
+
+      arr.sort((a, b) => {
+        const d = sortAgents.dir === 'asc' ? 1 : -1;
+        if (a[sortAgents.key] > b[sortAgents.key]) return d;
+        if (a[sortAgents.key] < b[sortAgents.key]) return -d;
+        return 0;
+      });
+
+      $('agentsCount').textContent = arr.length + ' agentes';
+      $('agentsTbody').innerHTML = arr.map(a => `
+        <tr class="border-b border-slate-500/10 hover:bg-white/5 transition-all">
+          <td class="py-2 pr-3 font-bold">${a.email}</td>
+          <td class="py-2 pr-3">${badgeEstado(a.estado)}</td>
+          <td class="py-2 pr-3 font-bold ${a.open_leads > 0 ? 'text-sky-400' : 'text-slate-500'}">${a.open_leads} / ${a.max_leads}</td>
+          <td class="py-2 pr-3 mono text-[11px]">${a.last_assigned_ago_sec ? Math.round(a.last_assigned_ago_sec/60) + 'm' : '--'}</td>
+          <td class="py-2 pr-3 mono text-[11px] text-slate-400">${a.last_seen_ago_sec}s</td>
+          <td class="py-2 text-right space-x-1">
+            <button class="btn px-2 py-1 rounded-lg bg-white/5 text-[10px] font-bold border border-white/10" onclick="openDrawerAgent('${a.email}')">Detalle</button>
+            <button class="btn px-2 py-1 rounded-lg bg-rose-500/20 text-rose-400 text-[10px] font-bold border border-rose-500/20" onclick="forceOffline('${a.email}')">Offline</button>
           </td>
         </tr>
-      `}).join('');
-
-      const rescueTable = document.querySelector('#rescueTable tbody');
-      rescueTable.innerHTML = res.stuckLeads.map(l => `
-        <tr><td>${l.linea}</td><td>${l.agente}</td><td style="color:var(--red)">${Math.round(l.minutos_asignado)}m</td><td><button class="btn btn-danger" onclick="release('${l.message_id}')">Liberar</button></td></tr>
-      `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted)">Sin leads trabados</td></tr>';
-
-      const followupsTable = document.querySelector('#followupsTable tbody');
-      followupsTable.innerHTML = res.seguimientos.map(l => `
-        <tr><td>${l.linea} / ${l.nombre || '—'}</td><td>${l.rellamar_en ? new Date(l.rellamar_en).toLocaleString() : 'Pendiente'}</td><td>${l.agente_original || '—'}</td><td><button class="btn btn-primary" onclick="release('${l.message_id}')">A Cola</button></td></tr>
-      `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted)">Sin seguimientos</td></tr>';
-
-      const backofficeTable = document.querySelector('#backofficeTable tbody');
-      backofficeTable.innerHTML = res.backofficePending.map(s => `
-        <tr><td>${s.message_id.substring(0,12)}...</td><td>${s.producto}</td><td>${s.agente}</td><td style="display:flex; gap:6px"><button class="btn btn-primary" onclick="boAction('${s.message_id}', 'approve')">OK</button><button class="btn btn-danger" onclick="boAction('${s.message_id}', 'reject')">X</button></td></tr>
       `).join('');
     }
 
-    async function forceOffline(email) {
-        if(!confirm('¿Forzar OFFLINE al agente ' + email + '?')) return;
-        await fetch(`/api/coordinator/agents/${encodeURIComponent(email)}/force-offline`, {method:'POST'});
-        load();
-    }
-    
-    async function rescueAll(email) {
-        if(!confirm('¿Mandar a COLA todos los leads de ' + email + '?')) return;
-        await fetch(`/api/coordinator/agents/${encodeURIComponent(email)}/rescue-all`, {method:'POST'});
-        load();
+    function renderStuck(list) {
+      const q = $('stuckSearch').value.toLowerCase();
+      const onlyMin = $('stuckOnlyWithMinutes').checked;
+
+      let arr = list.filter(l => {
+        if (q && !l.nombre.toLowerCase().includes(q) && !l.linea.includes(q)) return false;
+        if (onlyMin && l.minutos_asignado == null) return false;
+        return true;
+      });
+
+      arr.sort((a, b) => {
+        const d = sortStuck.dir === 'asc' ? 1 : -1;
+        if (a[sortStuck.key] > b[sortStuck.key]) return d;
+        if (a[sortStuck.key] < b[sortStuck.key]) return -d;
+        return 0;
+      });
+
+      $('stuckTbody').innerHTML = arr.map(l => `
+        <tr class="border-b border-slate-500/10">
+          <td class="py-2 pr-3"><div class="font-bold">${l.nombre || '--'}</div><div class="text-[10px] opacity-40 mono">${l.message_id}</div></td>
+          <td class="py-2 pr-3 mono">${l.linea}</td>
+          <td class="py-2 pr-3 text-slate-300 font-medium">${l.agente}</td>
+          <td class="py-2 pr-3 mono font-bold text-rose-500">${Math.round(l.minutos_asignado)}m</td>
+          <td class="py-2 text-right space-x-1">
+            <button class="btn px-3 py-1.5 rounded-lg bg-sky-500/90 text-[11px] font-bold" onclick="releaseLead('${l.message_id}')">Liberar</button>
+            <button class="btn px-3 py-1.5 rounded-lg bg-rose-500/90 text-[11px] font-bold" onclick="closeLeadCoord('${l.message_id}')">Cerrar</button>
+          </td>
+        </tr>
+      `).join('');
     }
 
-    async function release(mid) {
-        await fetch(`/api/coordinator/release/${mid}`, {method:'POST'});
-        load();
+    function renderFollowupsList(list) {
+      const q = $('fuSearch').value.toLowerCase();
+      const overdue = $('fuFilter').value === 'DUE';
+
+      let arr = list.filter(l => {
+        if (q && !l.nombre.toLowerCase().includes(q) && !l.linea.includes(q)) return false;
+        if (overdue && new Date(l.rellamar_en) > new Date()) return false;
+        return true;
+      });
+
+      $('fuTbody').innerHTML = arr.map(l => `
+        <tr class="border-b border-slate-500/10">
+          <td class="py-2 pr-3 font-bold">${l.nombre || '--'}<div class="text-[10px] opacity-40 mono">${l.linea}</div></td>
+          <td class="py-2 pr-3">
+             <div class="font-bold text-amber-400">${new Date(l.rellamar_en).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+             <div class="text-[10px] text-slate-500">${new Date(l.rellamar_en).toLocaleDateString()}</div>
+          </td>
+          <td class="py-2 pr-3 text-sky-400 font-bold text-xs">${l.tip_tipo}</td>
+          <td class="py-2 pr-3 font-bold text-slate-400">${l.agente_original || '--'}</td>
+          <td class="py-2 text-right space-x-1">
+            <button class="btn px-2 py-1 rounded-lg bg-sky-500/90 text-[10px] font-bold" onclick="autoAssignFollowup('${l.message_id}')">Auto</button>
+            <button class="btn px-2 py-1 rounded-lg bg-white/5 text-[10px] font-bold border border-white/10" onclick="chooseAgentFollowup('${l.message_id}')">Asignar...</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderBackoffice(list) {
+      const q = $('boSearch').value.toLowerCase();
+      const f = $('boQuickFilter').value;
+
+      let arr = list.filter(s => {
+        if (q && !s.cliente_nombre.toLowerCase().includes(q) && !s.agente.toLowerCase().includes(q)) return false;
+        if (f === 'HAS_AGENT' && !s.agente) return false;
+        if (f === 'NO_AGENT' && s.agente) return false;
+        return true;
+      });
+
+      $('boTbody').innerHTML = arr.map(s => `
+        <tr class="border-b border-slate-500/10">
+          <td class="py-2 pr-3 mono text-[10px] opacity-40">${s.message_id.substring(0,20)}...</td>
+          <td class="py-2 pr-3 font-bold text-sky-400 uppercase text-[11px]">${s.producto}</td>
+          <td class="py-2 pr-3 font-bold">${s.cliente_nombre}</td>
+          <td class="py-2 pr-3 text-slate-300 text-[11px]">${s.venta_plan}</td>
+          <td class="py-2 pr-3 font-bold text-emerald-400">${s.agente}</td>
+          <td class="py-2 text-right space-x-1">
+            <button class="btn px-2 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold" onclick="boAction('${s.message_id}', 'approve')">OK</button>
+            <button class="btn px-2 py-1 rounded-lg bg-rose-500 text-white text-[10px] font-bold" onclick="boAction('${s.message_id}', 'reject')">RECHAZO</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Modal helpers
+    let MODAL_ACTION = null;
+    function openModal({title, subtitle, hint, action, isSelect, options}) {
+      $('modalTitle').textContent = title;
+      $('modalSubtitle').textContent = subtitle;
+      $('modalHint').textContent = hint || '';
+      MODAL_ACTION = action;
+      
+      if (isSelect) {
+        $('modalText').classList.add('hidden');
+        $('modalSelect').classList.remove('hidden');
+        $('modalSelect').innerHTML = options.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+      } else {
+        $('modalSelect').classList.add('hidden');
+        $('modalText').classList.remove('hidden');
+        $('modalText').value = '';
+      }
+      $('modal').classList.remove('hidden');
+    }
+
+    $('modalOk').onclick = () => {
+      const val = !$('modalText').classList.contains('hidden') ? $('modalText').value : $('modalSelect').value;
+      if (MODAL_ACTION) MODAL_ACTION(val);
+      $('modal').classList.add('hidden');
+    };
+
+    $('modalCancel').onclick = () => $('modal').classList.add('hidden');
+    $('modalClose').onclick = () => $('modal').classList.add('hidden');
+
+    // Actions
+    function forceOffline(email) {
+      openModal({
+        title: 'Forzar Offline',
+        subtitle: email,
+        hint: 'Esto marcará al agente como Offline inmediatamente.',
+        action: async (motivo) => {
+          await fetch(`/api/coordinator/agents/${encodeURIComponent(email)}/force-offline`, {method:'POST'});
+          toast('Agente Offline', 'ok');
+          load();
+        }
+      });
+    }
+
+    async function releaseLead(mid) {
+      const mot = prompt('Motivo de liberación:', 'Rescate (coord)');
+      if (mot === null) return;
+      await fetch(`/api/coordinator/release/${mid}?motivo=${encodeURIComponent(mot)}`, {method:'POST'});
+      toast('Lead liberado', 'ok');
+      load();
+    }
+
+    async function closeLeadCoord(mid) {
+      const mot = prompt('Motivo de cierre:', 'Duplicado');
+      if (mot === null) return;
+      await fetch(`/api/coordinator/close/${mid}?motivo=${encodeURIComponent(mot)}`, {method:'POST'});
+      toast('Lead cerrado', 'warn');
+      load();
     }
 
     async function boAction(mid, action) {
-        const note = prompt('Nota (opcional):');
-        await fetch(`/api/coordinator/backoffice/${action}?message_id=${mid}&note=${encodeURIComponent(note||'')}`, {method:'POST'});
-        load();
+      const note = prompt('Nota de backoffice:', '');
+      if (note === null) return;
+      await fetch(`/api/coordinator/backoffice/${action}?message_id=${mid}&note=${encodeURIComponent(note)}`, {method:'POST'});
+      toast('Validación: ' + action.toUpperCase(), action === 'approve' ? 'ok' : 'err');
+      load();
     }
 
+    async function autoAssignFollowup(mid) {
+      const res = await fetch(`/api/coordinator/followups/auto-assign?message_id=${mid}`, {method:'POST'}).then(r => r.json());
+      if (res.success) toast('Seguimiento asignado', 'ok');
+      else toast(res.message, 'err');
+      load();
+    }
+
+    async function chooseAgentFollowup(mid) {
+       const agentsRes = await fetch('/api/coordinator/eligible-agents').then(r => r.json());
+       if (!agentsRes.items || !agentsRes.items.length) return toast('No hay agentes elegibles', 'err');
+       
+       openModal({
+         title: 'Asignar Seguimiento',
+         subtitle: mid,
+         isSelect: true,
+         options: agentsRes.items.map(a => ({value: a.email, label: `${a.email} (${a.open_leads}/${a.max_leads})`})),
+         action: async (email) => {
+           const res = await fetch(`/api/coordinator/followups/assign?message_id=${mid}&agent_email=${encodeURIComponent(email)}`, {method:'POST'}).then(r => r.json());
+           if (res.success) toast('Asignado a ' + email, 'ok');
+           else toast(res.message, 'err');
+           load();
+         }
+       });
+    }
+
+    async function openDrawerAgent(email) {
+      DRAWER_AGENT = email;
+      $('drawerAgentEmail').textContent = email;
+      $('drawer').classList.remove('hidden');
+      $('drawerLeadsTbody').innerHTML = '<tr><td colspan="5" class="py-10 text-center opacity-40">Cargando...</td></tr>';
+      
+      const res = await fetch(`/api/coordinator/agents/${encodeURIComponent(email)}/leads`).then(r => r.json());
+      if (!res.items.length) {
+        $('drawerLeadsTbody').innerHTML = '<tr><td colspan="5" class="py-10 text-center font-bold text-emerald-400">Sin leads activos</td></tr>';
+      } else {
+        $('drawerLeadsTbody').innerHTML = res.items.map(l => `
+          <tr class="border-b border-white/5">
+            <td class="py-2 pr-2 font-bold">${l.nombre || '--'}</td>
+            <td class="py-2 pr-2 mono text-xs">${l.linea}</td>
+            <td class="py-2 pr-2 opacity-60 text-xs">${l.estado}</td>
+            <td class="py-2 pr-2 font-bold text-sky-400">${l.minutos_asignado}m</td>
+            <td class="py-2 text-right"><button class="btn px-2 py-1 rounded bg-white/5 text-[9px] font-bold" onclick="releaseLead('${l.message_id}')">Liberar</button></td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    $('btnRescueAll').onclick = async () => {
+       if (!DRAWER_AGENT) return;
+       await fetch(`/api/coordinator/agents/${encodeURIComponent(DRAWER_AGENT)}/rescue-all`, {method:'POST'});
+       toast('Todos los leads liberados', 'ok');
+       openDrawerAgent(DRAWER_AGENT);
+       load();
+    };
+
+    $('btnOfflineRescue').onclick = async () => {
+       if (!DRAWER_AGENT) return;
+       await fetch(`/api/coordinator/agents/${encodeURIComponent(DRAWER_AGENT)}/force-offline-and-rescue`, {method:'POST'});
+       toast('Agente Offline + Leads Rescatados', 'warn');
+       $('drawer').classList.add('hidden');
+       load();
+    };
+
+    // UI Wire
+    document.querySelectorAll('.tab').forEach(b => b.onclick = (e) => {
+       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+       document.querySelectorAll('section').forEach(x => x.classList.add('hidden'));
+       e.currentTarget.classList.add('active');
+       $(e.currentTarget.dataset.tab).classList.remove('hidden');
+    });
+
+    $('btnAuto').onclick = () => {
+      AUTO_ON = !AUTO_ON;
+      $('btnAuto').textContent = 'Auto: ' + (AUTO_ON ? 'ON' : 'OFF');
+      $('autoLabel').textContent = 'Auto ' + (AUTO_ON ? 'ON' : 'OFF');
+      $('autoDot').className = 'w-2 h-2 rounded-full ' + (AUTO_ON ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-600');
+    };
+
+    $('btnRefresh').onclick = load;
+    $('drawerClose').onclick = () => $('drawer').classList.add('hidden');
+    $('btnFuReload').onclick = load;
+
+    function toast(msg, type='info') {
+      const el = document.createElement('div');
+      el.className = `px-6 py-3 rounded-2xl card border ${type === 'ok' ? 'border-emerald-500/40':'border-sky-500/40'} text-xs font-bold shadow-2xl animate-bounce`;
+      el.textContent = msg;
+      $('toastWrap').appendChild(el);
+      setTimeout(() => el.style.opacity = '0', 3500);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    // Loop
+    setInterval(() => {
+      if (!AUTO_ON) return;
+      COUNTDOWN--;
+      $('countdown').textContent = COUNTDOWN + 's';
+      if (COUNTDOWN <= 0) load();
+    }, 1000);
+
     load();
-    setInterval(load, 5000);
   </script>
 </body>
 </html>

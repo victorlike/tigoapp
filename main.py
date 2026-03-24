@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
-from routes import leads, agents, followups, sales, coordinator
+from routes import leads, agents, followups, sales, coordinator, seller
 
 load_dotenv()
 
@@ -24,6 +24,7 @@ app.include_router(agents.router,       prefix="/api/agent",       tags=["agents
 app.include_router(followups.router,    prefix="/api/followups",   tags=["followups"])
 app.include_router(sales.router,        prefix="/api/sales",       tags=["sales"])
 app.include_router(coordinator.router,  prefix="/api/coordinator", tags=["coordinator"])
+app.include_router(seller.router,       prefix="/api/seller",      tags=["seller"])
 
 
 # ─── Frontend routes (Jinja2 views) ─────────────────────

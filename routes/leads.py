@@ -154,6 +154,63 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate):
     return {"success": True}
 
 
+@router.post("/{message_id}/release")
+def release_lead(message_id: str, body: LeadRelease, email: str):
+    """
+    Release an assigned lead (legacy parity).
+    - If email matches current agent: OK.
+    - If not, check if owner is OFFLINE or inactive (> 3 min).
+    """
+    lead = fetchone("SELECT agente, estado FROM leads WHERE message_id = %s", (message_id,))
+    if not lead:
+        raise HTTPException(404, "Lead not found")
+    
+    if lead["estado"] != "ASIGNADO":
+        raise HTTPException(400, "Solo se pueden liberar leads en estado ASIGNADO.")
+    
+    assigned_to = lead["agente"]
+    if not assigned_to:
+        return {"success": True} # Already released
+
+    can_release = False
+    if assigned_to == email:
+        can_release = True
+    else:
+        # Check owner status
+        owner = fetchone("SELECT estado, last_seen FROM agents WHERE email = %s", (assigned_to,))
+        if not owner:
+            can_release = True
+        else:
+            is_offline = owner["estado"] == "OFFLINE"
+            last_seen = owner["last_seen"]
+            if last_seen and last_seen.tzinfo is None:
+                last_seen = last_seen.replace(tzinfo=timezone.utc)
+            
+            inactive = (datetime.now(timezone.utc) - last_seen).total_seconds() > 180
+            if is_offline or inactive:
+                can_release = True
+            
+    if not can_release:
+        raise HTTPException(403, f"No puedes liberar este lead. Pertenece a {assigned_to} y está activo.")
+    
+    execute(
+        """
+        UPDATE leads
+        SET estado = 'NUEVO',
+            agente = NULL,
+            fecha_asignacion = NULL,
+            liberado_por = %s,
+            liberado_en = now(),
+            liberado_motivo = %s,
+            updated_at = now()
+        WHERE message_id = %s
+        """,
+        (email, body.motivo, message_id)
+    )
+    
+    return {"success": True}
+
+
 # ─── POST /api/leads/bulk  ─────────────────────────────
 @router.post("/bulk", dependencies=[Depends(verify_apps_script_key)])
 def bulk_create_leads(leads: list[LeadOut]):

@@ -3,191 +3,268 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tigo LeadDesk</title>
+  <title>Tigo LeadDesk · Agente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css">
   <style>
-    .agent-email-badge { background: rgba(255,255,255,0.05); padding: 6px 16px; border-radius: 99px; font-size: 12px; color: var(--muted); border: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
-    .status-btn-group { display: flex; gap: 8px; margin-left: 24px; }
-    .st-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 16px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-    .st-btn.active-activo { background: rgba(16,185,129,0.1); color: var(--green); border-color: var(--green); }
-    .st-btn.active-pausa { background: rgba(245,158,11,0.1); color: var(--orange); border-color: var(--orange); }
-    .st-btn.active-offline { background: rgba(239,68,68,0.1); color: var(--red); border-color: var(--red); }
-    
-    .sidebar-title { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; margin-bottom: 16px; letter-spacing: 0.1em; }
-    .sidebar-stats { margin-top: 24px; }
-    .sidebar-stat-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-    .sidebar-stat-row .label { color: var(--muted); }
-    .sidebar-stat-row .val { font-weight: 700; }
-    
-    .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
-    .action-btn { background: var(--surface2); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: 0.2s; }
-    .action-btn:hover { border-color: var(--accent); background: rgba(0,132,255,0.05); }
-    .action-btn i { font-size: 14px; }
+    :root {
+      --bg0: #050814;
+      --bg1: #0b1220;
+      --bg2: #0f1a2e;
+      --card: rgba(15, 27, 51, .72);
+      --card-solid: #0d1b33;
+      --line: rgba(148, 163, 184, .18);
+      --muted: #93a4c7;
+      --txt: #e2e8f0;
+      --txt-dim: #64748b;
+      --accent: #00aef0;
+      --accent-glow: rgba(0, 174, 240, .25);
+      --accent-dark: #0369a1;
+      --ok: #34d399;
+      --ok-bg: rgba(52, 211, 153, .12);
+      --warn: #fbbf24;
+      --warn-bg: rgba(251, 191, 36, .12);
+      --danger: #fb7185;
+      --danger-bg: rgba(251, 113, 133, .12);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --border: rgba(148, 163, 184, .18);
+      --surface2: rgba(15, 27, 51, .6);
+    }
 
-    #loader { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-    .spinner { width: 32px; height: 32px; border: 3px solid var(--surface2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    *,::before,::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(0, 174, 240, .10), transparent 55%),
+                  radial-gradient(900px 500px at 90% 20%, rgba(52, 211, 153, .08), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      color: var(--txt);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 16px;
+    }
+
+    .app-container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-rows: auto 1fr; gap: 16px; height: calc(100vh - 32px); }
+
+    header {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      padding: 12px 24px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), #0ea5e9); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; box-shadow: 0 4px 12px var(--accent-glow); }
+    .brand-text { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+    .brand-sub { font-size: 11px; color: var(--muted); }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .agent-pill { background: rgba(148, 163, 184, .08); border: 1px solid var(--line); border-radius: 99px; padding: 6px 16px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+    .agent-pill strong { color: white; }
+
+    .status-btns { display: flex; gap: 8px; }
+    .status-btn { 
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--line); background: rgba(148, 163, 184, .05); color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .status-btn .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .status-btn.active-activo { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
+    .status-btn.active-activo .dot { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+    .status-btn.active-pausa { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+    .status-btn.active-pausa .dot { background: var(--warn); }
+    .status-btn.active-offline { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+    .status-btn.active-offline .dot { background: var(--danger); }
+
+    .main-grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; overflow: hidden; }
+
+    .card { background: var(--card); backdrop-filter: blur(12px); border-radius: var(--radius); border: 1px solid var(--line); padding: 20px; display: flex; flex-direction: column; overflow: hidden; }
+    .card-title { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 1px solid var(--line); padding-bottom: 12px; display: flex; justify-content: space-between; }
+
+    .sidebar-stats { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+    .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .stat-val { color: white; font-weight: 700; }
+
+    .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .btn { padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: rgba(148, 163, 184, .08); color: white; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+    .btn:hover { background: rgba(148, 163, 184, .15); border-color: var(--muted); }
+    .btn-primary { background: var(--accent); border: none; box-shadow: 0 4px 12px var(--accent-glow); }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .tab-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; }
+    .tab-btn.active { background: rgba(0, 174, 240, .15); border-color: var(--accent); color: var(--accent); }
+    .tab-badge { background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 99px; font-size: 10px; margin-left: 6px; }
+
+    .lead-list { overflow-y: auto; display: flex; flex-direction: column; gap: 12px; flex: 1; padding-right: 4px; }
+    .lead-item { background: var(--surface2); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+    .lead-item:hover { border-color: var(--accent); background: rgba(0, 174, 240, 0.05); }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(8px); }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--bg2); width: 95%; max-width: 1000px; height: 90vh; border-radius: 20px; border: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; }
+    .modal-head { padding: 20px 30px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); }
+    .modal-body { flex: 1; overflow: hidden; display: grid; grid-template-columns: 40% 60%; }
+    .modal-info { padding: 30px; border-right: 1px solid var(--line); overflow-y: auto; background: rgba(0,0,0,0.1); }
+    .modal-action { padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+    
+    .info-group { margin-bottom: 24px; }
+    .info-group h4 { font-size: 11px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid rgba(0,174,240,0.2); padding-bottom: 6px; }
+    .info-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 4px; }
+    .val { font-size: 13px; font-weight: 500; color: white; }
+
+    input, select, textarea { width: 100%; background: var(--surface2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; color: white; font-family: inherit; font-size: 13px; transition: 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    .wizard-steps { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .w-step { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); }
+    .w-step.active { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 10px var(--accent-glow); }
+    .w-line { flex: 1; height: 1px; background: var(--line); }
+
+    .form-section { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 16px; border: 1px solid var(--line); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    #loader { position: fixed; inset: 0; background: var(--bg0); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+    .spinner { width: 40px; height: 40px; border: 4px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .empty-state { padding: 80px 0; text-align: center; color: var(--muted); }
-    .empty-icon { font-size: 48px; opacity: 0.2; margin-bottom: 16px; }
+    .toast { position: fixed; top: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 20px; font-size: 13px; font-weight: 500; color: white; z-index: 10000; box-shadow: 0 12px 32px rgba(0,0,0,0.4); animation: toastIn 0.3s ease; }
+    @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
   </style>
 </head>
 <body>
   <div id="loader"><div class="spinner"></div></div>
 
-  <header>
-    <div class="brand-container">
-      <div class="logo-box" style="background: #00bcd4">T</div>
-      <div class="brand-text">
-        <div class="brand-title">Tigo LeadDesk</div>
-        <div class="brand-sub">Vista Agente</div>
+  <div class="app-container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">T</div>
+        <div>
+          <div class="brand-text">LeadDesk Tigo</div>
+          <div class="brand-sub">Portal de Agente</div>
+        </div>
       </div>
-    </div>
-    
-    <div style="display:flex; align-items:center">
-      <div class="agent-email-badge">
-        <i style="color:var(--green)">👤</i> Agente: <span id="agentEmailDisplay" style="color:var(--text); font-weight:700">—</span>
+      <div class="header-right">
+        <div class="agent-pill">
+          👤 Agente: <strong id="agentEmailDisplay">—</strong>
+        </div>
+        <div class="status-btns">
+          <button class="status-btn" id="st-ACTIVO" onclick="setStatus('ACTIVO')"><span class="dot"></span>Activo</button>
+          <button class="status-btn" id="st-PAUSA" onclick="setStatus('PAUSA')"><span class="dot"></span>Pausa</button>
+          <button class="status-btn" id="st-OFFLINE" onclick="setStatus('OFFLINE')"><span class="dot"></span>Offline</button>
+        </div>
+        <button class="btn" style="height:36px" onclick="load()">🔄 Refrescar</button>
       </div>
-      <div class="status-btn-group">
-        <button class="st-btn" id="btn-ACTIVO" onclick="setStatus('ACTIVO')">● Activo</button>
-        <button class="st-btn" id="id-PAUSA" onclick="setStatus('PAUSA')">● Pausa</button>
-        <button class="st-btn" id="btn-OFFLINE" onclick="setStatus('OFFLINE')">● Offline</button>
-      </div>
-      <button class="btn btn-outline" style="margin-left:16px; height:36px; padding:0 12px" onclick="load()">🔄 Actualizar</button>
-    </div>
-  </header>
+    </header>
 
-  <div class="main-wrapper">
-    <div class="sidebar">
-       <div class="sidebar-title">Panel de Control</div>
-       <div class="action-btns">
-         <button class="action-btn" onclick="takeLead()"><i>▶️</i> Tomar Lead</button>
-         <button class="action-btn" onclick="manualSale()"><i>📝</i> Venta Manual</button>
-       </div>
-       
-       <div class="sidebar-stats">
-         <div class="sidebar-stat-row"><span class="label">Leads en Cola</span> <span class="val" id="sideQueue">0</span></div>
-         <div class="sidebar-stat-row"><span class="label">Mis Pendientes</span> <span class="val" id="sideMine">0</span></div>
-         <div class="sidebar-stat-row"><span class="label" style="color:var(--red)">Fuera de SLA</span> <span class="val" id="sideSla">0</span></div>
-         <div class="sidebar-stat-row"><span class="label">Seguimientos hoy</span> <span class="val" id="sideFollowups">—</span></div>
-         <div class="sidebar-stat-row"><span class="label">Mis Ventas</span> <span class="val" id="sideSales" style="color:var(--green)">0</span></div>
-       </div>
-    </div>
-
-    <div class="content-area">
-      <div class="tabs-container">
-        <button class="tab-btn active" onclick="switchTab('active')">Mis Leads <span class="tab-badge" id="badgeActive">0</span></button>
-        <button class="tab-btn" onclick="switchTab('followups')">Seguimientos <span class="tab-badge" id="badgeFollowups">0</span></button>
-        <button class="tab-btn" onclick="switchTab('sales')">Mis Ventas <span class="tab-badge" id="badgeSales">0</span></button>
-        <button class="tab-btn" onclick="switchTab('backoffice')">Backoffice <span class="tab-badge" id="badgeBackoffice">0</span></button>
+    <div class="main-grid">
+      <div class="card">
+        <div class="card-title">PANEL DE CONTROL</div>
+        <div class="action-btns">
+          <button class="btn btn-primary" onclick="takeLead()" id="btnTake">▶️ Tomar Lead</button>
+          <button class="btn" onclick="openManualSale()">📝 Venta Manual</button>
+        </div>
+        <div class="sidebar-stats">
+          <div class="stat-row"><span>Leads en Cola</span> <span class="stat-val" id="statQueue">0</span></div>
+          <div class="stat-row"><span>Mis Pendientes</span> <span class="stat-val" id="statMine">0</span></div>
+          <div class="stat-row"><span>Fuera de SLA</span> <span class="stat-val" id="statSla" style="color:var(--danger)">0</span></div>
+          <div class="stat-row"><span>Seguimientos</span> <span class="stat-val" id="statFollowups">0</span></div>
+          <div class="stat-row"><span>Mis Ventas</span> <span class="stat-val" id="statSales" style="color:var(--ok)">0</span></div>
+        </div>
       </div>
 
-      <div id="tab-active" class="tab-content active">
-         <div id="leadsList">
-           <div class="empty-state">
-              <div class="empty-icon">📂</div>
-              <div style="font-size:14px; font-weight:600">No tienes leads asignados.</div>
-              <div style="font-size:12px; margin-top:4px">Presioná <b>Tomar Lead</b> cuando estés listo.</div>
-           </div>
-         </div>
+      <div class="card">
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('active')">Mis Leads <span class="tab-badge" id="badgeActive">0</span></button>
+          <button class="tab-btn" onclick="switchTab('followups')">Seguimientos <span class="tab-badge" id="badgeFollowups">0</span></button>
+          <button class="tab-btn" onclick="switchTab('sales')">Mis Ventas <span class="tab-badge" id="badgeSales">0</span></button>
+          <button class="tab-btn" onclick="switchTab('backoffice')">Backoffice <span class="tab-badge" id="badgeBackoffice">0</span></button>
+        </div>
+        <div class="lead-list" id="mainList"></div>
       </div>
-      
-      <div id="tab-followups" class="tab-content"></div>
-      <div id="tab-sales" class="tab-content"></div>
-      <div id="tab-backoffice" class="tab-content"></div>
     </div>
   </div>
 
+  <!-- MODAL GESTION -->
   <div id="gestModal" class="modal-overlay">
     <div class="modal">
       <div class="modal-head">
         <div>
-          <div class="modal-title" id="mTit">Gestión de Lead</div>
-          <div class="modal-subtitle" id="mSub">ID: —</div>
+          <div class="modal-title">Gestión de Cliente</div>
+          <div class="modal-subtitle" id="modalSub">—</div>
         </div>
-        <button class="btn" onclick="closeModal()">✕</button>
+        <div style="display:flex; gap:10px">
+          <button class="btn btn-danger" id="btnRelease" onclick="releaseLead()">🔓 Liberar</button>
+          <button class="btn" onclick="closeModal()">✕</button>
+        </div>
       </div>
       <div class="modal-body">
-        <div class="modal-split">
-          <div class="info-col">
-            <div class="info-group">
-                <div class="info-title">DATOS DEL LEAD</div>
-                <div class="info-grid">
-                  <div class="field-block"><span class="lbl">Llamar a</span><div class="val" id="vLine"></div></div>
-                  <div class="field-block"><span class="lbl">Nombre</span><div class="val" id="vNom"></div></div>
-                  <div class="field-block"><span class="lbl">Plan Interés</span><div class="val" id="vPlan"></div></div>
-                  <div class="field-block"><span class="lbl">Origen</span><div class="val" id="vOri"></div></div>
-                </div>
-            </div>
-            <div class="info-group">
-                <div class="info-title">HISTORIAL / NOTAS</div>
-                <div id="vHist" class="mini-note" style="max-height: 200px; overflow-y: auto;">Sin historial previo.</div>
+        <div class="modal-info">
+          <div id="infoContent"></div>
+        </div>
+        <div class="modal-action">
+          <div class="wizard-steps">
+            <div class="w-step" id="w1">1</div><div class="w-line"></div>
+            <div class="w-step" id="w2">2</div><div class="w-line"></div>
+            <div class="w-step" id="w3">3</div><div class="w-line"></div>
+            <div class="w-step" id="w4">4</div>
+          </div>
+
+          <div id="step1">
+            <label class="lbl">PASO 1: Consulta Inicial</label>
+            <select id="selConsultaIncial" onchange="goStep2()"></select>
+          </div>
+
+          <div id="step2" style="display:none">
+            <label class="lbl">PASO 2: Resultado y Motivo</label>
+            <div style="display:flex; flex-direction:column; gap:16px">
+            <select id="selResultado" onchange="updateResultados()"></select>
+            <select id="selMotivo" onchange="updateMotivos()"></select>
+            <select id="selSubMotivo" onchange="checkStep2()"></select>
+              <div id="step2Extra"></div>
+              <div style="display:flex; gap:10px; margin-top:20px">
+                <button class="btn" onclick="showStep(1)">Atrás</button>
+                <button class="btn btn-primary" id="btnNext2" onclick="goStep3()" disabled>Siguiente</button>
+              </div>
             </div>
           </div>
-          <div class="action-col">
-             <!-- STEP 1: TYPIFICATION -->
-             <div id="step1">
-                <div class="sidebar-title">PASO 1: SELECCIÓN</div>
-                <div class="action-btns">
-                  <button class="action-btn" onclick="goStep2('VENTA')"><i>💰</i> Venta</button>
-                  <button class="action-btn" onclick="goStep2('NO_VENTA')"><i>❌</i> No Venta</button>
-                  <button class="action-btn" onclick="goStep2('RELLAMADO')"><i>📞</i> Rellamado</button>
-                </div>
-             </div>
 
-             <!-- STEP 2: MOTIVOS -->
-             <div id="step2" style="display:none">
-                <div class="sidebar-title">PASO 2: DETALLES</div>
-                <select id="selMotivo" onchange="checkStep2()"></select>
-                <div id="step2Extra" style="margin-top:12px"></div>
-                <div style="margin-top:20px; display:flex; gap:10px">
-                   <button class="btn" onclick="goStep1()">Atrás</button>
-                   <button class="btn btn-primary" id="btnStep2Next" onclick="goStep3()">Siguiente</button>
-                </div>
-             </div>
-
-             <!-- STEP 3: FORMULARIO -->
-             <div id="step3" style="display:none">
-                <div class="sidebar-title">PASO 3: FORMULARIO</div>
-                <div id="formContainer" style="display:flex; flex-direction:column; gap:12px">
-                   <!-- This will be populated if VENTA -->
-                   <textarea id="fNotas" placeholder="Notas de la gestión..."></textarea>
-                   
-                   <div id="saleForm" style="display:none">
-                      <div class="sidebar-title" style="margin-top:10px">DATOS DE VENTA</div>
-                      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
-                         <input type="text" id="fCedula" placeholder="Cédula">
-                         <input type="text" id="fDepto" placeholder="Departamento">
-                         <input type="text" id="fCiudad" placeholder="Ciudad">
-                         <input type="text" id="fCalle" placeholder="Calle">
-                         <input type="text" id="fNro" placeholder="Puerta">
-                         <select id="fProducto">
-                            <option value="ALTAS">ALTA</option>
-                            <option value="PORTA">PORTA</option>
-                            <option value="RECO">RECO</option>
-                            <option value="MIGRA">MIGRACIÓN</option>
-                            <option value="UPGRADE">UPGRADE</option>
-                         </select>
-                      </div>
-                   </div>
-                </div>
-                <div style="margin-top:20px; display:flex; gap:10px">
-                   <button class="btn" onclick="goStep2()">Atrás</button>
-                   <button class="btn btn-primary" onclick="goStep4()">Revisar</button>
-                </div>
-             </div>
-
-             <!-- STEP 4: CONFIRMACIÓN -->
-             <div id="step4" style="display:none">
-                <div class="sidebar-title">PASO 4: CONFIRMAR</div>
-                <div class="mini-note" id="vReview"></div>
-                <div style="margin-top:20px; display:flex; gap:10px">
-                   <button class="btn" onclick="goStep3()">Atrás</button>
-                   <button class="btn btn-primary" id="btnSubmit" onclick="submitGestion()">CONFIRMAR Y CERRAR</button>
-                </div>
-             </div>
+          <div id="step3" style="display:none">
+            <label class="lbl">PASO 3: Formulario de Registro</label>
+            <div style="display:flex; flex-direction:column; gap:16px">
+              <textarea id="fNotas" placeholder="Notas de la llamada..."></textarea>
+              <div id="saleForm" style="display:none">
+                 <select id="fTipoVenta" onchange="renderSaleForm(this.value)">
+                   <option value="">Selecciona tipo de venta...</option>
+                   <option value="migracion">⭐ MIGRACIÓN</option>
+                   <option value="alta">ALTAS (Línea Nueva)</option>
+                   <option value="porta">PORTABILIDAD</option>
+                   <option value="recontrato">RECONTRATO</option>
+                   <option value="upgrade">UPGRADE / UPSELLING</option>
+                 </select>
+                 <div id="dynamicForm" style="margin-top:16px"></div>
+              </div>
+              <div style="display:flex; gap:10px; margin-top:20px">
+                <button class="btn" onclick="showStep(2)">Atrás</button>
+                <button class="btn btn-primary" onclick="goStep4()">Revisar</button>
+              </div>
+            </div>
           </div>
+
+          <div id="step4" style="display:none">
+            <label class="lbl">PASO 4: Confirmación Final</label>
+            <div class="form-section">
+              <div id="reviewSummary" style="font-size:13px; line-height:1.6"></div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:24px">
+              <button class="btn" onclick="showStep(3)">Atrás</button>
+              <button class="btn btn-primary" id="btnSubmit" onclick="submitGestion()">💾 GUARDAR Y CERRAR</button>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -198,13 +275,156 @@
     let agentState = 'OFFLINE';
     let currentTab = 'active';
     let currentLead = null;
-    let gestType = ''; // VENTA, NO_VENTA, RELLAMADO
+    let gestType = ''; 
+    let _data = {};
 
-    const MOTIVOS = {
-      VENTA: ["Venta Telefónica", "Venta WhatsApp", "Upselling"],
-      NO_VENTA: ["Ya tiene Movistar", "Fuera de zona", "Ilocalizable", "Cuelga / No interesa", "Error de número"],
-      RELLAMADO: ["Cliente pide llamar luego", "Fuera de horario", "No contesta 1", "No contesta 2", "No contesta 3"]
-    };
+    const RAW_TIP = `
+ConsultaInicial	TipoResultado	Resultado	Motivo
+Equipo libres	Venta	Venta	-
+Equipo libres	No venta	Falta de stock	-
+Equipo libres	No venta	No cumple requisitos	Financiación en la factura
+Equipo libres	No venta	No cumple requisitos	Falta disponibilidad en la tarjeta de crédito
+Equipo libres	No venta	Solo consulto	-
+Equipo libres	No venta	Ya se contactó anteriormente	-
+Equipo libres	Rellamado	Saliente Recoordinacion	-
+Equipo libres	Pendiente de Decision	Pendiente de Decision	-
+Equipo libres	Venta Cancelada	Venta Cancelada	-
+Equipo libres	No venta	Ya realizo la compra	-
+Linea nueva	Venta	Venta	-
+Linea nueva	No venta	Falta de stock	-
+Linea nueva	No venta	No cumple requisitos	Por financiación en la factura
+Linea nueva	No venta	No cumple requisitos	Por deposito en garantia
+Linea nueva	No venta	No cumple requisitos	Menor de edad
+Linea nueva	No venta	No cumple requisitos	Cliente deudor
+Linea nueva	No venta	Zona Roja	-
+Linea nueva	No venta	No le parecio atractiva la oferta	Por costos de plan
+Linea nueva	No venta	No le parecio atractiva la oferta	Por costos de equipos
+Linea nueva	No venta	No le parecio atractiva la oferta	Por gigas de plan
+Linea nueva	No venta	No le parecio atractiva la oferta	No da motivos
+Linea nueva	No venta	Pasa por el local	-
+Linea nueva	No venta	Ya realizo la compra	-
+Linea nueva	Rellamado	Saliente Recoordinacion	-
+Linea nueva	Pendiente de Decision	Pendiente de Decision	-
+Linea nueva	Venta Cancelada	Venta Cancelada	-
+Linea nueva	No venta	Desea linea empresa	
+Recontrato	Venta	Venta	-
+Recontrato	No venta	Falta de stock	-
+Recontrato	No venta	No cumple requisitos	Por financiación en la factura
+Recontrato	No venta	No cumple requisitos	Por deposito en garantia
+Recontrato	No venta	No cumple requisitos	Cliente deudor
+Recontrato	No venta	No cumple requisitos	Contrato vigente
+Recontrato	No venta	No cumple requisitos	Menor de edad
+Recontrato	No venta	No cumple requisitos	No es el titular
+Recontrato	No venta	Zona Roja	-
+Recontrato	No venta	No le parecio atractiva la oferta	Por costos de plan
+Recontrato	No venta	No le parecio atractiva la oferta	Por costos de equipos
+Recontrato	No venta	No le parecio atractiva la oferta	Por gigas de plan
+Recontrato	No venta	No le parecio atractiva la oferta	No da motivos
+Recontrato	No venta	Pasa por el local	-
+Recontrato	No venta	Desea linea empresa	
+Recontrato	No venta	Ya realizo la compra	-
+Recontrato	No venta	No esta en fecha de renovar	-
+Recontrato	No venta	Solicita recontrato a la baja	-
+Recontrato	Rellamado	Saliente Recoordinacion	-
+Recontrato	Pendiente de Decision	Pendiente de Decision	-
+Recontrato	Venta Cancelada	Venta Cancelada	-
+Migras	Venta	Venta	-
+Migras	No venta	Falta de stock	
+Migras	No venta	No cumple requisitos	Por financiación en la factura
+Migras	No venta	No cumple requisitos	Por deposito en garantia
+Migras	No venta	No cumple requisitos	Cliente deudor
+Migras	No venta	No cumple requisitos	Menor de edad
+Migras	No venta	No cumple requisitos	No es el titular
+Migras	No venta	Zona Roja	-
+Migras	No venta	No le parecio atractiva la oferta	Por costos de plan
+Migras	No venta	No le parecio atractiva la oferta	Por costos de equipos
+Migras	No venta	No le parecio atractiva la oferta	Por gigas de plan
+Migras	No venta	No le parecio atractiva la oferta	Por beneficios de prepago
+Migras	No venta	No le parecio atractiva la oferta	No da motivos
+Migras	Rellamado	Saliente Recoordinacion	-
+Migras	Pendiente de Decision	Pendiente de Decision	-
+Migras	Venta Cancelada	Venta Cancelada	-
+Upselling	Venta	Venta	-
+Upselling	No venta	Solo consulto	-
+Upselling	No venta	No cumple requisitos	Cliente deudor
+Upselling	No venta	No cumple requisitos	No es el titular
+Upselling	No venta	Pasa por el local	
+Upselling	Rellamado	Saliente Recoordinacion	-
+Upselling	Pendiente de Decision	Pendiente de Decision	-
+Upselling	Venta Cancelada	Venta Cancelada	-
+Consultas de atención al cliente	Consultas de atención al cliente	Derivada	-
+Consultas de atención al cliente	Consultas de atención al cliente	Atendida	-
+Linea nueva	No venta	Solo consulto	-
+Recontrato	No venta	Solo consulto	-
+Migras	No venta	Solo consulto	-
+Migras	No venta	Ya realizo la gestion	-
+Upselling	No venta	Ya realizo la gestion	-
+Linea nueva	No venta	No Acepta Medio de Pago	-
+Recontrato	No venta	No Acepta Medio de Pago	-
+Equipo libres	No venta	No Acepta Medio de Pago	-
+Migras	No venta	No Acepta Medio de Pago	-
+Upselling	No venta	No Acepta Medio de Pago	-
+Linea nueva	Venta Cancelada	Preventa Caída por No Pago	-
+Recontrato	Venta Cancelada	Preventa Caída por No Pago	-
+Equipo libres	Venta Cancelada	Preventa Caída por No Pago	-
+Migras	Venta Cancelada	Preventa Caída por No Pago	-
+Upselling	Venta Cancelada	Preventa Caída por No Pago	-
+Equipo libres	No venta	No esta interesado	-
+Linea nueva	No venta	No esta interesado	-
+Recontrato	No venta	No esta interesado	-
+Migras	No venta	No esta interesado	-
+Upselling	No venta	No esta interesado	-
+Consultas de atención al cliente	No venta	No esta interesado	-
+Portabilidad	No venta	No esta interesado	-
+Multiasistencia	No venta	No esta interesado	-
+Portabilidad	Venta	Venta	-
+Portabilidad	No venta	Falta de stock	
+Portabilidad	No venta	No cumple requisitos	No aprobado ABD
+Portabilidad	No venta	No cumple requisitos	Contrato vigente
+Portabilidad	No venta	No cumple requisitos	Por deposito en garantia
+Portabilidad	No venta	No cumple requisitos	Por financiacion en la factura
+Portabilidad	No venta	No cumple requisitos	Cliente deudor Movistar
+Portabilidad	No venta	No cumple requisitos	Menor de edad
+Portabilidad	No venta	No cumple requisitos	No es el titular
+Portabilidad	No venta	Solo consulto	Planes y equipos
+Portabilidad	No venta	Solo consulto	Requisitos de portabilidad
+Portabilidad	Venta Cancelada	Venta Cancelada	-
+Portabilidad	Pendiente de Decision	Pendiente de Decision	-
+Portabilidad	No venta	No le parecio atractiva la oferta	Por costos de plan
+Portabilidad	No venta	No le parecio atractiva la oferta	Por costos de equipos
+Portabilidad	No venta	No le parecio atractiva la oferta	Por gigas de plan
+Portabilidad	No venta	No le parecio atractiva la oferta	Por beneficios de prepago
+Portabilidad	No venta	No le parecio atractiva la oferta	No da motivos
+Portabilidad	No venta	Pasa por el local	
+Portabilidad	Rellamado	Saliente recoordinacion	Solicita activación
+Equipo libres	Registro No Llame	Cliente dice estar en el Registro No Llame	-
+Linea nueva	Registro No Llame	Cliente dice estar en el Registro No Llame	-
+Recontrato	Registro No Llame	Cliente dice estar en el Registro No Llame	-
+Migras	Registro No Llame	Cliente dice estar en el Registro No Llame	-
+Upselling	Registro No Llame	Cliente dice estar en el Registro No Llame	-
+Portabilidad	Registro No Llame	Cliente dice estar en el Registro No Llame	-
+Portabilidad	No venta	Ya realizo la compra	-
+Multiasistencia	Venta	Venta	-
+Multiasistencia	No venta	Solo consulto	-
+Multiasistencia	No venta	No cumple requisitos	Cliente deudor
+Multiasistencia	Rellamado	Saliente Recoordinacion	-
+Multiasistencia	Pendiente de Decision	Pendiente de Decision	-
+Multiasistencia	Venta Cancelada	Venta Cancelada	-
+Multiasistencia	No venta	Ya realizo la gestion	-
+Multiasistencia	No venta	No Acepta Medio de Pago	-
+Multiasistencia	Venta Cancelada	Preventa Caída por No Pago	-
+Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
+`;
+
+    const TYPES = {};
+    RAW_TIP.split('\n').filter(l => l.trim() && !l.includes('ConsultaInicial')).forEach(line => {
+      let [c1, c2, c3, c4] = line.split('\t');
+      c1 = c1.trim(); c2 = c2.trim(); c3 = c3.trim(); c4 = (c4||'').trim();
+      if (!TYPES[c1]) TYPES[c1] = {};
+      if (!TYPES[c1][c2]) TYPES[c1][c2] = {};
+      if (!TYPES[c1][c2][c3]) TYPES[c1][c2][c3] = [];
+      if (c4 && c4 !== '-' && !TYPES[c1][c2][c3].includes(c4)) TYPES[c1][c2][c3].push(c4);
+    });
 
     async function init() {
       const params = new URLSearchParams(location.search);
@@ -219,33 +439,34 @@
       await load();
       document.getElementById('loader').style.display = 'none';
       setInterval(load, 15000);
-      setInterval(() => fetch(`/api/agent/touch?email=${agentEmail}`, {method:'POST'}), 10000);
+      setInterval(() => fetch('/api/agent/touch?email=' + agentEmail, {method:'POST'}), 10000);
     }
 
     async function load() {
       try {
-        const [dataRes, statsRes, agentRes] = await Promise.all([
+        const [dataRes, statsRes, agentRes, salesRes] = await Promise.all([
           fetch(`/api/leads/mine?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
           fetch(`/api/leads/stats?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
-          fetch(`/api/agent/info?email=${encodeURIComponent(agentEmail)}`).then(r => r.json())
+          fetch(`/api/agent/info?email=${encodeURIComponent(agentEmail)}`).then(r => r.json()),
+          fetch(`/api/seller/sales?email=${encodeURIComponent(agentEmail)}`).then(r => r.json())
         ]);
 
         if (statsRes.success) {
-          document.getElementById('sideQueue').textContent = statsRes.queue;
-          document.getElementById('sideMine').textContent = statsRes.pendientes;
-          document.getElementById('sideSla').textContent = statsRes.sla;
-          document.getElementById('sideFollowups').textContent = statsRes.followups || '—';
-          document.getElementById('sideSales').textContent = statsRes.sales_today;
+          document.getElementById('statQueue').textContent = statsRes.queue;
+          document.getElementById('statMine').textContent = statsRes.pendientes;
+          document.getElementById('statSla').textContent = statsRes.sla;
+          document.getElementById('statFollowups').textContent = statsRes.followups || '0';
+          document.getElementById('statSales').textContent = statsRes.sales_today;
         }
 
         if (dataRes.success) {
+          _data = dataRes;
+          _data.sales = salesRes.success ? salesRes.items : [];
           document.getElementById('badgeActive').textContent = dataRes.active.length;
           document.getElementById('badgeFollowups').textContent = dataRes.followups.length;
-          document.getElementById('badgeSales').textContent = dataRes.sales.length;
+          document.getElementById('badgeSales').textContent = _data.sales.length;
           document.getElementById('badgeBackoffice').textContent = dataRes.backoffice.length;
-          // Store data for render
-          window._data = dataRes;
-          renderTab();
+          renderList();
         }
 
         if (agentRes.agent) {
@@ -253,161 +474,61 @@
           updateStatusUI();
         }
       } catch (e) {
-        console.error(e);
+        console.error("Load error:", e);
       }
     }
 
-    function renderTab() {
-      const list = window._data[currentTab] || [];
-      const container = document.getElementById('tab-' + currentTab);
-      
-      if (list.length === 0) {
-        container.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><div style="font-size:14px; font-weight:600">Nada pendiente en esta pestaña.</div></div>`;
-        return;
-      }
-
-      container.innerHTML = list.map(l => `
-        <div class="card" style="padding:16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-          <div>
-            <div style="font-weight:700; font-size:14px">${l.linea || l.message_id.substring(0,8)}</div>
-            <div style="font-size:11px; color:var(--muted)">${l.nombre || 'Sin nombre'} · ${l.plan || 'Plan s/e'}</div>
-          </div>
-          <button class="btn btn-primary" style="border-radius:6px; font-size:11px" onclick="openGestion('${l.message_id}')">Gestionar</button>
-        </div>
-      `).join('');
+    function updateStatusUI() {
+      document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active-activo', 'active-pausa', 'active-offline'));
+      const btn = document.getElementById('st-' + agentState);
+      if (btn) btn.classList.add('active-' + agentState.toLowerCase());
+      document.getElementById('btnTake').disabled = (agentState !== 'ACTIVO' || _data.active.length > 0);
     }
 
     function switchTab(t) {
       currentTab = t;
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('tab-' + t).classList.add('active');
-      const target = [...document.querySelectorAll('.tab-btn')].find(b => b.textContent.includes(t === 'active' ? 'Mis Leads' : t === 'followups' ? 'Seguimientos' : t === 'sales' ? 'Mis Ventas' : 'Backoffice'));
-      if (target) target.classList.add('active');
-      renderTab();
+      const btn = Array.from(document.querySelectorAll('.tab-btn')).find(x => x.innerText.toLowerCase().includes(t));
+      if (btn) btn.classList.add('active');
+      renderList();
     }
 
-    // --- MODAL & WIZARD ---
-    function openGestion(mid) {
-      const lead = [...(window._data.active || []), ...(window._data.followups || [])].find(x => x.message_id === mid);
-      if (!lead) return;
-      currentLead = lead;
-      
-      document.getElementById('mSub').textContent = 'ID: ' + mid;
-      document.getElementById('vLine').textContent = lead.linea;
-      document.getElementById('vNom').textContent = lead.nombre || '—';
-      document.getElementById('vPlan').textContent = lead.plan || '—';
-      document.getElementById('vOri').textContent = lead.origen || 'Tigo Web';
-      
-      goStep1();
-      document.getElementById('gestModal').classList.add('open');
-    }
+    function renderList() {
+      const list = _data[currentTab] || [];
+      const cont = document.getElementById('mainList');
+      if (list.length === 0) {
+        cont.innerHTML = `<div style="padding:40px; text-align:center; color:var(--muted)">Sin datos en esta pestaña. ${currentTab === 'sales' ? 'Registra una venta para verla aquí.' : ''}</div>`;
+        return;
+      }
 
-    function closeModal() { document.getElementById('gestModal').classList.remove('open'); }
+      cont.innerHTML = list.map(l => {
+        const title = l.linea || (l.message_id ? l.message_id.substring(0,8) : '—');
+        const sub = l.nombre || l.cliente_nombre || 'Sin nombre';
+        let stLabel = '';
+        let actionBtn = `<button class="btn btn-primary" style="padding:6px 12px; font-size:11px" onclick="openGestion('${l.message_id}')">Gestionar</button>`;
 
-    function goStep1() {
-        showStep('step1');
-    }
-
-    function goStep2(type) {
-        if (type) gestType = type;
-        showStep('step2');
-        const sel = document.getElementById('selMotivo');
-        sel.innerHTML = '<option value="">Selecciona motivo...</option>' + MOTIVOS[gestType].map(m => `<option value="${m}">${m}</option>`).join('');
-        document.getElementById('step2Extra').innerHTML = '';
-        checkStep2();
-    }
-
-    function checkStep2() {
-        const val = document.getElementById('selMotivo').value;
-        const extra = document.getElementById('step2Extra');
-        extra.innerHTML = '';
+        if (currentTab === 'followups') {
+          stLabel = `<span style="color:var(--warn); font-size:10px">📅 ${l.rellamar_en || ''}</span>`;
+        } else if (currentTab === 'sales') {
+          const boStatus = l.backoffice_status || 'Pendiente';
+          const boColor = boStatus === 'OK' ? 'var(--ok)' : (boStatus.includes('Rechazado') ? 'var(--danger)' : 'var(--warn)');
+          stLabel = `<span style="color:${boColor}; font-size:10px; font-weight:700">BO: ${boStatus}</span>`;
+          actionBtn = `<button class="btn" style="padding:6px 12px; font-size:11px" onclick="editComment('${l.message_id}')">Comentar</button>`;
+        }
         
-        if (gestType === 'RELLAMADO' && val.includes('llamar')) {
-            extra.innerHTML = `<span class="lbl">FECHA Y HORA</span><input type="datetime-local" id="fRellamar">`;
-        }
-        document.getElementById('btnStep2Next').disabled = !val;
+        return `
+          <div class="lead-item">
+            <div>
+              <div style="font-weight:700; font-size:14px">${title}</div>
+              <div style="font-size:11px; color:var(--muted)">${sub} · ${l.plan || l.venta_plan || 'Plan s/e'}</div>
+              ${stLabel}
+            </div>
+            ${actionBtn}
+          </div>
+        `;
+      }).join('');
     }
 
-    function goStep3() {
-        showStep('step3');
-        document.getElementById('saleForm').style.display = (gestType === 'VENTA') ? 'block' : 'none';
-        // Reset form
-        if (gestType === 'VENTA') {
-            document.getElementById('fCedula').value = currentLead.documento || '';
-        }
-    }
-
-    function goStep4() {
-        showStep('step4');
-        const motivo = document.getElementById('selMotivo').value;
-        let summary = `<b>Tipo:</b> ${gestType}<br><b>Motivo:</b> ${motivo}<br>`;
-        if (gestType === 'VENTA') {
-            summary += `<b>Cliente:</b> ${document.getElementById('fCedula').value}<br><b>Lugar:</b> ${document.getElementById('fCiudad').value}`;
-        }
-        document.getElementById('vReview').innerHTML = summary;
-    }
-
-    function showStep(id) {
-        ['step1','step2','step3','step4'].forEach(s => document.getElementById(s).style.display = (s===id?'block':'none'));
-    }
-
-    async function submitGestion() {
-      const btn = document.getElementById('btnSubmit');
-      btn.disabled = true;
-      btn.textContent = 'Enviando...';
-      
-      const motivo = document.getElementById('selMotivo').value;
-      const notas = document.getElementById('fNotas').value;
-      
-      // 1. If VENTA, create sale
-      if (gestType === 'VENTA') {
-          await fetch('/api/sales', {
-              method: 'POST',
-              headers: {'Content-Type':'application/json'},
-              body: JSON.stringify({
-                  message_id: currentLead.message_id,
-                  agente: agentEmail,
-                  producto: document.getElementById('fProducto').value,
-                  tipo_venta: motivo,
-                  cliente_cedula: document.getElementById('fCedula').value,
-                  dir_ciudad: document.getElementById('fCiudad').value,
-                  vendedor_comentarios: notas
-              })
-          });
-      }
-      
-      // 2. Update Lead Status
-      let estado = 'CERRADO';
-      let rellamar = null;
-      if (gestType === 'RELLAMADO') {
-          estado = 'SEGUIMIENTO';
-          rellamar = document.getElementById('fRellamar')?.value;
-      }
-      
-      const res = await fetch(`/api/leads/${currentLead.message_id}/status`, {
-          method: 'PATCH',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({
-              estado: estado,
-              resultado: gestType === 'VENTA' ? 'Venta' : gestType === 'RELLAMADO' ? 'Seguimiento' : 'No Venta',
-              rellamar_en: rellamar,
-              tip_tipo: gestType,
-              tip_resultado: motivo
-          })
-      }).then(r => r.json());
-
-      if (res.success) {
-          closeModal();
-          load();
-      } else {
-          alert('Error al guardar gestión');
-          btn.disabled = false;
-          btn.textContent = 'CONFIRMAR Y CERRAR';
-      }
-    }
-
-    // --- AGENT STATUS ---
     async function setStatus(s) {
       const res = await fetch(`/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
         method: 'PATCH',
@@ -417,28 +538,266 @@
       if (res.success) {
         agentState = s;
         updateStatusUI();
+        if (s === 'OFFLINE') toast("Has pasado a modo Offline", "info");
+      } else {
+        toast(res.detail || "No puedes cambiar a Offline con leads pendientes", "warn");
       }
-    }
-
-    function updateStatusUI() {
-      document.querySelectorAll('.st-btn').forEach(b => b.classList.remove('active-activo', 'active-pausa', 'active-offline'));
-      const mapping = {'ACTIVO':'ACTIVO', 'PAUSA':'PAUSA', 'OFFLINE':'OFFLINE'};
-      const id = mapping[agentState] || 'OFFLINE';
-      const btn = document.getElementById('btn-' + id) || document.getElementById('id-PAUSA');
-      if (btn) btn.classList.add('active-' + id.toLowerCase());
     }
 
     async function takeLead() {
       const res = await fetch(`/api/agent/take?email=${encodeURIComponent(agentEmail)}`, { method: 'POST' }).then(r => r.json());
-      if (res.success) load();
-      else alert(res.message);
+      if (res.success) {
+        toast("Lead asignado con éxito", "ok");
+        load();
+      } else {
+        toast(res.message || "No hay leads disponibles", "info");
+      }
     }
-    
-    async function manualSale() {
-      const linea = prompt('Línea:');
+
+    function openGestion(mid) {
+      const list = [..._data.active, ..._data.followups];
+      const lead = list.find(x => x.message_id === mid);
+      if (!lead) return;
+      currentLead = lead;
+
+      document.getElementById('modalSub').textContent = 'ID: ' + mid;
+      const f = (k, v) => `<div class="field-block"><span class="lbl">${k}</span><div class="val">${v || '-'}</div></div>`;
+      
+      document.getElementById('infoContent').innerHTML = `
+        <div class="info-group">
+          <h4>DATOS PERSONALES</h4>
+          <div class="info-grid">${f('Línea', lead.linea)} ${f('Cliente', lead.nombre)} ${f('Cédula', lead.documento)}</div>
+        </div>
+        <div class="info-group">
+          <h4>PRODUCTO E INTERÉS</h4>
+          <div class="info-grid">${f('Plan', lead.plan)} ${f('Origen', lead.origen)} ${f('Compañía', lead.compania)}</div>
+        </div>
+      `;
+
+      showStep(1);
+      const sel1 = document.getElementById('selConsultaIncial');
+      sel1.innerHTML = '<option value="">Selecciona...</option>' + Object.keys(TYPES).map(k => `<option value="${k}">${k}</option>`).join('');
+      document.getElementById('gestModal').classList.add('open');
+    }
+
+    function closeModal() { document.getElementById('gestModal').classList.remove('open'); }
+
+    function showStep(n) {
+      for(let i=1; i<=4; i++) {
+        document.getElementById('step' + i).style.display = (i === n ? 'block' : 'none');
+        document.getElementById('w' + i).classList.toggle('active', i <= n);
+      }
+    }
+
+    function goStep2() {
+      const consulta = document.getElementById('selConsultaIncial').value;
+      if (!consulta) return;
+      
+      const selR = document.getElementById('selResultado');
+      selR.innerHTML = '<option value="">Selecciona Tipo Resultado...</option>' + Object.keys(TYPES[consulta]).map(m => `<option value="${m}">${m}</option>`).join('');
+      document.getElementById('selMotivo').innerHTML = '<option value="-">-</option>';
+      document.getElementById('selSubMotivo').innerHTML = '<option value="-">-</option>';
+      showStep(2);
+      checkStep2();
+    }
+
+    function updateResultados() {
+      const c = document.getElementById('selConsultaIncial').value;
+      const r = document.getElementById('selResultado').value;
+      const selM = document.getElementById('selMotivo');
+      selM.innerHTML = '<option value="">Selecciona Resultado...</option>' + Object.keys(TYPES[c][r]).map(m => `<option value="${m}">${m}</option>`).join('');
+      document.getElementById('selSubMotivo').innerHTML = '<option value="-">-</option>';
+      checkStep2();
+    }
+
+    function updateMotivos() {
+      const c = document.getElementById('selConsultaIncial').value;
+      const r = document.getElementById('selResultado').value;
+      const m = document.getElementById('selMotivo').value;
+      const selS = document.getElementById('selSubMotivo');
+      
+      const sub = TYPES[c][r][m];
+      selS.innerHTML = sub && sub.length ? '<option value="">Selecciona Motivo...</option>' + sub.map(s => `<option value="${s}">${s}</option>`).join('') : '<option value="-">-</option>';
+      
+      const extra = document.getElementById('step2Extra');
+      extra.innerHTML = '';
+      if (r.toLowerCase().includes('rellamado')) {
+        extra.innerHTML = `<label class="lbl">HORA RELLAMADA</label><input type="datetime-local" id="fRellamar">`;
+      }
+      checkStep2();
+    }
+
+    function checkStep2() {
+      document.getElementById('btnNext2').disabled = !document.getElementById('selResultado').value;
+    }
+
+    function goStep3() {
+      showStep(3);
+      document.getElementById('saleForm').style.display = (gestType === 'VENTA' ? 'block' : 'none');
+      if (gestType === 'VENTA') renderSaleForm('');
+    }
+
+    function renderSaleForm(type) {
+      const div = document.getElementById('dynamicForm');
+      div.innerHTML = '';
+      if (!type) return;
+
+      const f = (id, l, p='', t='text') => `<div class="field-block"><label class="lbl">${l}</label><input type="${t}" id="${id}" placeholder="${p}"></div>`;
+      const s = (id, l, opt) => `<div class="field-block"><label class="lbl">${l}</label><select id="${id}"><option value="">-</option>${opt.map(o => `<option value="${o}">${o}</option>`).join('')}</select></div>`;
+
+      let html = `<div class="form-grid">
+        ${f('f_nombre', 'Nombre completo', currentLead.nombre)}
+        ${f('f_cedula', 'Cédula', currentLead.documento)}
+        ${f('f_tel', 'Teléfono contacto', currentLead.linea)}
+        ${f('f_email', 'Email')}
+        ${f('f_dpto', 'Departamento')}
+        ${f('f_ciudad', 'Ciudad/Localidad')}
+        ${f('f_calle', 'Calle')}
+        ${f('f_nro', 'Puerta/Nro')}
+        ${s('f_pago', 'Forma de Pago', ['FACTURA', 'MERCADO PAGO', 'CONTADO'])}
+        ${f('f_plan', 'Plan Vendido')}
+      </div>`;
+      
+      if (type === 'alta' || type === 'porta') {
+        html += `<div class="form-grid" style="margin-top:10px">
+          ${s('f_envio', 'Tipo Envío', ['DOMICILIO', 'PICKUP', 'CADETE'])}
+          ${f('f_envio_det', 'Detalles Envío')}
+        </div>`;
+      }
+
+      div.innerHTML = html;
+    }
+
+    function goStep4() {
+      showStep(4);
+      const res = document.getElementById('selResultado').value;
+      document.getElementById('reviewSummary').innerHTML = `
+        <b>Gestión:</b> ${gestType}<br>
+        <b>Resultado:</b> ${res}<br>
+        <b>Notas:</b> ${document.getElementById('fNotas').value || 'Sin notas'}
+      `;
+    }
+
+    async function submitGestion() {
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      const consulta = document.getElementById('selConsultaIncial').value;
+      const tipoRes = document.getElementById('selResultado').value;
+      const resVal = document.getElementById('selMotivo').value;
+      const subMotivo = document.getElementById('selSubMotivo').value;
+      const notas = document.getElementById('fNotas').value;
+      
+      const isVenta = tipoRes.toLowerCase() === 'venta';
+      const isRellamado = tipoRes.toLowerCase().includes('rellamado') || tipoRes.toLowerCase().includes('pendiente');
+
+      if (isVenta) {
+        const formType = document.getElementById('fTipoVenta').value;
+        const saleBody = {
+          message_id: currentLead.message_id,
+          agente: agentEmail,
+          producto: formType || consulta,
+          tipo_venta: resVal,
+          cliente_nombre: document.getElementById('f_nombre')?.value || currentLead.nombre,
+          cliente_cedula: document.getElementById('f_cedula')?.value || currentLead.documento,
+          cliente_email: document.getElementById('f_email')?.value,
+          cliente_telefono: document.getElementById('f_tel')?.value,
+          dir_depto: document.getElementById('f_dpto')?.value,
+          dir_ciudad: document.getElementById('f_ciudad')?.value,
+          dir_calle: document.getElementById('f_calle')?.value,
+          dir_puerta: document.getElementById('f_nro')?.value,
+          venta_plan: document.getElementById('f_plan')?.value,
+          venta_pago: document.getElementById('f_pago')?.value,
+          vendedor_comentarios: notas,
+          tip_tipo: consulta,
+          tip_resultado: tipoRes,
+          tip_motivo: resVal,
+          tip_submotivo: subMotivo !== '-' ? subMotivo : ''
+        };
+        await fetch('/api/sales', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(saleBody) });
+      }
+
+      const statusBody = {
+        estado: isRellamado ? 'SEGUIMIENTO' : 'CERRADO',
+        resultado: isVenta ? 'Venta' : (isRellamado ? 'Seguimiento' : 'No Venta'),
+        rellamar_en: document.getElementById('fRellamar')?.value,
+        tip_tipo: consulta,
+        tip_resultado: tipoRes,
+        tip_motivo: resVal,
+        tip_submotivo: subMotivo !== '-' ? subMotivo : ''
+      };
+
+      await fetch(`/api/leads/${currentLead.message_id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(statusBody)
+      });
+
+      toast("Gestión guardada con éxito", "ok");
+      closeModal();
+      load();
+    }
+
+    async function releaseLead() {
+      const motivo = prompt('Motivo de liberación:');
+      if (!motivo) return;
+      document.getElementById('loader').style.display = 'flex';
+      const res = await fetch(`/api/leads/${currentLead.message_id}/release?email=${encodeURIComponent(agentEmail)}`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ motivo: motivo })
+      }).then(r => r.json());
+      document.getElementById('loader').style.display = 'none';
+      if (res.success) {
+        toast("Lead liberado", "ok");
+        closeModal();
+        load();
+      } else {
+        toast(res.error || "Error al liberar", "warn");
+      }
+    }
+
+    function openManualSale() {
+      const linea = prompt('Línea/Teléfono del cliente:');
       if (!linea) return;
-      const res = await fetch(`/api/agent/manual_sale?email=${encodeURIComponent(agentEmail)}&linea=${encodeURIComponent(linea)}`, { method: 'POST' }).then(r => r.json());
-      if (res.success) load();
+      fetch(`/api/agent/manual_sale?email=${encodeURIComponent(agentEmail)}&linea=${encodeURIComponent(linea)}`, {method:'POST'})
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            toast("Venta manual creada", "ok");
+            load();
+          } else {
+            toast(res.message || "Error al crear venta manual", "warn");
+          }
+        });
+    }
+
+    function toast(m, t='info') {
+      const d = document.createElement('div');
+      d.className = 'toast';
+      d.style.borderColor = t === 'ok' ? 'var(--ok)' : (t === 'warn' ? 'var(--danger)' : 'var(--accent)');
+      d.innerText = m;
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 4000);
+    }
+
+    async function editComment(mid) {
+      const sale = _data.sales.find(x => x.message_id === mid);
+      if (!sale) return;
+      const c = prompt('Actualizar comentario para el vendedor:', sale.vendedor_comentarios || '');
+      if (c === null) return;
+      
+      const res = await fetch(`/api/seller/sales/${mid}/comment?email=${encodeURIComponent(agentEmail)}`, {
+        method: 'PATCH',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ comentario: c })
+      }).then(r => r.json());
+      
+      if (res.success) {
+        toast("Comentario actualizado", "ok");
+        load();
+      }
     }
 
     init();
