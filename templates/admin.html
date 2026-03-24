@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tigo Leads · Administrador</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --bg0: #050814;
+      --bg1: #0b1220;
+      --card: rgba(15, 27, 51, .72);
+      --line: rgba(148, 163, 184, .18);
+      --muted: #93a4c7;
+      --accent: #00aef0;
+      --danger: #fb7185;
+      --ok: #34d399;
+      --warn: #fbbf24;
+    }
+    body {
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(0, 174, 240, .12), transparent 55%),
+        radial-gradient(900px 500px at 90% 20%, rgba(52, 211, 153, .10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      font-family: 'Inter', sans-serif;
+    }
+    .card { background: var(--card); border: 1px solid var(--line); backdrop-filter: blur(12px); }
+    .pill { border: 1px solid var(--line); background: rgba(2, 6, 23, .35); }
+    .btn { transition: transform .03s ease; }
+    .btn:active { transform: translateY(1px); }
+    .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, SFMono-Regular, monospace; }
+    .tab.active { background: rgba(0, 174, 240, 0.15); border-color: var(--accent); color: var(--accent); }
+    select, option, input, textarea { background-color: #0b1220 !important; color: #e2e8f0 !important; border: 1px solid var(--line) !important; }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100">
+  <div class="max-w-[1200px] mx-auto p-4 md:p-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+          <span class="text-white font-black text-xl">A</span>
+        </div>
+        <div>
+          <h1 class="text-2xl font-black tracking-tight">Tigo Leads · Admin</h1>
+          <p class="text-xs text-slate-400 font-medium">Gestión de Roles · Parámetros del Sistema · Auditoría</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button id="btnRefresh" class="btn px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold ring-1 ring-white/10">Refrescar Datos</button>
+        <a href="/coordinator" class="btn px-4 py-2 rounded-xl bg-sky-500 text-white text-xs font-bold shadow-lg shadow-sky-500/20">Ir a Coordinador</a>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mt-8 flex gap-2 overflow-x-auto pb-4">
+      <button class="tab btn px-6 py-2.5 rounded-xl pill text-xs font-bold transition-all active" data-tab="tab-users">Usuarios y Roles</button>
+      <button class="tab btn px-6 py-2.5 rounded-xl pill text-xs font-bold transition-all" data-tab="tab-settings">Parámetros Sistema</button>
+      <button class="tab btn px-6 py-2.5 rounded-xl pill text-xs font-bold transition-all" data-tab="tab-audit">Logs de Auditoría</button>
+    </div>
+
+    <!-- TOASTS -->
+    <div id="toastWrap" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- TAB: USERS -->
+    <section id="tab-users" class="mt-4">
+      <div class="card rounded-3xl overflow-hidden shadow-soft">
+        <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-white/5">
+          <h2 class="text-sm font-bold text-slate-300">Lista de Personal</h2>
+          <span id="userCount" class="pill px-3 py-1 rounded-full text-[10px] font-bold">-- usuarios</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-white/5 text-slate-500 uppercase tracking-widest font-black text-[10px]">
+              <tr>
+                <th class="px-8 py-4">Email</th>
+                <th class="px-8 py-4">Rol</th>
+                <th class="px-8 py-4">Capacidad</th>
+                <th class="px-8 py-4">Estado</th>
+                <th class="px-8 py-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usersTbody" class="divide-y divide-white/5"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: SETTINGS -->
+    <section id="tab-settings" class="mt-4 hidden">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card rounded-3xl p-8 space-y-6">
+          <h2 class="text-lg font-bold">Tiempos y SLA</h2>
+          <div class="space-y-4">
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SLA de Respuesta (Minutos)</label>
+              <input type="number" id="set_sla_min" class="w-full mt-2 px-4 py-3 rounded-xl text-sm outline-none" placeholder="5">
+              <p class="text-[10px] text-slate-500 mt-2">Tiempo máximo para que un lead NUEVO sea tomado antes de marcar breach.</p>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Timeout Lead Trabado (Minutos)</label>
+              <input type="number" id="set_stuck_min" class="w-full mt-2 px-4 py-3 rounded-xl text-sm outline-none" placeholder="15">
+              <p class="text-[10px] text-slate-500 mt-2">Tiempo tras el cual un lead ASIGNADO se considera "estancado" en el Monitor.</p>
+            </div>
+          </div>
+          <button id="btnSaveTime" class="btn w-full py-4 rounded-xl bg-sky-500 text-white font-bold text-sm shadow-lg shadow-sky-500/20">Guardar Tiempos</button>
+        </div>
+
+        <div class="card rounded-3xl p-8 space-y-6">
+          <h2 class="text-lg font-bold">Motor de Asignación</h2>
+          <div class="space-y-4">
+             <div class="flex items-center justify-between p-4 pill rounded-2xl">
+               <div>
+                 <div class="text-sm font-bold">Auto-Asignación Global</div>
+                 <div class="text-xs text-slate-500">Habilita/Deshabilita el reparto automático.</div>
+               </div>
+               <label class="relative inline-flex items-center cursor-pointer">
+                 <input type="checkbox" id="set_auto_assign" class="sr-only peer">
+                 <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+               </label>
+             </div>
+          </div>
+          <button id="btnSaveEngine" class="btn w-full py-4 rounded-xl bg-white/5 hover:bg-white/10 font-bold text-sm border border-white/10">Sincronizar Motor</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: AUDIT -->
+    <section id="tab-audit" class="mt-4 hidden">
+       <div class="card rounded-3xl p-8 flex flex-col items-center justify-center min-h-[300px]">
+         <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+           <span class="text-2xl">📜</span>
+         </div>
+         <h3 class="text-lg font-bold">Próximamente: Historial de Auditoría</h3>
+         <p class="text-slate-500 text-sm mt-1 text-center max-w-sm">Aquí podrás ver quién liberó leads, quién forzó offline y qué cambios se hicieron en la configuración.</p>
+       </div>
+    </section>
+  </div>
+
+  <!-- Modal Edit User -->
+  <div id="modalUser" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="card rounded-3xl w-full max-w-md p-8 shadow-soft relative z-10">
+      <h3 class="text-xl font-bold mb-2" id="modalUserEmail">usuario@mail.com</h3>
+      <p class="text-xs text-slate-400 mb-6">Modifica privilegios y capacidad operativa</p>
+      
+      <div class="space-y-6">
+        <div>
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Rol de Usuario</label>
+          <select id="editRole" class="w-full mt-2 px-4 py-3 rounded-xl text-sm outline-none">
+            <option value="AGENT">AGENT (Vendedor)</option>
+            <option value="COORD">COORD (Supervisor)</option>
+            <option value="ADMIN">ADMIN (Control Total)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Capacidad (Max Leads)</label>
+          <input type="number" id="editMaxLeads" class="w-full mt-2 px-4 py-3 rounded-xl text-sm outline-none">
+        </div>
+      </div>
+
+      <div class="mt-8 flex gap-3">
+        <button id="modalUserCancel" class="btn flex-1 py-4 rounded-xl bg-white/5 text-xs font-bold border border-white/10">Cancelar</button>
+        <button id="modalUserSave" class="btn flex-1 py-4 rounded-xl bg-sky-500 text-white text-xs font-bold">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let USERS = [];
+    let SETTINGS = {};
+
+    const $ = (id) => document.getElementById(id);
+
+    async function load() {
+      try {
+        const [uRes, sRes] = await Promise.all([
+          fetch('/api/admin/users').then(r => r.json()),
+          fetch('/api/admin/settings').then(r => r.json())
+        ]);
+        
+        if (uRes.success) USERS = uRes.items;
+        if (sRes.success) SETTINGS = sRes.settings;
+        
+        render();
+      } catch (e) {
+        console.error(e);
+        toast('Error de conexión', 'err');
+      }
+    }
+
+    function render() {
+      // Users
+      $('userCount').textContent = USERS.length + ' usuarios';
+      $('usersTbody').innerHTML = USERS.map(u => `
+        <tr class="hover:bg-white/5 transition-all">
+          <td class="px-8 py-5 font-bold">${u.email}</td>
+          <td class="px-8 py-5">
+            <span class="px-2 py-1 rounded-lg text-[10px] font-black tracking-widest ${u.role === 'ADMIN' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/20' : (u.role === 'COORD' ? 'bg-sky-500/20 text-sky-400 border border-sky-500/20' : 'bg-slate-700/50 text-slate-400')}">${u.role}</span>
+          </td>
+          <td class="px-8 py-5 font-bold text-slate-300 mono">${u.max_leads}</td>
+          <td class="px-8 py-5">
+            <span class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full ${u.last_seen_ago_sec < 90 ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-600'}"></span>
+              <span class="text-[10px] font-bold ${u.last_seen_ago_sec < 90 ? 'text-emerald-400' : 'text-slate-500'}">${u.estado}</span>
+            </span>
+          </td>
+          <td class="px-8 py-5 text-right">
+            <button class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold border border-white/10" onclick="editUser('${u.email}')">Editar</button>
+          </td>
+        </tr>
+      `).join('');
+
+      // Settings
+      $('set_sla_min').value = SETTINGS.sla_min || 5;
+      $('set_stuck_min').value = SETTINGS.stuck_min || 15;
+      $('set_auto_assign').checked = SETTINGS.auto_assign_enabled === 'true';
+    }
+
+    function editUser(email) {
+      const u = USERS.find(x => x.email === email);
+      if (!u) return;
+      $('modalUserEmail').textContent = u.email;
+      $('editRole').value = u.role;
+      $('editMaxLeads').value = u.max_leads;
+      $('modalUser').classList.remove('hidden');
+    }
+
+    $('modalUserSave').onclick = async () => {
+      const email = $('modalUserEmail').textContent;
+      const role = $('editRole').value;
+      const max_leads = parseInt($('editMaxLeads').value);
+      
+      const res = await fetch('/api/admin/users/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({email, role, max_leads})
+      }).then(r => r.json());
+      
+      if (res.success) {
+        toast('Usuario actualizado', 'ok');
+        $('modalUser').classList.add('hidden');
+        load();
+      }
+    };
+
+    $('btnSaveTime').onclick = async () => {
+      const sla_min = $('set_sla_min').value;
+      const stuck_min = $('set_stuck_min').value;
+      
+      const res = await fetch('/api/admin/settings/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({sla_min, stuck_min})
+      }).then(r => r.json());
+      
+      if (res.success) toast('Tiempos actualizados', 'ok');
+    };
+
+    $('btnSaveEngine').onclick = async () => {
+      const auto_assign_enabled = $('set_auto_assign').checked ? 'true' : 'false';
+      const res = await fetch('/api/admin/settings/update', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({auto_assign_enabled})
+      }).then(r => r.json());
+      
+      if (res.success) toast('Motor sincronizado', 'ok');
+    };
+
+    // UI Wiring
+    document.querySelectorAll('.tab').forEach(b => b.onclick = (e) => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('section').forEach(x => x.classList.add('hidden'));
+      e.target.classList.add('active');
+      $(e.target.dataset.tab).classList.remove('hidden');
+    });
+
+    $('modalUserCancel').onclick = () => $('modalUser').classList.add('hidden');
+    $('btnRefresh').onclick = load;
+
+    function toast(msg, type='info') {
+      const el = document.createElement('div');
+      el.className = `px-6 py-3 rounded-2xl card border ${type === 'ok' ? 'border-emerald-500/40' : 'border-sky-500/40'} text-xs font-bold shadow-2xl animate-bounce`;
+      el.textContent = msg;
+      $('toastWrap').appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    load();
+  </script>
+</body>
+</html>

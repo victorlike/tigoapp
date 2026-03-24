@@ -4,6 +4,7 @@ routes/coordinator.py — Coordinator dashboard data
 from database import execute, fetchone
 from auth import verify_apps_script_key
 from fastapi import APIRouter, Depends
+from utils.settings import get_int_setting
 
 router = APIRouter()
 
@@ -25,15 +26,16 @@ def get_dashboard():
         fetch=True
     )
 
-    # 2. Stuck Leads (Rescue)
-    # Leads assigned for more than 15 minutes
-    stuck = execute(
-        """
-        SELECT *, EXTRACT(EPOCH FROM (now() - fecha_asignacion))::int / 60 as minutos_asignado
-        FROM leads
-        WHERE estado = 'ASIGNADO'
-          AND fecha_asignacion < now() - interval '15 minutes'
-        ORDER BY fecha_asignacion ASC
+    # 2. Stuck Leads (ASIGNADO > 15 min)
+    stuck_min = get_int_setting("stuck_min", 15)
+    stuck_leads = execute(
+        f"""
+        SELECT 
+            message_id, linea, nombre, agente,
+            EXTRACT(EPOCH FROM (now() - fecha_asignacion))/60 as minutos_asignado
+        FROM leads 
+        WHERE estado = 'ASIGNADO' AND fecha_asignacion < now() - interval '{stuck_min} minutes'
+        ORDER BY minutos_asignado DESC
         """,
         fetch=True
     )
@@ -67,7 +69,8 @@ def get_dashboard():
     kpi_nosale = fetchone("SELECT COUNT(*) as total FROM leads WHERE resultado = 'No Venta' AND updated_at::date = now()::date")
     
     # SLA Breach (NUEVO > 5 min)
-    kpi_sla = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '5 minutes'")
+    sla_min = get_int_setting("sla_min", 5)
+    kpi_sla = fetchone(f"SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '{sla_min} minutes'")
 
     # 6. Sales by agent and product (Including SEGUIMIENTO breakdown)
     detailed_sales = execute(

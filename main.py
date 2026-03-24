@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 
-from routes import leads, agents, followups, sales, coordinator, seller
+from routes import leads, agents, followups, sales, coordinator, seller, admin
 
 load_dotenv()
 
@@ -25,6 +25,15 @@ app.include_router(followups.router,    prefix="/api/followups",   tags=["follow
 app.include_router(sales.router,        prefix="/api/sales",       tags=["sales"])
 app.include_router(coordinator.router,  prefix="/api/coordinator", tags=["coordinator"])
 app.include_router(seller.router,       prefix="/api/seller",      tags=["seller"])
+app.include_router(admin.router,        prefix="/api/admin",       tags=["admin"])
+
+
+# ─── Startup Event ───────────────────────────────────────
+@app.on_event("startup")
+async def startup_event():
+    """Run migrations on startup."""
+    from routes.admin import migrate_admin_schema
+    migrate_admin_schema()
 
 
 # ─── Frontend routes (Jinja2 views) ─────────────────────
@@ -44,6 +53,12 @@ async def leaddesk(request: Request):
 async def coordinator_view(request: Request):
     """Coordinator view."""
     return templates.TemplateResponse("coordinator.html", {"request": request})
+
+
+@app.get("/admin", response_class=HTMLResponse, include_in_schema=False)
+async def admin_view(request: Request):
+    """Administrator view."""
+    return templates.TemplateResponse("admin.html", {"request": request})
 
 
 # ─── Health check ───────────────────────────────────────

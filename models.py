@@ -107,6 +107,7 @@ class AgentOut(BaseModel):
     email: str
     estado: str = "OFFLINE"
     last_seen: Optional[datetime] = None
+    role: str = "AGENT"
     max_leads: int = 1
     last_assigned: Optional[datetime] = None
     updated_at: Optional[datetime] = None

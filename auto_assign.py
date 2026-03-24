@@ -4,6 +4,7 @@ Runs after a new lead arrives or an agent goes ACTIVO.
 """
 from database import execute, fetchone
 from datetime import datetime, timezone
+from utils.settings import get_setting
 
 CONNECTED_SECONDS = 90
 MAX_LEADS_DEFAULT = 1
@@ -11,10 +12,14 @@ MAX_LEADS_DEFAULT = 1
 
 def run():
     """
-    1. Find agents ACTIVO + seen in last 90s + below their max_leads
-    2. Find NUEVO leads with no agent
-    3. Assign round-robin by (open_leads ASC, last_assigned ASC)
+    1. Check if auto-assignment is enabled in settings
+    2. Find agents ACTIVO + seen in last 90s + below their max_leads
+    3. Find NUEVO leads with no agent
+    4. Assign round-robin by (open_leads ASC, last_assigned ASC)
     """
+    if get_setting("auto_assign_enabled", "true") != "true":
+        return {"assigned": 0, "status": "disabled"}
+
     now = datetime.now(timezone.utc)
 
     # Load eligible agents
