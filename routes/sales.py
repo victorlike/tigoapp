@@ -14,6 +14,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+DEFAULT_BO_STATUS_LIST = [
+    "Pendiente de carga", 
+    "OK", 
+    "Venta aprobada", 
+    "Venta rechazada", 
+    "Venta cancelada", 
+    "Venta duplicada", 
+    "Venta con error", 
+    "Venta con observación"
+]
+
 
 @router.post("")
 def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
