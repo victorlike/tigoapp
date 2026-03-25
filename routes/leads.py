@@ -25,6 +25,7 @@ def create_lead(lead: LeadCreate):
     # 1. Duplicate Check by message_id
     existing = fetchone("SELECT id FROM leads WHERE message_id = %s", (lead.message_id,))
     if existing:
+        logger.info(f"Ingestion: Lead {lead.message_id} already exists (id: {existing['id']})")
         from database import log_audit
         log_audit("system", "ingestion_duplicate", lead.message_id, f"Phone: {lead.linea}")
         return {"success": True, "message": "Lead already exists", "id": str(existing["id"])}
@@ -38,13 +39,14 @@ def create_lead(lead: LeadCreate):
             (suffix,)
         )
         if dup:
-             logger.info(f"Duplicate phone detected: {suffix} matching {dup['message_id']}")
+             logger.info(f"Ingestion: Duplicate phone detected: {suffix} matching {dup['message_id']}")
              from database import log_audit
              log_audit("system", "ingestion_warning", lead.message_id, f"Potential duplicate phone suffix: {suffix}")
 
     created = lead.created_at or datetime.datetime.now(datetime.timezone.utc)
     updated = lead.updated_at or created
 
+    logger.info(f"Ingestion: Attempting to insert lead {lead.message_id} ({lead.nombre})")
     try:
         execute(
             """
@@ -63,20 +65,22 @@ def create_lead(lead: LeadCreate):
                 created, updated
             )
         )
+        logger.info(f"Ingestion: Successfully inserted lead {lead.message_id}")
         from database import log_audit
         log_audit("system", "ingestion_success", lead.message_id, f"Lead for {lead.nombre} ({lead.linea}) created.")
     except Exception as e:
-        logger.error(f"Error inserting lead {lead.message_id}: {e}")
+        logger.error(f"Ingestion: Error inserting lead {lead.message_id}: {e}")
         from database import log_audit
         log_audit("system", "ingestion_error", lead.message_id, str(e))
         raise HTTPException(status_code=500, detail="Error saving lead to database")
 
     # Try auto-assign immediately
     try:
+        logger.info(f"Ingestion: Triggering auto-assign for {lead.message_id}")
         res = auto_assign.run()
-        logger.info(f"Auto-assign result for {lead.message_id}: {res}")
+        logger.info(f"Ingestion: Auto-assign result for {lead.message_id}: {res}")
     except Exception as ae:
-        logger.error(f"Auto-assign error during lead creation: {ae}")
+        logger.error(f"Ingestion: Auto-assign error during lead creation: {ae}")
 
     return {"success": True, "message": "Lead created", "message_id": lead.message_id}
 

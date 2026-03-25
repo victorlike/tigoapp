@@ -60,7 +60,7 @@ function extractLeadFromEmail_(msg) {
   // Use Gmail Message-Id as unique identifier
   const messageId = 'gmail_' + Utilities.base64Encode(msg.getId());
 
-  return {
+  const lead = {
     message_id: messageId,
     nombre: data.nombre || subject,
     linea: data.linea || null,
