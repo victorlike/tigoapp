@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS agents (
 -- ── SALES ──────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS sales (
   id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  message_id              TEXT,
+  message_id              TEXT UNIQUE,
   agente                  TEXT,
   fecha                   TIMESTAMPTZ DEFAULT now(),
   
