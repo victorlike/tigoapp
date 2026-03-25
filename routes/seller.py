@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from models import SaleCommentUpdate
 from database import execute, fetchone
 from datetime import datetime, timezone
+from utils.logic import get_now
 import logging
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ def update_sale_comment(message_id: str, body: SaleCommentUpdate, email: str):
     if not sale:
         raise HTTPException(403, "No tienes permiso para comentar esta venta o no existe.")
 
-    now = datetime.now(timezone.utc)
+    now = get_now()
     execute(
         """
         UPDATE sales

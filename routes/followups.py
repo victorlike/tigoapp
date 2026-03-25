@@ -4,6 +4,7 @@ routes/followups.py — Followup management (SEGUIMIENTO leads)
 from fastapi import APIRouter
 from database import execute
 from datetime import datetime, timezone
+from utils.logic import get_now
 
 router = APIRouter()
 
@@ -11,7 +12,6 @@ router = APIRouter()
 @router.get("")
 def get_followups(email: str):
     """Return all SEGUIMIENTO leads for the given agent."""
-    from utils.logic import get_now
     now = get_now()
     rows = execute(
         """

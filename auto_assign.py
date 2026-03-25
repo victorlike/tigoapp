@@ -1,7 +1,7 @@
 import logging
-from database import execute, fetchone
-from datetime import datetime, timezone
 from utils.settings import get_setting
+from utils.logic import get_now
+from database import execute, fetchone, log_audit
 
 logger = logging.getLogger(__name__)
 
@@ -16,13 +16,11 @@ def run():
     3. Find NUEVO leads with no agent
     4. Assign round-robin by (open_leads ASC, last_assigned ASC)
     """
-    from utils.logic import get_now
     enabled = get_setting("auto_assign_enabled", "true")
     if enabled != "true":
         logger.info("Auto-assign skipped: disabled in settings")
         return {"assigned": 0, "status": "disabled"}
 
-    from database import log_audit
     log_audit("system", "auto_assign_start", None, "Starting auto-assignment process.")
 
     now = get_now()

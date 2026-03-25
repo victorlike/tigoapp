@@ -7,6 +7,7 @@ import datetime
 from database import execute, fetchone
 from auth import verify_apps_script_key
 from utils.mailer import send_backoffice_email
+from utils.logic import normalize_product_group, get_phone_suffix, get_now
 import logging
 from typing import Optional
 
@@ -29,7 +30,6 @@ DEFAULT_BO_STATUS_LIST = [
 @router.post("")
 def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
     """Register a new sale with full metadata."""
-    from utils.logic import normalize_product_group, get_phone_suffix, get_now
     
     # 1. Normalize Product
     producto = normalize_product_group(sale.producto)
@@ -104,7 +104,6 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
     """
     Creates both a Lead (closed as Venta) and a Sale record for ad-hoc agent entries.
     """
-    from utils.logic import normalize_product_group, get_phone_suffix, get_now
     
     # 1. Normalize Product
     producto = normalize_product_group(sale.producto)

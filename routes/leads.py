@@ -4,8 +4,9 @@ routes/leads.py — Lead management endpoints
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 import datetime
 from models import LeadCreate, LeadStatusUpdate, LeadOut, ResponseOK, LeadRelease
-from database import execute, fetchone
+from database import execute, fetchone, log_audit
 from auth import verify_apps_script_key
+from utils.logic import get_phone_suffix, get_now
 import auto_assign
 import logging
 
@@ -20,13 +21,11 @@ OPEN_STATES = {"ASIGNADO", "SEGUIMIENTO"}
 @router.post("", dependencies=[Depends(verify_apps_script_key)])
 def create_lead(lead: LeadCreate):
     """Create a new lead from Gmail. Called by Apps Script."""
-    from utils.logic import get_phone_suffix, get_now
 
     # 1. Duplicate Check by message_id
     existing = fetchone("SELECT id FROM leads WHERE message_id = %s", (lead.message_id,))
     if existing:
         logger.info(f"Ingestion: Lead {lead.message_id} already exists (id: {existing['id']})")
-        from database import log_audit
         log_audit("system", "ingestion_duplicate", lead.message_id, f"Phone: {lead.linea}")
         return {"success": True, "message": "Lead already exists", "id": str(existing["id"])}
     
@@ -40,7 +39,6 @@ def create_lead(lead: LeadCreate):
         )
         if dup:
              logger.info(f"Ingestion: Duplicate phone detected: {suffix} matching {dup['message_id']}")
-             from database import log_audit
              log_audit("system", "ingestion_warning", lead.message_id, f"Potential duplicate phone suffix: {suffix}")
 
     created = lead.created_at or get_now()
@@ -66,11 +64,9 @@ def create_lead(lead: LeadCreate):
             )
         )
         logger.info(f"Ingestion: Successfully inserted lead {lead.message_id}")
-        from database import log_audit
         log_audit("system", "ingestion_success", lead.message_id, f"Lead for {lead.nombre} ({lead.linea}) created.")
     except Exception as e:
         logger.error(f"Ingestion: Error inserting lead {lead.message_id}: {e}")
-        from database import log_audit
         log_audit("system", "ingestion_error", lead.message_id, str(e))
         raise HTTPException(status_code=500, detail="Error saving lead to database")
 
@@ -101,7 +97,7 @@ def get_my_leads(email: str):
 @router.get("/followups")
 def get_followups(email: str):
     """Return scheduled followups for the agent."""
-    now = datetime.now()
+    now = get_now()
     items = execute(
         """
         SELECT *, (rellamar_en <= %s) AS due_now 
@@ -119,7 +115,7 @@ def get_followups(email: str):
 @router.get("/dup_check")
 def duplicate_check(phone: str, message_id: str):
     """Check for recent leads with the same phone suffix."""
-    from utils.logic import get_phone_suffix
+    
     suffix = get_phone_suffix(phone)
     if not suffix:
         return {"success": True, "today": 0, "items": []}
@@ -276,10 +272,7 @@ def release_lead(message_id: str, body: LeadRelease, email: str):
         else:
             is_offline = owner["estado"] == "OFFLINE"
             last_seen = owner["last_seen"]
-            if last_seen and last_seen.tzinfo is None:
-                last_seen = last_seen.replace(tzinfo=timezone.utc)
-            
-            inactive = (datetime.now(timezone.utc) - last_seen).total_seconds() > 180
+            inactive = (get_now() - last_seen).total_seconds() > 180
             if is_offline or inactive:
                 can_release = True
             
@@ -348,8 +341,8 @@ def bulk_create_leads(leads: list[LeadOut]):
             l.compania, l.operacion, l.tsource, l.modal, l.direccion, l.email,
             l.fecha_cierre, l.notas, l.minutos_asignacion, l.seguimiento_tomado_por,
             l.seguimiento_tomado_en, l.liberado_por, l.liberado_en, l.liberado_motivo, l.error,
-            l.created_at or datetime.datetime.now(datetime.timezone.utc),
-            l.updated_at or l.created_at or datetime.datetime.now(datetime.timezone.utc)
+            l.created_at or get_now(),
+            l.updated_at or l.created_at or get_now()
         )
         for l in leads
     ]
