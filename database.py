@@ -46,7 +46,7 @@ def get_pool():
                 maxconn=10,
                 dsn=DATABASE_URL,
                 connect_timeout=10,
-                options="-c prepare_threshold=0"
+                options="-c timezone=America/Montevideo -c prepare_threshold=0"
             )
             logger.info("Connection pool initialized successfully.")
         except Exception as e:

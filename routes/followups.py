@@ -11,7 +11,8 @@ router = APIRouter()
 @router.get("")
 def get_followups(email: str):
     """Return all SEGUIMIENTO leads for the given agent."""
-    now = datetime.now(timezone.utc)
+    from utils.logic import get_now
+    now = get_now()
     rows = execute(
         """
         SELECT message_id, nombre, linea, plan, rellamar_en,

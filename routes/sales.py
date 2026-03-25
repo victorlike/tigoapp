@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("")
 def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
     """Register a new sale with full metadata."""
-    from utils.logic import normalize_product_group, get_phone_suffix
+    from utils.logic import normalize_product_group, get_phone_suffix, get_now
     
     # 1. Normalize Product
     producto = normalize_product_group(sale.producto)
@@ -59,7 +59,7 @@ def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         bo_email_enviado_at, suptipo_reco, created_at, updated_at
     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
-    created = sale.created_at or datetime.datetime.now(datetime.timezone.utc)
+    created = sale.created_at or get_now()
     updated = sale.updated_at or created
     
     params = (
@@ -93,14 +93,14 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
     """
     Creates both a Lead (closed as Venta) and a Sale record for ad-hoc agent entries.
     """
-    from utils.logic import normalize_product_group
+    from utils.logic import normalize_product_group, get_phone_suffix, get_now
     
     # 1. Normalize Product
     producto = normalize_product_group(sale.producto)
     
     # 2. Create the Lead Record (so it exists in the leads table for reporting)
     # Manual sales are inherently "Venta" status
-    created = sale.created_at or datetime.datetime.now(datetime.timezone.utc)
+    created = sale.created_at or get_now()
     updated = sale.updated_at or created
     
     execute(
@@ -256,8 +256,8 @@ def bulk_create_sales(sales: list[SaleCreate]):
             s.backoffice_sub_status, s.backoffice_agent, s.backoffice_at, s.backoffice_notas,
             s.origen, s.valor_plan, s.valor_telefono, s.revenue, s.revenuedolar,
             s.bo_email_enviado_at, s.suptipo_reco,
-            s.created_at or datetime.datetime.now(datetime.timezone.utc),
-            s.updated_at or s.created_at or datetime.datetime.now(datetime.timezone.utc)
+            s.created_at or get_now(),
+            s.updated_at or s.created_at or get_now()
         )
         for s in sales
     ]

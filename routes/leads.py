@@ -20,8 +20,8 @@ OPEN_STATES = {"ASIGNADO", "SEGUIMIENTO"}
 @router.post("", dependencies=[Depends(verify_apps_script_key)])
 def create_lead(lead: LeadCreate):
     """Create a new lead from Gmail. Called by Apps Script."""
-    from utils.logic import get_phone_suffix
-    
+    from utils.logic import get_phone_suffix, get_now
+
     # 1. Duplicate Check by message_id
     existing = fetchone("SELECT id FROM leads WHERE message_id = %s", (lead.message_id,))
     if existing:
@@ -43,7 +43,7 @@ def create_lead(lead: LeadCreate):
              from database import log_audit
              log_audit("system", "ingestion_warning", lead.message_id, f"Potential duplicate phone suffix: {suffix}")
 
-    created = lead.created_at or datetime.datetime.now(datetime.timezone.utc)
+    created = lead.created_at or get_now()
     updated = lead.updated_at or created
 
     logger.info(f"Ingestion: Attempting to insert lead {lead.message_id} ({lead.nombre})")

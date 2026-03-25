@@ -38,3 +38,8 @@ def is_within_timeframe(t1: datetime, t2: datetime, seconds: int = 60) -> bool:
     """Check if two datetimes are within X seconds of each other."""
     if not t1 or not t2: return False
     return abs((t1 - t2).total_seconds()) <= seconds
+
+def get_now() -> datetime:
+    """Return current time in America/Montevideo timezone."""
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo("America/Montevideo"))

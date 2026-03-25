@@ -16,6 +16,7 @@ def run():
     3. Find NUEVO leads with no agent
     4. Assign round-robin by (open_leads ASC, last_assigned ASC)
     """
+    from utils.logic import get_now
     enabled = get_setting("auto_assign_enabled", "true")
     if enabled != "true":
         logger.info("Auto-assign skipped: disabled in settings")
@@ -24,7 +25,7 @@ def run():
     from database import log_audit
     log_audit("system", "auto_assign_start", None, "Starting auto-assignment process.")
 
-    now = datetime.now(timezone.utc)
+    now = get_now()
 
     # Load eligible agents
     agents = execute(

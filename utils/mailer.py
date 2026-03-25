@@ -68,7 +68,8 @@ def send_backoffice_email(sale: SaleCreate):
 
 def build_sale_html(sale: SaleCreate):
     """Generates a rich HTML table for the sale."""
-    now_str = datetime.now().strftime("%d/%m/%Y %H:%M")
+    from utils.logic import get_now
+    now_str = get_now().strftime("%d/%m/%Y %H:%M")
     
     rows = [
         ("Agente", sale.agente),

@@ -114,7 +114,7 @@ def get_audit_logs():
     logs = execute("""
         SELECT actor, action, target, details, 
                EXTRACT(EPOCH FROM (now() - timestamp))::int as ago_sec,
-               to_char(timestamp at time zone 'UTC' at time zone 'America/Montevideo', 'DD/MM HH24:MI') as fecha_fmt
+               to_char(timestamp, 'DD/MM HH24:MI') as fecha_fmt
         FROM audit_logs 
         ORDER BY timestamp DESC 
         LIMIT 150

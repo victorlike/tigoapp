@@ -20,10 +20,11 @@ OPEN_STATE = "ASIGNADO"
 def touch_agent(email: str):
     """Update agent LastSeen (heartbeat). Creates agent if not exists."""
     from utils.settings import get_setting
+    from utils.logic import get_now
     email = email.lower().strip()
     
     existing = fetchone("SELECT email FROM agents WHERE email = %s", (email,))
-    now = datetime.now(timezone.utc)
+    now = get_now()
     
     if not existing:
         allowed_domain = get_setting("allowed_domain", "@xtendo-it.com").strip().lower()
@@ -60,8 +61,8 @@ def set_agent_status(email: str, body: AgentStatusUpdate):
                 409,
                 detail=f"No puedes desconectarte con {row['n']} lead(s) abierto(s)."
             )
-
-    now = datetime.now(timezone.utc)
+    from utils.logic import get_now
+    now = get_now()
     execute(
         "UPDATE agents SET estado = %s, last_seen = %s, updated_at = %s WHERE email = %s",
         (body.estado, now, now, email)
@@ -80,14 +81,14 @@ def get_agent_init(email: str, login: bool = False):
     """
     Called on page load. Aggregates data needed for the Agent Portal.
     """
-    from utils.settings import get_setting
+    from utils.logic import get_setting, get_now
     email = email.lower().strip()
     
     allowed_domain = get_setting("allowed_domain", "@xtendo-it.com").strip().lower()
     if not email.endswith(allowed_domain):
         return {"success": False, "error": f"Dominio de correo no permitido. Debe terminar en {allowed_domain}"}
 
-    now = datetime.now(timezone.utc)
+    now = get_now()
     agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
     
     # Update last_seen on every init/refresh
@@ -161,7 +162,8 @@ def get_agent_info(email: str):
     
     # If not exists, auto-create
     if not agent:
-        now = datetime.now(timezone.utc)
+        from utils.logic import get_now
+        now = get_now()
         execute(
             "INSERT INTO agents (email, estado, last_seen, max_leads, updated_at, role) VALUES (%s, %s, %s, %s, %s, %s)",
             (email, 'OFFLINE', now, 1, now, 'AGENT')
@@ -187,8 +189,9 @@ def bulk_create_agents(agents: list[AgentOut]):
         last_assigned = EXCLUDED.last_assigned,
         updated_at = EXCLUDED.updated_at
     """
+    from utils.logic import get_now
     params = [
-        (a.email, a.estado, a.last_seen, a.max_leads, a.last_assigned, a.updated_at or datetime.now())
+        (a.email, a.estado, a.last_seen, a.max_leads, a.last_assigned, a.updated_at or get_now())
         for a in agents
     ]
     
@@ -242,7 +245,8 @@ def take_lead(email: str):
     if not lead:
         return {"success": False, "message": "No leads in queue"}
 
-    now = datetime.now(timezone.utc)
+    from utils.logic import get_now
+    now = get_now()
     execute(
         """
         UPDATE leads
@@ -264,7 +268,8 @@ def take_lead(email: str):
 @router.post("/manual_sale")
 def create_manual_sale(email: str, linea: str, nombre: str = ""):
     """Create a lead directly in ASIGNADO state for manual sale."""
-    now = datetime.now(timezone.utc)
+    from utils.logic import get_now
+    now = get_now()
     message_id = f"manual-{int(now.timestamp() * 1000)}"
     
     execute(
