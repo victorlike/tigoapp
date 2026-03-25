@@ -202,42 +202,42 @@ function migrateLeadsFromSheet(sheetName) {
     }
 
     return {
-      message_id: String(messageId),
-      nombre: getValue_(row, map, 'Nombre'),
-      linea: getValue_(row, map, 'Linea'),
-      plan: getValue_(row, map, 'Plan'),
+      message_id: getValue_(row, map, 'MessageId', 17) || getValue_(row, map, 'message_id', 17) || ('mig_' + sheetName + '_' + index + '_' + new Date().getTime()),
+      nombre: getValue_(row, map, 'Nombre') || getValue_(row, map, 'nombre'), // Name seems missing in CSV
+      linea: getValue_(row, map, 'Linea', 6) || getValue_(row, map, 'linea', 6),
+      plan: getValue_(row, map, 'Plan', 4) || getValue_(row, map, 'plan', 4),
       estado: estado,
-      agente: getValue_(row, map, 'Agente'),
-      agente_original: getValue_(row, map, 'AgenteOriginal') || getValue_(row, map, 'Agente'),
-      fecha_gmail: parseDate_(getValue_(row, map, 'Fecha Gmail') || getValue_(row, map, 'Fecha')),
-      fecha_asignacion: parseDate_(getValue_(row, map, 'FechaAsignacion')),
+      agente: getValue_(row, map, 'Agente', 19) || getValue_(row, map, 'agente', 19),
+      agente_original: getValue_(row, map, 'AgenteOriginal') || getValue_(row, map, 'Agente', 19),
+      fecha_gmail: parseDate_(getValue_(row, map, 'Fecha Gmail', 0) || getValue_(row, map, 'Fecha', 0)),
+      fecha_asignacion: parseDate_(getValue_(row, map, 'FechaAsignacion', 20)),
       resultado: resultado,
       rellamar_en: parseDate_(getValue_(row, map, 'RellamarEn')),
-      reagendar_tipo: getValue_(row, map, 'ReagendarTipo'),
+      reagendar_tipo: getValue_(row, map, 'ReagendarTipo', 23),
       nocontacto_intentos: parseInt(getValue_(row, map, 'NoContactoIntentos')) || 0,
       sla_asignacion: getValue_(row, map, 'SLA_Asignacion'),
       tip_tipo: getValue_(row, map, 'Tip_Tipo'),
       tip_resultado: getValue_(row, map, 'Tip_Resultado'),
       tip_motivo: getValue_(row, map, 'Tip_Motivo'),
       tip_submotivo: getValue_(row, map, 'Tip_Submotivo'),
-      tracking: getValue_(row, map, 'Tracking'),
+      tracking: getValue_(row, map, 'Tracking', 5),
       gaid: getValue_(row, map, 'GAID'),
       cantidad_ventas: parseInt(getValue_(row, map, 'Cantidad_Ventas')) || 0,
-      origen: getValue_(row, map, 'Origen'),
-      url: getValue_(row, map, 'Url'),
-      equipo: getValue_(row, map, 'Equipo'),
-      utm: getValue_(row, map, 'Utm'),
-      horario: getValue_(row, map, 'Horario'),
-      timestamp_sheet: getValue_(row, map, 'Timestamp'),
+      origen: getValue_(row, map, 'Origen', 1),
+      url: getValue_(row, map, 'Url', 2),
+      equipo: getValue_(row, map, 'Equipo', 3),
+      utm: getValue_(row, map, 'Utm', 5),
+      horario: getValue_(row, map, 'Horario', 7),
+      timestamp_sheet: getValue_(row, map, 'Timestamp', 8),
       documento: getValue_(row, map, 'Documento'),
       compania: getValue_(row, map, 'Compania'),
-      operacion: getValue_(row, map, 'Operacion'),
+      operacion: getValue_(row, map, 'Operacion', 12),
       tsource: getValue_(row, map, 'Tsource'),
       modal: getValue_(row, map, 'Modal'),
       direccion: getValue_(row, map, 'Direccion'),
-      email: getValue_(row, map, 'Email'),
-      fecha_cierre: parseDate_(getValue_(row, map, 'FechaCierre')),
-      notas: getValue_(row, map, 'Notas'),
+      email: getValue_(row, map, 'Email', 16),
+      fecha_cierre: parseDate_(getValue_(row, map, 'FechaCierre', 22)),
+      notas: getValue_(row, map, 'Notas', 23),
       minutos_asignacion: getValue_(row, map, 'MinutosAsignacion'),
       seguimiento_tomado_por: getValue_(row, map, 'SeguimientoTomadoPor'),
       seguimiento_tomado_en: parseDate_(getValue_(row, map, 'SeguimientoTomadoEn')),
@@ -245,8 +245,8 @@ function migrateLeadsFromSheet(sheetName) {
       liberado_en: parseDate_(getValue_(row, map, 'LiberadoEn')),
       liberado_motivo: getValue_(row, map, 'LiberadoMotivo'),
       error: getValue_(row, map, 'Error'),
-      created_at: parseDate_(getValue_(row, map, 'Fecha Gmail') || getValue_(row, map, 'Fecha') || new Date()),
-      updated_at: parseDate_(getValue_(row, map, 'FechaCierre') || getValue_(row, map, 'Fecha Gmail') || new Date())
+      created_at: parseDate_(getValue_(row, map, 'Fecha Gmail', 0) || getValue_(row, map, 'Fecha', 0) || new Date()),
+      updated_at: parseDate_(getValue_(row, map, 'FechaCierre', 22) || getValue_(row, map, 'Fecha Gmail', 0) || new Date())
     };
   }).filter(l => l.message_id);
 
@@ -294,10 +294,14 @@ function getHeaderMapFromArray_(headers) {
   return map;
 }
 
-function getValue_(row, map, key) {
+function getValue_(row, map, key, indexFallback = null) {
   const idx = map[key] ?? map[key.toLowerCase()] ?? map[key.toUpperCase()] ?? map[key.replace(/\s+/g, '_')];
-  if (idx === undefined) return null;
-  const val = row[idx];
+  
+  // Use index fallback if header not found
+  const finalIdx = (idx !== undefined) ? idx : indexFallback;
+  
+  if (finalIdx === null || finalIdx === undefined) return null;
+  const val = row[finalIdx];
   if (val === undefined || val === null || val === '') return null;
   return String(val).trim();
 }
