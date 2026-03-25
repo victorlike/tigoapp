@@ -82,7 +82,7 @@ async def health():
     return {
         "status": "ok" if db_ok else "degraded",
         "database": "connected" if db_ok else "disconnected",
-        "version": "2.0.2"
+        "version": "2.0.3"
     }
 
 
