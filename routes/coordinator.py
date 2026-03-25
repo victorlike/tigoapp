@@ -506,3 +506,11 @@ def bulk_close_queue(actor: str = "Sistema"):
     log_audit(actor, "CIERRE_MASIVO_COLA", "COLA", f"Se cerraron {num} leads que estaban en estado NUEVO.")
     
     return {"success": True, "closed": num}
+
+@router.post("/fix-migration-dates", dependencies=[Depends(verify_apps_script_key)])
+def fix_migration_dates():
+    """Maintenance: backdate all leads/sales created today to 2 days ago to clear the dashboard."""
+    today = get_now().date()
+    execute("UPDATE sales SET created_at = created_at - interval '2 days' WHERE created_at::date = %s", (today,))
+    execute("UPDATE leads SET created_at = created_at - interval '2 days' WHERE created_at::date = %s", (today,))
+    return {"success": True, "message": "Records backdated successfully"}

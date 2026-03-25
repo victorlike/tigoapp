@@ -152,7 +152,9 @@ function migrateSales() {
       tip_tipo: getValue_(row, map, 'Tip_Tipo'),
       tip_resultado: getValue_(row, map, 'Tip_Resultado'),
       tip_motivo: getValue_(row, map, 'Tip_Motivo'),
-      tip_submotivo: getValue_(row, map, 'Tip_Submotivo')
+      tip_submotivo: getValue_(row, map, 'Tip_Submotivo'),
+      created_at: parseDate_(getValue_(row, map, 'FechaCierre') || getValue_(row, map, 'FechaAsignacion') || new Date()),
+      updated_at: parseDate_(getValue_(row, map, 'FechaCierre') || new Date())
     };
   }).filter(s => s.agente);
 
