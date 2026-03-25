@@ -2,7 +2,7 @@
 routes/leads.py — Lead management endpoints
 """
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
-from datetime import datetime, timezone
+import datetime
 from models import LeadCreate, LeadStatusUpdate, LeadOut, ResponseOK, LeadRelease
 from database import execute, fetchone
 from auth import verify_apps_script_key
@@ -41,7 +41,7 @@ def create_lead(lead: LeadCreate):
         if dup:
              logger.info(f"Duplicate phone detected: {suffix} matching {dup['message_id']}")
 
-    created = lead.created_at or datetime.now(timezone.utc)
+    created = lead.created_at or datetime.datetime.now(datetime.timezone.utc)
     updated = lead.updated_at or created
 
     execute(
@@ -328,8 +328,8 @@ def bulk_create_leads(leads: list[LeadOut]):
             l.compania, l.operacion, l.tsource, l.modal, l.direccion, l.email,
             l.fecha_cierre, l.notas, l.minutos_asignacion, l.seguimiento_tomado_por,
             l.seguimiento_tomado_en, l.liberado_por, l.liberado_en, l.liberado_motivo, l.error,
-            l.created_at or datetime.now(timezone.utc),
-            l.updated_at or l.created_at or datetime.now(timezone.utc)
+            l.created_at or datetime.datetime.now(datetime.timezone.utc),
+            l.updated_at or l.created_at or datetime.datetime.now(datetime.timezone.utc)
         )
         for l in leads
     ]

@@ -3,7 +3,7 @@ routes/sales.py — Sales logging
 """
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from models import SaleCreate
-from datetime import datetime, timezone
+import datetime
 from database import execute, fetchone
 from auth import verify_apps_script_key
 from utils.mailer import send_backoffice_email
@@ -59,7 +59,7 @@ def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         bo_email_enviado_at, suptipo_reco, created_at, updated_at
     ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
-    created = sale.created_at or datetime.now(timezone.utc)
+    created = sale.created_at or datetime.datetime.now(datetime.timezone.utc)
     updated = sale.updated_at or created
     
     params = (
@@ -100,7 +100,7 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
     
     # 2. Create the Lead Record (so it exists in the leads table for reporting)
     # Manual sales are inherently "Venta" status
-    created = sale.created_at or datetime.now(timezone.utc)
+    created = sale.created_at or datetime.datetime.now(datetime.timezone.utc)
     updated = sale.updated_at or created
     
     execute(
@@ -256,8 +256,8 @@ def bulk_create_sales(sales: list[SaleCreate]):
             s.backoffice_sub_status, s.backoffice_agent, s.backoffice_at, s.backoffice_notas,
             s.origen, s.valor_plan, s.valor_telefono, s.revenue, s.revenuedolar,
             s.bo_email_enviado_at, s.suptipo_reco,
-            s.created_at or datetime.now(timezone.utc),
-            s.updated_at or s.created_at or datetime.now(timezone.utc)
+            s.created_at or datetime.datetime.now(datetime.timezone.utc),
+            s.updated_at or s.created_at or datetime.datetime.now(datetime.timezone.utc)
         )
         for s in sales
     ]
