@@ -326,7 +326,7 @@ def bulk_create_leads(leads: list[LeadOut]):
             l.tracking, l.gaid, l.cantidad_ventas,
             l.origen, l.url, l.equipo, l.utm, l.horario, l.timestamp_sheet, l.documento,
             l.compania, l.operacion, l.tsource, l.modal, l.direccion, l.email,
-            l.fecha_cierre, l.notes, l.minutos_asignacion, l.seguimiento_tomado_por,
+            l.fecha_cierre, l.notas, l.minutos_asignacion, l.seguimiento_tomado_por,
             l.seguimiento_tomado_en, l.liberado_por, l.liberado_en, l.liberado_motivo, l.error,
             l.created_at or datetime.now(timezone.utc),
             l.updated_at or l.created_at or datetime.now(timezone.utc)

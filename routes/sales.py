@@ -3,6 +3,7 @@ routes/sales.py — Sales logging
 """
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from models import SaleCreate
+from datetime import datetime, timezone
 from database import execute, fetchone
 from auth import verify_apps_script_key
 from utils.mailer import send_backoffice_email
