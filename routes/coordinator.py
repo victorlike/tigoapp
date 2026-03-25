@@ -88,13 +88,15 @@ def get_dashboard():
     )
 
     # 3. Seguimientos (STRICT Today only)
+    today = get_now().date()
     seguimientos = execute(
         """
         SELECT * FROM leads 
         WHERE estado = 'SEGUIMIENTO' 
-          AND rellamar_en::date = now()::date
+          AND rellamar_en::date = %s
         ORDER BY rellamar_en ASC
         """,
+        (today,),
         fetch=True
     )
 
@@ -109,18 +111,20 @@ def get_dashboard():
     )
 
     # 5. KPIs
+    today = get_now().date()
+    
     # STRICT Today's stats only (no backlog)
-    kpi_queue = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at::date = now()::date")
-    kpi_sales = fetchone("SELECT COUNT(*) as total FROM sales WHERE created_at::date = now()::date")
-    kpi_approved = fetchone("SELECT COUNT(*) as total FROM sales WHERE backoffice_status = 'OK' AND backoffice_at::date = now()::date")
+    kpi_queue = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at::date = %s", (today,))
+    kpi_sales = fetchone("SELECT COUNT(*) as total FROM sales WHERE created_at::date = %s", (today,))
+    kpi_approved = fetchone("SELECT COUNT(*) as total FROM sales WHERE backoffice_status = 'OK' AND backoffice_at::date = %s", (today,))
     
     # We filter by created_at for no-sales to only count leads that were processed today AND entered today? 
     # Actually, better to check leads that were CLOSED today.
-    kpi_nosale = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'CERRADO' AND (resultado IS NULL OR (resultado != 'Venta' AND resultado != 'VENTA')) AND updated_at::date = now()::date")
+    kpi_nosale = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'CERRADO' AND (resultado IS NULL OR (resultado != 'Venta' AND resultado != 'VENTA')) AND updated_at::date = %s", (today,))
     
     # SLA Breach (NUEVO > 5 min - Today only)
     sla_min = get_int_setting("sla_min", 5)
-    kpi_sla = fetchone(f"SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '{sla_min} minutes' AND created_at::date = now()::date")
+    kpi_sla = fetchone(f"SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '{sla_min} minutes' AND created_at::date = %s", (today,))
 
     # 6. Sales by agent and product (Including SEGUIMIENTO breakdown)
     detailed_sales = execute(
@@ -129,8 +133,9 @@ def get_dashboard():
             s.agente, s.producto, s.backoffice_status, s.backoffice_at,
             (SELECT COUNT(*) FROM leads l WHERE l.message_id = s.message_id AND l.resultado = 'Seguimiento') > 0 as is_seguimiento
         FROM sales s
-        WHERE s.created_at::date = now()::date
+        WHERE s.created_at::date = %s
         """,
+        (today,),
         fetch=True
     )
     
@@ -161,10 +166,10 @@ def get_dashboard():
     total_new = kpi_queue["total"] if kpi_queue else 0
 
     # Specific KPI for Pending in Backoffice (Today's only)
-    kpi_pending_bo = fetchone("SELECT COUNT(*) as total FROM sales WHERE (backoffice_status IS NULL OR backoffice_status = 'Pendiente de carga') AND created_at::date = now()::date")
+    kpi_pending_bo = fetchone("SELECT COUNT(*) as total FROM sales WHERE (backoffice_status IS NULL OR backoffice_status = 'Pendiente de carga') AND created_at::date = %s", (today,))
     
     # Specific KPI for Followups Today (STRICT Today only)
-    kpi_fu_today = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'SEGUIMIENTO' AND rellamar_en::date = now()::date")
+    kpi_fu_today = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'SEGUIMIENTO' AND rellamar_en::date = %s", (today,))
 
 
     return {
