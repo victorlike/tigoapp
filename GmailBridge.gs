@@ -23,17 +23,30 @@ function processNewLeads() {
 
   let sent = 0;
   threads.forEach(thread => {
-    const msg = thread.getMessages()[0];
-    if (!msg) return;
+    const messages = thread.getMessages();
+    let threadProcessed = true;
 
-    const lead = extractLeadFromEmail_(msg);
-    if (!lead) return;
+    messages.forEach(msg => {
+      // Skip if message was already processed in a previous run (optional safeguard)
+      // but here we rely on the API's duplicate check by message_id
+      
+      const lead = extractLeadFromEmail_(msg);
+      if (!lead) return;
 
-    const ok = postToRailway_(lead);
-    if (ok) {
+      const ok = postToRailway_(lead);
+      if (ok) {
+        sent++;
+      } else {
+        // If one message fails, we might want to keep the thread in the label
+        // but since we have duplicate checks in the API, it's safer to keep 
+        // trying until all are reported as true (or already exists).
+        threadProcessed = false;
+      }
+    });
+
+    if (threadProcessed) {
       thread.addLabel(doneLabel);
       thread.removeLabel(label);
-      sent++;
     }
   });
 
