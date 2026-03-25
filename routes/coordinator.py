@@ -101,7 +101,7 @@ def get_dashboard():
     backoffice = execute(
         """
         SELECT * FROM sales 
-        WHERE backoffice_status IS NULL OR backoffice_status = 'Pendiente de carga' 
+        WHERE (backoffice_status IS NULL OR backoffice_status = 'Pendiente de carga') 
         ORDER BY created_at ASC
         """,
         fetch=True
@@ -109,13 +109,13 @@ def get_dashboard():
 
     # 5. KPIs
     # Today's stats
-    kpi_queue = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO'")
+    kpi_queue = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at >= current_date")
     kpi_sales = fetchone("SELECT COUNT(*) as total FROM sales WHERE created_at::date = now()::date")
     kpi_approved = fetchone("SELECT COUNT(*) as total FROM sales WHERE backoffice_status = 'OK' AND backoffice_at::date = now()::date")
     
     # We filter by created_at for no-sales to only count leads that were processed today AND entered today? 
     # Actually, better to check leads that were CLOSED today.
-    kpi_nosale = fetchone("SELECT COUNT(*) as total FROM leads WHERE resultado = 'No Venta' AND updated_at::date = now()::date")
+    kpi_nosale = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'CERRADO' AND (resultado IS NULL OR (resultado != 'Venta' AND resultado != 'VENTA')) AND updated_at::date = now()::date")
     
     # SLA Breach (NUEVO > 5 min)
     sla_min = get_int_setting("sla_min", 5)
@@ -159,6 +159,12 @@ def get_dashboard():
     conversion = round((total_sales / total_processed * 100), 1) if total_processed > 0 else 0
     total_new = kpi_queue["total"] if kpi_queue else 0
 
+    # Specific KPI for Pending in Backoffice (Today's only as per "current day" request)
+    kpi_pending_bo = fetchone("SELECT COUNT(*) as total FROM sales WHERE (backoffice_status IS NULL OR backoffice_status = 'Pendiente de carga') AND created_at::date = now()::date")
+    
+    # Specific KPI for Followups Today (Due today + backlog)
+    kpi_fu_today = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'SEGUIMIENTO' AND (rellamar_en::date <= now()::date OR rellamar_en IS NULL)")
+
     from datetime import datetime
     return {
         "success": True,
@@ -178,8 +184,8 @@ def get_dashboard():
             "salesByProductSeguimiento": sales_by_product_seg,
             "conversion": conversion,
             "slaBreached": kpi_sla["total"] if kpi_sla else 0,
-            "followupsToday": len(seguimientos),
-            "pendingInBackoffice": len(backoffice)
+            "followupsToday": kpi_fu_today["total"] if kpi_fu_today else 0,
+            "pendingInBackoffice": kpi_pending_bo["total"] if kpi_pending_bo else 0
         },
         "serverNow": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }

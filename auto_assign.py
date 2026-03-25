@@ -21,6 +21,9 @@ def run():
         logger.info("Auto-assign skipped: disabled in settings")
         return {"assigned": 0, "status": "disabled"}
 
+    from database import log_audit
+    log_audit("system", "auto_assign_start", None, "Starting auto-assignment process.")
+
     now = datetime.now(timezone.utc)
 
     # Load eligible agents
@@ -42,6 +45,7 @@ def run():
 
     if not agents:
         logger.info("Auto-assign: No eligible agents found (ACTIVO + seen in 90s)")
+        log_audit("system", "auto_assign_skip", None, "No eligible agents found (ACTIVO + seen in 90s).")
         return {"assigned": 0}
 
     # Load free leads
@@ -57,6 +61,7 @@ def run():
 
     if not free_leads:
         logger.info(f"Auto-assign: Found {len(agents)} agents but 0 NUEVO leads")
+        log_audit("system", "auto_assign_skip", None, f"Found {len(agents)} eligible agents but 0 NUEVO leads.")
         return {"assigned": 0}
 
     logger.info(f"Auto-assign: Starting assignment of {len(free_leads)} leads to {len(agents)} agents")
@@ -85,6 +90,8 @@ def run():
             "UPDATE agents SET last_assigned = %s, updated_at = %s WHERE email = %s",
             (now, now, agent["email"])
         )
+        
+        log_audit("system", "auto_assign_success", lead["message_id"], f"Assigned to {agent['email']}")
 
         assigned += 1
         agent["open_leads"] += 1

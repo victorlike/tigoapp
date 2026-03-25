@@ -22,12 +22,9 @@ def create_lead(lead: LeadCreate):
     """Create a new lead from Gmail. Called by Apps Script."""
     from utils.logic import get_phone_suffix
     
-    # 1. Message ID Check
-    existing = fetchone(
-        "SELECT id FROM leads WHERE message_id = %s",
-        (lead.message_id,)
-    )
     if existing:
+        from database import log_audit
+        log_audit("system", "ingestion_duplicate", lead.message_id, f"Phone: {lead.linea}")
         return {"success": True, "message": "Lead already exists", "id": str(existing["id"])}
     
     # 2. Phone Suffix Check (Deduplication)
@@ -40,27 +37,37 @@ def create_lead(lead: LeadCreate):
         )
         if dup:
              logger.info(f"Duplicate phone detected: {suffix} matching {dup['message_id']}")
+             from database import log_audit
+             log_audit("system", "ingestion_warning", lead.message_id, f"Potential duplicate phone suffix: {suffix}")
 
     created = lead.created_at or datetime.datetime.now(datetime.timezone.utc)
     updated = lead.updated_at or created
 
-    execute(
-        """
-        INSERT INTO leads (
-            message_id, nombre, linea, plan, fecha_gmail, tracking, gaid,
-            origen, url, equipo, utm, horario, timestamp_sheet,
-            documento, compania, operacion, tsource, modal, direccion, email,
-            created_at, updated_at
+    try:
+        execute(
+            """
+            INSERT INTO leads (
+                message_id, nombre, linea, plan, fecha_gmail, tracking, gaid,
+                origen, url, equipo, utm, horario, timestamp_sheet,
+                documento, compania, operacion, tsource, modal, direccion, email,
+                created_at, updated_at
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                lead.message_id, lead.nombre, lead.linea, lead.plan, lead.fecha_gmail, lead.tracking, lead.gaid,
+                lead.origen, lead.url, lead.equipo, lead.utm, lead.horario, lead.timestamp_sheet,
+                lead.documento, lead.compania, lead.operacion, lead.tsource, lead.modal, lead.direccion, lead.email,
+                created, updated
+            )
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """,
-        (
-            lead.message_id, lead.nombre, lead.linea, lead.plan, lead.fecha_gmail, lead.tracking, lead.gaid,
-            lead.origen, lead.url, lead.equipo, lead.utm, lead.horario, lead.timestamp_sheet,
-            lead.documento, lead.compania, lead.operacion, lead.tsource, lead.modal, lead.direccion, lead.email,
-            created, updated
-        )
-    )
+        from database import log_audit
+        log_audit("system", "ingestion_success", lead.message_id, f"Lead for {lead.nombre} ({lead.linea}) created.")
+    except Exception as e:
+        logger.error(f"Error inserting lead {lead.message_id}: {e}")
+        from database import log_audit
+        log_audit("system", "ingestion_error", lead.message_id, str(e))
+        raise HTTPException(status_code=500, detail="Error saving lead to database")
 
     # Try auto-assign immediately
     try:
@@ -223,6 +230,13 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate, background_tasks
             create_sale(sale_obj, background_tasks)
         except Exception as e:
             logger.error(f"Error creating sale from lead status update: {e}")
+
+    # Try auto-assign immediately after status update in case an agent became free
+    try:
+        from auto_assign import run as run_auto_assign
+        run_auto_assign()
+    except Exception as ae:
+        logger.error(f"Auto-assign error after status update of {message_id}: {ae}")
 
     return {"success": True}
 

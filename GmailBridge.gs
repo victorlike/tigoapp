@@ -82,6 +82,22 @@ function extractLeadFromEmail_(msg) {
     direccion: data.direccion || null,
     email: data.email || null
   };
+
+  // ─── Fallback Regex Parsing (If fields are empty) ───
+  if (!lead.nombre || lead.nombre === subject) {
+    const n = body.match(/Nombre:\s*([^\n|]+)/i);
+    if (n) lead.nombre = n[1].trim();
+  }
+  if (!lead.linea) {
+    const l = body.match(/(?:Línea|Teléfono|Celular):\s*([\d\s+-]+)/i);
+    if (l) lead.linea = l[1].replace(/[^\d]/g, '');
+  }
+  if (!lead.plan) {
+    const p = body.match(/Plan:\s*([^\n|]+)/i);
+    if (p) lead.plan = p[1].trim();
+  }
+
+  return lead;
 }
 
 
@@ -102,7 +118,9 @@ function postToRailway_(lead) {
     if (code === 200 || code === 201) {
       return true;
     } else {
-      Logger.log('⚠️ Railway responded ' + code + ': ' + res.getContentText());
+      const errorText = res.getContentText();
+      Logger.log('⚠️ Railway responded ' + code + ': ' + errorText);
+      // Optional: Send a notification email to the admin on persistent 403 or 500
       return false;
     }
   } catch (e) {
