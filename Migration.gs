@@ -19,6 +19,35 @@ function migrateAll() {
   leadSheets.forEach(sheetName => {
     migrateLeadsFromSheet(sheetName);
   });
+
+  // Finally, apply liberations
+  migrateLeadsLiberados();
+}
+
+/**
+ * 4. Apply Liberations (Updates existing leads)
+ */
+function migrateLeadsLiberados() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName('leads_liberados');
+  if (!sh) return Logger.log('ℹ️ Hoja "leads_liberados" no encontrada');
+
+  const data = sh.getDataRange().getValues();
+  const headers = data.shift();
+  const map = getHeaderMapFromArray_(headers);
+
+  const updates = data.map(row => ({
+    message_id: getValue_(row, map, 'MessageId', 1),
+    liberado_por: getValue_(row, map, 'LiberadoPor', 3),
+    liberado_en: parseDate_(getValue_(row, map, 'Fecha', 0)),
+    liberado_motivo: getValue_(row, map, 'Motivo', 4)
+  })).filter(u => u.message_id);
+
+  // We need a specific endpoint for updating liberations, or reuse bulk_leads
+  // For now, we'll send them to a dedicated update endpoint or leads/bulk 
+  // (if leads/bulk supports partial updates, which standard UPSERT does)
+  postBulk_('/api/leads/bulk', updates);
+  Logger.log(`Liberaciones: ${updates.length} procesadas.`);
 }
 
 /**
@@ -308,10 +337,36 @@ function getValue_(row, map, key, indexFallback = null) {
 
 function parseDate_(val) {
   if (!val) return null;
+  if (val instanceof Date) return val.toISOString();
+  
+  const s = String(val).trim();
+  if (!s) return null;
+
   try {
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return null;
-    return d.toISOString();
+    // Try native first
+    let d = new Date(s);
+    if (!isNaN(d.getTime())) return d.toISOString();
+
+    // Fallback for DD/MM/YYYY HH:mm:ss
+    const parts = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/);
+    if (parts) {
+      const day = parseInt(parts[1], 10);
+      const month = parseInt(parts[2], 10) - 1;
+      const year = parseInt(parts[3], 10);
+      const timePart = parts[4].trim();
+      
+      let d2 = new Date(year, month, day);
+      if (timePart) {
+        const timeParts = timePart.match(/(\d{1,2}):(\d{1,2}):?(\d{1,2})?/);
+        if (timeParts) {
+          d2.setHours(parseInt(timeParts[1], 10) || 0);
+          d2.setMinutes(parseInt(timeParts[2], 10) || 0);
+          d2.setSeconds(parseInt(timeParts[3], 10) || 0);
+        }
+      }
+      return d2.toISOString();
+    }
+    return null;
   } catch (e) {
     return null;
   }
