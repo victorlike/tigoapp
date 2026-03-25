@@ -15,15 +15,23 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-DEFAULT_BO_STATUS_LIST = [
-    "Pendiente de carga", 
-    "OK", 
-    "Venta aprobada", 
-    "Venta rechazada", 
-    "Venta cancelada", 
-    "Venta duplicada", 
-    "Venta con error", 
-    "Venta con observación"
+DEFAULT_BO_STATUS_LIST = ["Pendiente", "Procesado", "Cancelado"]
+
+DEFAULT_BO_SUBSTATUS_LIST = [
+    "Pendiente de carga",
+    "Pendiente de firma",
+    "Pendiente de pago",
+    "Enviada a plateran",
+    "Pendiente de retiro en pick up",
+    "Pendiente de control de documentación",
+    "Documentación rechazada",
+    "Venta cancelada falta retoma",
+    "Venta cancelada Cliente desiste de la venta",
+    "Venta cancelada finalizada",
+    "Venta cancelada Venta mal generada",
+    "Venta cancelada cliente con deuda",
+    "Falta de stock de equipos",
+    "Procesado"
 ]
 
 
@@ -67,8 +75,11 @@ def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         vendedor_comentarios_por, vendedor_comentarios_at, backoffice_status,
         backoffice_sub_status, backoffice_agent, backoffice_at, backoffice_notas,
         origen, valor_plan, valor_telefono, revenue, revenuedolar,
-        bo_email_enviado_at, suptipo_reco, created_at, updated_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        bo_email_enviado_at, suptipo_reco, created_at, updated_at,
+        bo_fecha_preventa, bo_fecha_proceso, bo_procesado_cancelado, 
+        bo_fecha_cancelado, bo_subtipo_venta, bo_columna1, 
+        bo_fecha_generic, bo_seguimiento, bo_seguimiento_interaccion
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
     created = sale.created_at or get_now()
     updated = sale.updated_at or created
@@ -88,7 +99,10 @@ def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         sale.vendedor_comentarios_por, sale.vendedor_comentarios_at, sale.backoffice_status,
         sale.backoffice_sub_status, sale.backoffice_agent, sale.backoffice_at, sale.backoffice_notas,
         sale.origen, sale.valor_plan, sale.valor_telefono, sale.revenue, sale.revenuedolar,
-        sale.bo_email_enviado_at, sale.suptipo_reco, created, updated
+        sale.bo_email_enviado_at, sale.suptipo_reco, created, updated,
+        sale.bo_fecha_preventa, sale.bo_fecha_proceso, sale.bo_procesado_cancelado,
+        sale.bo_fecha_cancelado, sale.bo_subtipo_venta, sale.bo_columna1,
+        sale.bo_fecha_generic, sale.bo_seguimiento, sale.bo_seguimiento_interaccion
     )
     
     execute(query, params)
@@ -143,8 +157,11 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         dg_corresponde, envio_tipo, envio_detalles, cobro_importe, cobro_motivo,
         cobro_linkemail, link_enviado, nombre_link, plateran_cargado, plateran_so,
         estado_pedido, controldoc_subido, controldoc_estado, porta_nip,
-        backoffice_status, created_at, updated_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Pendiente de carga',%s,%s)
+        backoffice_status, created_at, updated_at,
+        bo_fecha_preventa, bo_fecha_proceso, bo_procesado_cancelado, 
+        bo_fecha_cancelado, bo_subtipo_venta, bo_columna1, 
+        bo_fecha_generic, bo_seguimiento, bo_seguimiento_interaccion
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Pendiente de carga',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
     params = (
         sale.message_id, sale.agente, producto, sale.tipo_venta, sale.tipo_venta_original,
@@ -158,7 +175,10 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         sale.dg_corresponde, sale.envio_tipo, sale.envio_detalles, sale.cobro_importe, sale.cobro_motivo,
         sale.cobro_linkemail, sale.link_enviado, sale.nombre_link, sale.plateran_cargado, sale.plateran_so,
         sale.estado_pedido, sale.controldoc_subido, sale.controldoc_estado, sale.porta_nip,
-        created, updated
+        created, updated,
+        sale.bo_fecha_preventa, sale.bo_fecha_proceso, sale.bo_procesado_cancelado,
+        sale.bo_fecha_cancelado, sale.bo_subtipo_venta, sale.bo_columna1,
+        sale.bo_fecha_generic, sale.bo_seguimiento, sale.bo_seguimiento_interaccion
     )
     
     execute(query, params)
@@ -197,18 +217,36 @@ def list_backoffice_sales(q: Optional[str] = None):
 
 
 @router.patch("/{message_id}/backoffice")
-def update_backoffice_status(message_id: str, status: str, notas: Optional[str] = None, agent: Optional[str] = None):
-    """Update the backoffice status and notes for a sale."""
+def update_sale_backoffice(message_id: str, data: dict):
+    """
+    Update any backoffice-related fields for a sale.
+    Expects a dict of fields to update.
+    """
+    if not data:
+        return {"success": True}
+        
+    allowed_fields = [
+        "backoffice_status", "backoffice_sub_status", "backoffice_notas", 
+        "backoffice_agent", "bo_fecha_preventa", "bo_fecha_proceso",
+        "bo_procesado_cancelado", "bo_fecha_cancelado", "bo_subtipo_venta",
+        "bo_columna1", "bo_fecha_generic", "bo_seguimiento", 
+        "bo_seguimiento_interaccion"
+    ]
+    
+    updates = []
+    params = []
+    for k, v in data.items():
+        if k in allowed_fields:
+            updates.append(f"{k} = %s")
+            params.append(v)
+            
+    if not updates:
+        return {"success": True}
+        
+    params.append(message_id)
     execute(
-        """
-        UPDATE sales SET 
-            backoffice_status = %s, 
-            backoffice_notas = %s, 
-            backoffice_agent = %s, 
-            backoffice_at = now() 
-        WHERE message_id = %s
-        """,
-        (status, notas, agent, message_id)
+        f"UPDATE sales SET {', '.join(updates)}, backoffice_at = now() WHERE message_id = %s",
+        tuple(params)
     )
     return {"success": True}
 
@@ -246,8 +284,11 @@ def bulk_create_sales(sales: list[SaleCreate]):
         vendedor_comentarios_por, vendedor_comentarios_at, backoffice_status,
         backoffice_sub_status, backoffice_agent, backoffice_at, backoffice_notas,
         origen, valor_plan, valor_telefono, revenue, revenuedolar,
-        bo_email_enviado_at, suptipo_reco, created_at, updated_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        bo_email_enviado_at, suptipo_reco, created_at, updated_at,
+        bo_fecha_preventa, bo_fecha_proceso, bo_procesado_cancelado, 
+        bo_fecha_cancelado, bo_subtipo_venta, bo_columna1, 
+        bo_fecha_generic, bo_seguimiento, bo_seguimiento_interaccion
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     ON CONFLICT (message_id) DO UPDATE SET
         agente = EXCLUDED.agente,
         producto = EXCLUDED.producto,
@@ -312,7 +353,16 @@ def bulk_create_sales(sales: list[SaleCreate]):
         revenuedolar = EXCLUDED.revenuedolar,
         bo_email_enviado_at = EXCLUDED.bo_email_enviado_at,
         suptipo_reco = EXCLUDED.suptipo_reco,
-        updated_at = EXCLUDED.updated_at
+        updated_at = EXCLUDED.updated_at,
+        bo_fecha_preventa = EXCLUDED.bo_fecha_preventa,
+        bo_fecha_proceso = EXCLUDED.bo_fecha_proceso,
+        bo_procesado_cancelado = EXCLUDED.bo_procesado_cancelado,
+        bo_fecha_cancelado = EXCLUDED.bo_fecha_cancelado,
+        bo_subtipo_venta = EXCLUDED.bo_subtipo_venta,
+        bo_columna1 = EXCLUDED.bo_columna1,
+        bo_fecha_generic = EXCLUDED.bo_fecha_generic,
+        bo_seguimiento = EXCLUDED.bo_seguimiento,
+        bo_seguimiento_interaccion = EXCLUDED.bo_seguimiento_interaccion
     """
     params = [
         (
@@ -332,7 +382,10 @@ def bulk_create_sales(sales: list[SaleCreate]):
             s.origen, s.valor_plan, s.valor_telefono, s.revenue, s.revenuedolar,
             s.bo_email_enviado_at, s.suptipo_reco,
             s.created_at or get_now(),
-            s.updated_at or s.created_at or get_now()
+            s.updated_at or s.created_at or get_now(),
+            s.bo_fecha_preventa, s.bo_fecha_proceso, s.bo_procesado_cancelado,
+            s.bo_fecha_cancelado, s.bo_subtipo_venta, s.bo_columna1,
+            s.bo_fecha_generic, s.bo_seguimiento, s.bo_seguimiento_interaccion
         )
         for s in sales
     ]

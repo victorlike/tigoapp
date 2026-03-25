@@ -66,6 +66,12 @@ async def admin_view(request: Request):
     return templates.TemplateResponse("admin.html", {"request": request})
 
 
+@app.get("/backoffice", response_class=HTMLResponse, include_in_schema=False)
+async def backoffice_view(request: Request):
+    """Backoffice management view."""
+    return templates.TemplateResponse("backoffice.html", {"request": request})
+
+
 # ─── Health check ───────────────────────────────────────
 @app.get("/health")
 async def health():
@@ -82,7 +88,7 @@ async def health():
     return {
         "status": "ok" if db_ok else "degraded",
         "database": "connected" if db_ok else "disconnected",
-        "version": "2.0.3"
+        "version": "2.0.4"
     }
 
 

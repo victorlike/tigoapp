@@ -24,10 +24,17 @@ def migrate_admin_schema():
         execute("INSERT INTO settings (key, value) VALUES ('sla_min', '5') ON CONFLICT (key) DO NOTHING;")
         execute("INSERT INTO settings (key, value) VALUES ('stuck_min', '15') ON CONFLICT (key) DO NOTHING;")
         execute("INSERT INTO settings (key, value) VALUES ('auto_assign_enabled', 'true') ON CONFLICT (key) DO NOTHING;")
-        # Ensure sales table has UNIQUE message_id for UPSERT
+        # Ensure sales table has Backoffice Expansion Fields
         try:
-            execute("DELETE FROM sales a USING sales b WHERE a.id > b.id AND a.message_id = b.message_id")
-            execute("ALTER TABLE sales ADD CONSTRAINT sales_message_id_key UNIQUE (message_id)")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_fecha_preventa TIMESTAMPTZ;")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_fecha_proceso TIMESTAMPTZ;")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_procesado_cancelado TEXT;")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_fecha_cancelado TIMESTAMPTZ;")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_subtipo_venta TEXT;")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_columna1 TEXT;")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_fecha_generic TIMESTAMPTZ;")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_seguimiento TEXT;")
+            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_seguimiento_interaccion TEXT;")
         except:
             pass
 

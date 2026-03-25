@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backoffice | Tigo Leads</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #00377d;
+            --secondary: #00b5e2;
+            --bg: #f4f7fa;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text: #1e293b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --glass: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+            padding: 1.5rem;
+        }
+
+        /* Filters Bar */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input, select {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e1;
+            background: white;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(0, 181, 226, 0.1);
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 1rem;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: rgba(0, 55, 125, 0.02);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-pendiente { background: #fee2e2; color: #b91c1c; }
+        .badge-procesado { background: #dcfce7; color: #15803d; }
+        .badge-cancelado { background: #f1f5f9; color: #475569; }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #002a5d; transform: translateY(-1px); }
+
+        /* Modal */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: white;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            border-radius: 1rem;
+            padding: 2rem;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 1rem;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            border-left: 4px solid var(--secondary);
+            padding-left: 0.75rem;
+        }
+
+        .field {
+            margin-bottom: 1rem;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .field input, .field select, .field textarea {
+            width: 100%;
+        }
+
+        textarea {
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            min-height: 80px;
+        }
+
+        .modal-footer {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--secondary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i data-lucide="shield-check"></i> Módulo de Backoffice</h1>
+            <div id="stats" style="display: flex; gap: 1rem;">
+                <!-- Live stats could go here -->
+            </div>
+        </header>
+
+        <section class="filters glass-card">
+            <div class="filter-group">
+                <label>Buscar</label>
+                <input type="text" id="search" placeholder="Nombre, CI, ID...">
+            </div>
+            <div class="filter-group">
+                <label>Estado</label>
+                <select id="filter-status">
+                    <option value="">Todos</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Procesado">Procesado</option>
+                    <option value="Cancelado">Cancelado</option>
+                </select>
+            </div>
+            <div class="filter-group" style="flex: 0.5;">
+                <label>&nbsp;</label>
+                <button class="btn btn-primary" onclick="loadSales()"><i data-lucide="refresh-cw"></i> Actualizar</button>
+            </div>
+        </section>
+
+        <section class="glass-card">
+            <div class="table-container">
+                <table id="sales-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Agente</th>
+                            <th>Cliente</th>
+                            <th>Línea</th>
+                            <th>Producto/Plan</th>
+                            <th>Estado</th>
+                            <th>SubEstado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-body">
+                        <!-- Rows populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal de Gestión -->
+    <div class="overlay" id="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Gestionar Venta</h2>
+                <button onclick="closeModal()" style="border:none; background:none; cursor:pointer;"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-content">
+                <form id="edit-form">
+                    <input type="hidden" id="edit-message-id">
+                    
+                    <div class="modal-grid">
+                        <div class="form-section">
+                            <h3>Estado General</h3>
+                            <div class="field">
+                                <label>Estado Backoffice</label>
+                                <select id="edit-status">
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Procesado">Procesado</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>SubEstado Detallado</label>
+                                <select id="edit-substatus">
+                                    <option value="Pendiente de carga">Pendiente de carga</option>
+                                    <option value="Pendiente de firma">Pendiente de firma</option>
+                                    <option value="Pendiente de pago">Pendiente de pago</option>
+                                    <option value="Enviada a plateran">Enviada a plateran</option>
+                                    <option value="Pendiente de retiro en pick up">Pendiente de retiro en pick up</option>
+                                    <option value="Pendiente de control de documentación">Pendiente de control de documentación</option>
+                                    <option value="Documentación rechazada">Documentación rechazada</option>
+                                    <option value="Venta cancelada falta retoma">Venta cancelada falta retoma</option>
+                                    <option value="Venta cancelada Cliente desiste de la venta">Venta cancelada Cliente desiste de la venta</option>
+                                    <option value="Venta cancelada finalizada">Venta cancelada finalizada</option>
+                                    <option value="Venta cancelada Venta mal generada">Venta cancelada Venta mal generada</option>
+                                    <option value="Venta cancelada cliente con deuda">Venta cancelada cliente con deuda</option>
+                                    <option value="Falta de stock de equipos">Falta de stock de equipos</option>
+                                    <option value="Procesado">Procesado</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Notas de Backoffice</label>
+                                <textarea id="edit-notes"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Fechas y Seguimiento</h3>
+                            <div class="field">
+                                <label>Fecha Preventa</label>
+                                <input type="date" id="edit-fecha-pre">
+                            </div>
+                            <div class="field">
+                                <label>Fecha Proceso</label>
+                                <input type="date" id="edit-fecha-pro">
+                            </div>
+                            <div class="field">
+                                <label>Fecha Cancelado</label>
+                                <input type="date" id="edit-fecha-can">
+                            </div>
+                            <div class="field">
+                                <label>Seguimiento</label>
+                                <input type="text" id="edit-seguimiento">
+                            </div>
+                            <div class="field">
+                                <label>Interacción Seguimiento</label>
+                                <input type="text" id="edit-interaccion">
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Otros Datos</h3>
+                            <div class="field">
+                                <label>Procesado / Cancelado</label>
+                                <input type="text" id="edit-proc-can">
+                            </div>
+                            <div class="field">
+                                <label>Subtipo de Venta</label>
+                                <select id="edit-subtipo">
+                                    <option value="">Seleccione...</option>
+                                    <option value="RECONTRATO SIN EQUIPO">RECONTRATO SIN EQUIPO</option>
+                                    <option value="RECONTRATO CON EQUIPO">RECONTRATO CON EQUIPO</option>
+                                    <option value="MIGRACION">MIGRACION</option>
+                                    <option value="PORTABILIDAD">PORTABILIDAD</option>
+                                    <option value="ALTA">ALTA</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Columna1 (Referencia)</label>
+                                <input type="text" id="edit-columna1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn" style="background:#e2e8f0;" onclick="closeModal()">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="save-btn">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentSales = [];
+
+        async function loadSales() {
+            const q = document.getElementById('search').value;
+            const status = document.getElementById('filter-status').value;
+            
+            try {
+                const url = q ? `/api/sales/backoffice?q=${q}` : `/api/sales/backoffice`;
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if (data.success) {
+                    currentSales = data.items;
+                    renderTable(status);
+                }
+            } catch (err) {
+                console.error("Error loading sales:", err);
+            }
+        }
+
+        function renderTable(statusFilter) {
+            const body = document.getElementById('sales-body');
+            body.innerHTML = '';
+            
+            const filtered = statusFilter 
+                ? currentSales.filter(s => s.backoffice_status === statusFilter)
+                : currentSales;
+
+            filtered.forEach(s => {
+                const date = s.created_at ? new Date(s.created_at).toLocaleDateString() : '-';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${s.agente || '-'}</td>
+                    <td><strong>${s.cliente_nombre || '-'}</strong><br><small>${s.cliente_cedula || '-'}</small></td>
+                    <td>${s.cliente_telefono || s.linea || '-'}</td>
+                    <td>${s.producto || '-'}<br><small>${s.venta_plan || '-'}</small></td>
+                    <td><span class="badge badge-${(s.backoffice_status || 'Pendiente').toLowerCase()}">${s.backoffice_status || 'PENDIENTE'}</span></td>
+                    <td><small>${s.backoffice_sub_status || '-'}</small></td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" onclick="openModal('${s.message_id}')">
+                            <i data-lucide="edit-3" style="width:14px; height:14px;"></i> Gestionar
+                        </button>
+                    </td>
+                `;
+                body.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function openModal(mid) {
+            const sale = currentSales.find(s => s.message_id === mid);
+            if (!sale) return;
+
+            document.getElementById('edit-message-id').value = mid;
+            document.getElementById('modal-title').innerText = `Gestión: ${sale.cliente_nombre || mid}`;
+            
+            // Map fields to inputs
+            document.getElementById('edit-status').value = sale.backoffice_status || 'Pendiente';
+            document.getElementById('edit-substatus').value = sale.backoffice_sub_status || 'Pendiente de carga';
+            document.getElementById('edit-notes').value = sale.backoffice_notas || '';
+            
+            // Map new expansion fields
+            document.getElementById('edit-fecha-pre').value = sale.bo_fecha_preventa ? sale.bo_fecha_preventa.split('T')[0] : '';
+            document.getElementById('edit-fecha-pro').value = sale.bo_fecha_proceso ? sale.bo_fecha_proceso.split('T')[0] : '';
+            document.getElementById('edit-fecha-can').value = sale.bo_fecha_cancelado ? sale.bo_fecha_cancelado.split('T')[0] : '';
+            document.getElementById('edit-seguimiento').value = sale.bo_seguimiento || '';
+            document.getElementById('edit-interaccion').value = sale.bo_seguimiento_interaccion || '';
+            document.getElementById('edit-proc-can').value = sale.bo_procesado_cancelado || '';
+            document.getElementById('edit-subtipo').value = sale.bo_subtipo_venta || '';
+            document.getElementById('edit-columna1').value = sale.bo_columna1 || '';
+
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        document.getElementById('edit-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const mid = document.getElementById('edit-message-id').value;
+            const btn = document.getElementById('save-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loader"></div> Guardando...';
+
+            const payload = {
+                backoffice_status: document.getElementById('edit-status').value,
+                backoffice_sub_status: document.getElementById('edit-substatus').value,
+                backoffice_notas: document.getElementById('edit-notes').value,
+                bo_fecha_preventa: document.getElementById('edit-fecha-pre').value || null,
+                bo_fecha_proceso: document.getElementById('edit-fecha-pro').value || null,
+                bo_fecha_cancelado: document.getElementById('edit-fecha-can').value || null,
+                bo_seguimiento: document.getElementById('edit-seguimiento').value,
+                bo_seguimiento_interaccion: document.getElementById('edit-interaccion').value,
+                bo_procesado_cancelado: document.getElementById('edit-proc-can').value,
+                bo_subtipo_venta: document.getElementById('edit-subtipo').value,
+                bo_columna1: document.getElementById('edit-columna1').value
+            };
+
+            try {
+                const res = await fetch(`/api/sales/${mid}/backoffice`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeModal();
+                    loadSales();
+                } else {
+                    alert("Error al guardar cambios");
+                }
+            } catch (err) {
+                console.error("Error saving:", err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        };
+
+        // Init
+        loadSales();
+        setInterval(loadSales, 60000); // Auto refresh 1min
+    </script>
+</body>
+</html>

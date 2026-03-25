@@ -215,6 +215,17 @@ class SaleCreate(BaseModel):
     bo_email_enviado_at: Optional[str] = None
     suptipo_reco: Optional[str] = None
 
+    # Backoffice Expansion Fields
+    bo_fecha_preventa: Optional[datetime] = None
+    bo_fecha_proceso: Optional[datetime] = None
+    bo_procesado_cancelado: Optional[str] = None
+    bo_fecha_cancelado: Optional[datetime] = None
+    bo_subtipo_venta: Optional[str] = None
+    bo_columna1: Optional[str] = None
+    bo_fecha_generic: Optional[datetime] = None
+    bo_seguimiento: Optional[str] = None
+    bo_seguimiento_interaccion: Optional[str] = None
+
     class Config:
         coerce_numbers_to_str = True
 

@@ -180,9 +180,25 @@ function migrateSales() {
       suptipo_reco: getValue_(row, map, 'Suptipo Reco', 59),
       tip_tipo: getValue_(row, map, 'Tip_Tipo'),
       tip_resultado: getValue_(row, map, 'Tip_Resultado'),
-      tip_motivo: getValue_(row, map, 'Tip_Motivo'),
-      tip_submotivo: getValue_(row, map, 'Tip_Submotivo'),
-      created_at: parseDate_(getValue_(row, map, 'Fecha', 0) || getValue_(row, map, 'FechaCierre', 117) || getValue_(row, map, 'FechaAsignacion', 115) || new Date()),
+      venta_equipo: getValue_(headers, row, ["Venta Reco", "Equipo"]),
+      vendedor_comentarios: getValue_(headers, row, ["COMENTARIOS", "OBSERVACIONES"]),
+      
+      // -- Backoffice Expansion Fields --
+      backoffice_status: getValue_(headers, row, ["Estado"]),
+      backoffice_sub_status: getValue_(headers, row, ["SubEstado"]),
+      bo_fecha_preventa: parseDate_(getValue_(headers, row, ["Fecha de Preventa", "fecha pre"])),
+      bo_fecha_proceso: parseDate_(getValue_(headers, row, ["fecha de proceso", "fecha pro"])),
+      bo_procesado_cancelado: getValue_(headers, row, ["Procesado cancelado"]),
+      bo_fecha_cancelado: parseDate_(getValue_(headers, row, ["Fecha de procesado cancelado"])),
+      bo_subtipo_venta: getValue_(headers, row, ["Subtipo de venta"]),
+      suptipo_reco: getValue_(headers, row, ["Suptipo Reco"]),
+      bo_columna1: getValue_(headers, row, ["Columna1"]),
+      backoffice_agent: getValue_(headers, row, ["BO"]),
+      bo_fecha_generic: parseDate_(getValue_(headers, row, ["FECHA"])),
+      bo_seguimiento: getValue_(headers, row, ["SEGUIMIENTO"]),
+      bo_seguimiento_interaccion: getValue_(headers, row, ["seguimiento interaccion"]),
+
+      created_at: parseDate_(getValue_(headers, row, ["Fecha", "FECHA CUADRO"])) || new Date(),
       updated_at: parseDate_(getValue_(row, map, 'FechaCierre', 117) || getValue_(row, map, 'Fecha', 0) || new Date())
     };
   }).filter(s => s.agente);

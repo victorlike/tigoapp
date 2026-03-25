@@ -140,6 +140,17 @@ CREATE TABLE IF NOT EXISTS sales (
   producto                TEXT,
   tipo_venta              TEXT,
   tipo_venta_original     TEXT,
+  
+  -- Backoffice Expansion Fields
+  bo_fecha_preventa       TIMESTAMPTZ,
+  bo_fecha_proceso        TIMESTAMPTZ,
+  bo_procesado_cancelado  TEXT,
+  bo_fecha_cancelado      TIMESTAMPTZ,
+  bo_subtipo_venta        TEXT,
+  bo_columna1             TEXT,
+  bo_fecha_generic        TIMESTAMPTZ,
+  bo_seguimiento          TEXT,
+  bo_seguimiento_interaccion TEXT,
 
   created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
