@@ -183,8 +183,22 @@ function migrateLeadsFromSheet(sheetName) {
 
   const leads = data.map((row, index) => {
     const messageId = getValue_(row, map, 'MessageId') || getValue_(row, map, 'message_id') || ('mig_' + sheetName + '_' + index + '_' + new Date().getTime());
-    const estado = String(getValue_(row, map, 'EstadoLead') || getValue_(row, map, 'Estado') || 'NUEVO').trim().toUpperCase();
-    
+    // ─── Estado Mapping Logic ──────────────────────
+    let estado = String(getValue_(row, map, 'EstadoLead') || getValue_(row, map, 'Estado') || '').trim().toUpperCase();
+    let resultado = getValue_(row, map, 'Resultado');
+
+    if (!estado) {
+      if (sheetName === 'leads_seguimiento') estado = 'SEGUIMIENTO';
+      else if (sheetName === 'leads_exitosos' || sheetName === 'leads_descartados') estado = 'CERRADO';
+      else estado = 'NUEVO';
+    }
+
+    // Force result if missing for dead sheets
+    if (!resultado) {
+      if (sheetName === 'leads_exitosos') resultado = 'VENTA';
+      if (sheetName === 'leads_descartados') resultado = 'No Venta';
+    }
+
     return {
       message_id: String(messageId),
       nombre: getValue_(row, map, 'Nombre'),
@@ -195,7 +209,7 @@ function migrateLeadsFromSheet(sheetName) {
       agente_original: getValue_(row, map, 'AgenteOriginal') || getValue_(row, map, 'Agente'),
       fecha_gmail: parseDate_(getValue_(row, map, 'Fecha Gmail') || getValue_(row, map, 'Fecha')),
       fecha_asignacion: parseDate_(getValue_(row, map, 'FechaAsignacion')),
-      resultado: getValue_(row, map, 'Resultado'),
+      resultado: resultado,
       rellamar_en: parseDate_(getValue_(row, map, 'RellamarEn')),
       reagendar_tipo: getValue_(row, map, 'ReagendarTipo'),
       nocontacto_intentos: parseInt(getValue_(row, map, 'NoContactoIntentos')) || 0,

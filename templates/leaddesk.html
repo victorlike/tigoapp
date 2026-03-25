@@ -108,6 +108,7 @@
           <div class="stat-row"><span>Mios</span><span class="stat-val" id="my-count">0</span></div>
           <div class="stat-row"><span>Ventas</span><span class="stat-val" id="sales-count">0</span></div>
         </div>
+        <button class="btn w-full mt-4 text-xs font-bold border-rose-500/30 text-rose-400 hover:bg-rose-500/10" id="btn-clean-queue" style="display:none;" onclick="cleanQueue()">Limpiar Cola</button>
       </div>
       <div class="card">
         <div class="card-head">
@@ -278,7 +279,8 @@
               }),
               apiMarkSaleReviewed: (mid, st, notas) => fetch(`/api/sales/${mid}/backoffice?status=${encodeURIComponent(st)}&notas=${encodeURIComponent(notas || '')}&agent=${encodeURIComponent(agentEmail)}`, {
                 method: 'PATCH'
-              })
+              }),
+              apiBulkCloseQueue: () => fetch('/api/coordinator/bulk-close-queue', {method: 'POST'})
             };
 
             Object.keys(apiMap).forEach(method => {
@@ -485,7 +487,10 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
         document.getElementById('agent-name').innerText = app.agent;
         document.getElementById('q-count').innerText = res.queueCount;
         document.getElementById('my-count').innerText = app.myLeads.length;
-        if (app.isBO) document.getElementById('tab-bo').style.display = 'block';
+        if (app.isBO) {
+            document.getElementById('tab-bo').style.display = 'block';
+            document.getElementById('btn-clean-queue').style.display = 'block';
+        }
         if (typeof renderActiveTab === 'function') renderActiveTab();
         
         handleStatusButtons(res.agentStatus);
@@ -763,6 +768,20 @@ Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
           toast(res.detail || res.message || 'Error tomando lead', 'err');
         }
       }).apiTakeNextLead();
+    }
+
+    function cleanQueue() {
+      if (!confirm("¿Estás seguro de cerrar TODOS los leads en cola? Esta acción es irreversible.")) return;
+      document.getElementById('loader').style.display = 'flex';
+      google.script.run.withSuccessHandler(res => {
+        document.getElementById('loader').style.display = 'none';
+        if (res.success) {
+          toast(`Se cerraron ${res.closed} leads exitosamente`, 'ok');
+          refresh();
+        } else {
+          toast(res.detail || res.error || 'Error limpiando cola', 'err');
+        }
+      }).apiBulkCloseQueue();
     }
 
     function updateResultTypes() {
