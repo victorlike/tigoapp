@@ -62,39 +62,45 @@ function extractLeadFromEmail_(msg) {
 
   const lead = {
     message_id: messageId,
-    nombre: data.nombre || subject,
-    linea: data.linea || null,
-    plan: data.plan || null,
+    nombre:     data.nombre     || null,   // ← No usar el Subject como nombre
+    linea:      data.linea      || null,
+    plan:       data.plan       || null,
     fecha_gmail: date ? date.toISOString() : new Date().toISOString(),
-    tracking: data.tracking || null,
-    gaid: data.gaid || null,
-    origen: data.origen || null,
-    url: data.url || null,
-    equipo: data.equipo || null,
-    utm: data.utm || null,
-    horario: data.horario || null,
+    tracking:   data.tracking   || null,
+    gaid:       data.gaid       || null,
+    origen:     data.origen     || null,
+    url:        data.url        || null,
+    equipo:     data.equipo     || null,
+    utm:        data.utm        || null,
+    horario:    data.horario    || null,
     timestamp_sheet: data.timestamp || null,
-    documento: data.documento || null,
-    compania: data.compania || null,
-    operacion: data.operacion || null,
-    tsource: data.tsource || null,
-    modal: data.modal || null,
-    direccion: data.direccion || null,
-    email: data.email || null
+    documento:  data.documento  || null,
+    compania:   data.compania   || null,
+    operacion:  data.operacion  || null,
+    tsource:    data.tsource    || null,
+    modal:      data.modal      || null,
+    direccion:  data.direccion  || null,
+    email:      data.email      || null
   };
 
-  // ─── Fallback Regex Parsing (If fields are empty) ───
-  if (!lead.nombre || lead.nombre === subject) {
+  // ─── Fallback Regex Parsing (Si el formato Key=Value no funcionó) ───
+  if (!lead.nombre) {
     const n = body.match(/Nombre:\s*([^\n|]+)/i);
     if (n) lead.nombre = n[1].trim();
   }
   if (!lead.linea) {
-    const l = body.match(/(?:Línea|Teléfono|Celular):\s*([\d\s+-]+)/i);
+    const l = body.match(/(?:Línea|Teléfono|Celular|Linea):\s*([\d\s+()\-]+)/i);
     if (l) lead.linea = l[1].replace(/[^\d]/g, '');
   }
   if (!lead.plan) {
     const p = body.match(/Plan:\s*([^\n|]+)/i);
     if (p) lead.plan = p[1].trim();
+  }
+
+  // ─── Validación mínima ───────────────────────────────
+  if (!lead.linea) {
+    Logger.log('⚠️ Lead sin línea detectado. Subject: ' + subject + ' | MessageId: ' + msg.getId());
+    // Aún así enviamos — el servidor decide si aceptarlo
   }
 
   return lead;

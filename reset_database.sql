@@ -8,6 +8,9 @@ DROP VIEW IF EXISTS vw_daily_queue;
 DROP TABLE IF EXISTS leads CASCADE;
 DROP TABLE IF EXISTS sales CASCADE;
 DROP TABLE IF EXISTS agents CASCADE;
+DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS catalog CASCADE;
+DROP TABLE IF EXISTS settings CASCADE;
 
 -- Enable UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -164,6 +167,41 @@ CREATE TABLE sales (
   created_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ── AUDIT LOGS ─────────────────────────────────────────────
+CREATE TABLE audit_logs (
+  id          SERIAL PRIMARY KEY,
+  timestamp   TIMESTAMPTZ DEFAULT now(),
+  actor       TEXT NOT NULL,
+  action      TEXT NOT NULL,
+  target      TEXT,
+  details     TEXT
+);
+
+-- ── CATALOG ────────────────────────────────────────────────
+CREATE TABLE catalog (
+  id          SERIAL PRIMARY KEY,
+  item_type   TEXT NOT NULL,
+  name        TEXT NOT NULL,
+  price       NUMERIC(10,2),
+  active      BOOLEAN DEFAULT TRUE,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+-- ── SETTINGS ───────────────────────────────────────────────
+CREATE TABLE settings (
+  key         TEXT PRIMARY KEY,
+  value       TEXT NOT NULL,
+  updated_at  TIMESTAMPTZ DEFAULT now()
+);
+
+-- Default settings
+INSERT INTO settings (key, value) VALUES
+  ('auto_assign_enabled', 'true'),
+  ('sla_min', '5'),
+  ('stuck_min', '15'),
+  ('allowed_domain', '@xtendo-it.com')
+ON CONFLICT (key) DO NOTHING;
 
 -- ── INDICES ────────────────────────────────────────────────
 CREATE INDEX idx_leads_estado        ON leads(estado);

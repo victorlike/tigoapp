@@ -436,8 +436,45 @@ def clean_database():
     for col in ts_columns:
         execute(f"ALTER TABLE sales ADD COLUMN IF NOT EXISTS {col} TIMESTAMPTZ")
 
-    # 2. Cleanup
-    for table in ["leads", "sales", "agents"]:
+    # 2. Self-healing: ensure auxiliary tables always exist
+    execute("""
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id        SERIAL PRIMARY KEY,
+            timestamp TIMESTAMPTZ DEFAULT now(),
+            actor     TEXT NOT NULL,
+            action    TEXT NOT NULL,
+            target    TEXT,
+            details   TEXT
+        )
+    """)
+    execute("""
+        CREATE TABLE IF NOT EXISTS catalog (
+            id        SERIAL PRIMARY KEY,
+            item_type TEXT NOT NULL,
+            name      TEXT NOT NULL,
+            price     NUMERIC(10,2),
+            active    BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMPTZ DEFAULT now()
+        )
+    """)
+    execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key        TEXT PRIMARY KEY,
+            value      TEXT NOT NULL,
+            updated_at TIMESTAMPTZ DEFAULT now()
+        )
+    """)
+    execute("""
+        INSERT INTO settings (key, value) VALUES
+            ('auto_assign_enabled', 'true'),
+            ('sla_min', '5'),
+            ('stuck_min', '15'),
+            ('allowed_domain', '@xtendo-it.com')
+        ON CONFLICT (key) DO NOTHING
+    """)
+
+    # 3. Cleanup (only data tables)
+    for table in ["leads", "sales", "agents", "audit_logs"]:
         execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE")
     return {"success": True, "message": "Database cleaned and schema updated"}
 @router.post("/bulk-close-queue")
