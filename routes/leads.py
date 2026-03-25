@@ -22,6 +22,8 @@ def create_lead(lead: LeadCreate):
     """Create a new lead from Gmail. Called by Apps Script."""
     from utils.logic import get_phone_suffix
     
+    # 1. Duplicate Check by message_id
+    existing = fetchone("SELECT id FROM leads WHERE message_id = %s", (lead.message_id,))
     if existing:
         from database import log_audit
         log_audit("system", "ingestion_duplicate", lead.message_id, f"Phone: {lead.linea}")
