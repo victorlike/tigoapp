@@ -55,9 +55,12 @@ def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         vendedor_comentarios_por, vendedor_comentarios_at, backoffice_status,
         backoffice_sub_status, backoffice_agent, backoffice_at, backoffice_notas,
         origen, valor_plan, valor_telefono, revenue, revenuedolar,
-        bo_email_enviado_at, suptipo_reco, created_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
+        bo_email_enviado_at, suptipo_reco, created_at, updated_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
+    created = sale.created_at or datetime.now(timezone.utc)
+    updated = sale.updated_at or created
+    
     params = (
         sale.message_id, sale.agente, producto, sale.tipo_venta, sale.tipo_venta_original,
         sale.cliente_nombre, sale.cliente_cedula, sale.cliente_email, sale.cliente_telefono,
@@ -73,7 +76,7 @@ def create_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         sale.vendedor_comentarios_por, sale.vendedor_comentarios_at, sale.backoffice_status,
         sale.backoffice_sub_status, sale.backoffice_agent, sale.backoffice_at, sale.backoffice_notas,
         sale.origen, sale.valor_plan, sale.valor_telefono, sale.revenue, sale.revenuedolar,
-        sale.bo_email_enviado_at, sale.suptipo_reco
+        sale.bo_email_enviado_at, sale.suptipo_reco, created, updated
     )
     
     execute(query, params)
@@ -96,18 +99,22 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
     
     # 2. Create the Lead Record (so it exists in the leads table for reporting)
     # Manual sales are inherently "Venta" status
+    created = sale.created_at or datetime.now(timezone.utc)
+    updated = sale.updated_at or created
+    
     execute(
         """
         INSERT INTO leads (
             message_id, nombre, linea, plan, agente, agente_original, 
             estado, resultado, created_at, updated_at, 
             tip_tipo, tip_resultado, tip_motivo, origen, tsource
-        ) VALUES (%s, %s, %s, %s, %s, %s, 'Venta', 'Venta', now(), now(), %s, %s, %s, 'manual-referido', 'manual')
-        ON CONFLICT (message_id) DO UPDATE SET estado='Venta', updated_at=now()
+        ) VALUES (%s, %s, %s, %s, %s, %s, 'Venta', 'Venta', %s, %s, %s, %s, %s, 'manual-referido', 'manual')
+        ON CONFLICT (message_id) DO UPDATE SET estado='Venta', updated_at=%s
         """,
         (
             sale.message_id, sale.cliente_nombre, sale.cliente_telefono, sale.venta_plan, 
-            sale.agente, sale.agente, sale.tip_tipo, sale.tip_resultado, sale.tip_motivo
+            sale.agente, sale.agente, created, updated, sale.tip_tipo, sale.tip_resultado, sale.tip_motivo, 
+            updated
         )
     )
 
@@ -125,8 +132,8 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         dg_corresponde, envio_tipo, envio_detalles, cobro_importe, cobro_motivo,
         cobro_linkemail, link_enviado, nombre_link, plateran_cargado, plateran_so,
         estado_pedido, controldoc_subido, controldoc_estado, porta_nip,
-        backoffice_status, created_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Pendiente de carga',now())
+        backoffice_status, created_at, updated_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,'Pendiente de carga',%s,%s)
     """
     params = (
         sale.message_id, sale.agente, producto, sale.tipo_venta, sale.tipo_venta_original,
@@ -139,7 +146,8 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
         sale.venta_llevaequipo, sale.venta_precio, sale.venta_cuotas, sale.dg_solicita, sale.dg_importe,
         sale.dg_corresponde, sale.envio_tipo, sale.envio_detalles, sale.cobro_importe, sale.cobro_motivo,
         sale.cobro_linkemail, sale.link_enviado, sale.nombre_link, sale.plateran_cargado, sale.plateran_so,
-        sale.estado_pedido, sale.controldoc_subido, sale.controldoc_estado, sale.porta_nip
+        sale.estado_pedido, sale.controldoc_subido, sale.controldoc_estado, sale.porta_nip,
+        created, updated
     )
     
     execute(query, params)
@@ -227,8 +235,8 @@ def bulk_create_sales(sales: list[SaleCreate]):
         vendedor_comentarios_por, vendedor_comentarios_at, backoffice_status,
         backoffice_sub_status, backoffice_agent, backoffice_at, backoffice_notas,
         origen, valor_plan, valor_telefono, revenue, revenuedolar,
-        bo_email_enviado_at, suptipo_reco, created_at
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())
+        bo_email_enviado_at, suptipo_reco, created_at, updated_at
+    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
     params = [
         (
@@ -246,7 +254,9 @@ def bulk_create_sales(sales: list[SaleCreate]):
             s.vendedor_comentarios_por, s.vendedor_comentarios_at, s.backoffice_status,
             s.backoffice_sub_status, s.backoffice_agent, s.backoffice_at, s.backoffice_notas,
             s.origen, s.valor_plan, s.valor_telefono, s.revenue, s.revenuedolar,
-            s.bo_email_enviado_at, s.suptipo_reco
+            s.bo_email_enviado_at, s.suptipo_reco,
+            s.created_at or datetime.now(timezone.utc),
+            s.updated_at or s.created_at or datetime.now(timezone.utc)
         )
         for s in sales
     ]

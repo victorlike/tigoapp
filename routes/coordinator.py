@@ -112,6 +112,9 @@ def get_dashboard():
     kpi_queue = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO'")
     kpi_sales = fetchone("SELECT COUNT(*) as total FROM sales WHERE created_at::date = now()::date")
     kpi_approved = fetchone("SELECT COUNT(*) as total FROM sales WHERE backoffice_status = 'OK' AND backoffice_at::date = now()::date")
+    
+    # We filter by created_at for no-sales to only count leads that were processed today AND entered today? 
+    # Actually, better to check leads that were CLOSED today.
     kpi_nosale = fetchone("SELECT COUNT(*) as total FROM leads WHERE resultado = 'No Venta' AND updated_at::date = now()::date")
     
     # SLA Breach (NUEVO > 5 min)
@@ -149,10 +152,12 @@ def get_dashboard():
             sales_by_agent_seg[ag] = sales_by_agent_seg.get(ag, 0) + 1
             sales_by_product_seg[pr] = sales_by_product_seg.get(pr, 0) + 1
 
-    # Calculate conversion
-    total_new = kpi_queue["total"] if kpi_queue else 0
+    # Calculate conversion: Sales / (Sales + No Sales)
     total_sales = kpi_sales["total"] if kpi_sales else 0
-    conversion = round((total_sales / total_new * 100), 1) if total_new > 0 else 0
+    total_nosale = kpi_nosale["total"] if kpi_nosale else 0
+    total_processed = total_sales + total_nosale
+    conversion = round((total_sales / total_processed * 100), 1) if total_processed > 0 else 0
+    total_new = kpi_queue["total"] if kpi_queue else 0
 
     from datetime import datetime
     return {

@@ -242,7 +242,9 @@ function migrateLeadsFromSheet(sheetName) {
       liberado_por: getValue_(row, map, 'LiberadoPor'),
       liberado_en: parseDate_(getValue_(row, map, 'LiberadoEn')),
       liberado_motivo: getValue_(row, map, 'LiberadoMotivo'),
-      error: getValue_(row, map, 'Error')
+      error: getValue_(row, map, 'Error'),
+      created_at: parseDate_(getValue_(row, map, 'Fecha Gmail') || getValue_(row, map, 'Fecha') || new Date()),
+      updated_at: parseDate_(getValue_(row, map, 'FechaCierre') || getValue_(row, map, 'Fecha Gmail') || new Date())
     };
   }).filter(l => l.message_id);
 

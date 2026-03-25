@@ -41,19 +41,24 @@ def create_lead(lead: LeadCreate):
         if dup:
              logger.info(f"Duplicate phone detected: {suffix} matching {dup['message_id']}")
 
+    created = lead.created_at or datetime.now(timezone.utc)
+    updated = lead.updated_at or created
+
     execute(
         """
         INSERT INTO leads (
             message_id, nombre, linea, plan, fecha_gmail, tracking, gaid,
             origen, url, equipo, utm, horario, timestamp_sheet,
-            documento, compania, operacion, tsource, modal, direccion, email
+            documento, compania, operacion, tsource, modal, direccion, email,
+            created_at, updated_at
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             lead.message_id, lead.nombre, lead.linea, lead.plan, lead.fecha_gmail, lead.tracking, lead.gaid,
             lead.origen, lead.url, lead.equipo, lead.utm, lead.horario, lead.timestamp_sheet,
-            lead.documento, lead.compania, lead.operacion, lead.tsource, lead.modal, lead.direccion, lead.email
+            lead.documento, lead.compania, lead.operacion, lead.tsource, lead.modal, lead.direccion, lead.email,
+            created, updated
         )
     )
 
@@ -297,10 +302,11 @@ def bulk_create_leads(leads: list[LeadOut]):
         origen, url, equipo, utm, horario, timestamp_sheet, documento,
         compania, operacion, tsource, modal, direccion, email,
         fecha_cierre, notas, minutos_asignacion, seguimiento_tomado_por,
-        seguimiento_tomado_en, liberado_por, liberado_en, liberado_motivo, error
+        seguimiento_tomado_en, liberado_por, liberado_en, liberado_motivo, error,
+        created_at, updated_at
     ) VALUES (
         %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-        %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
+        %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
     )
     ON CONFLICT (message_id) DO UPDATE SET
         estado = EXCLUDED.estado,
@@ -309,7 +315,7 @@ def bulk_create_leads(leads: list[LeadOut]):
         tip_resultado = EXCLUDED.tip_resultado,
         tracking = EXCLUDED.tracking,
         gaid = EXCLUDED.gaid,
-        updated_at = now()
+        updated_at = EXCLUDED.updated_at
     """
     params = [
         (
@@ -320,8 +326,10 @@ def bulk_create_leads(leads: list[LeadOut]):
             l.tracking, l.gaid, l.cantidad_ventas,
             l.origen, l.url, l.equipo, l.utm, l.horario, l.timestamp_sheet, l.documento,
             l.compania, l.operacion, l.tsource, l.modal, l.direccion, l.email,
-            l.fecha_cierre, l.notas, l.minutos_asignacion, l.seguimiento_tomado_por,
-            l.seguimiento_tomado_en, l.liberado_por, l.liberado_en, l.liberado_motivo, l.error
+            l.fecha_cierre, l.notes, l.minutos_asignacion, l.seguimiento_tomado_por,
+            l.seguimiento_tomado_en, l.liberado_por, l.liberado_en, l.liberado_motivo, l.error,
+            l.created_at or datetime.now(timezone.utc),
+            l.updated_at or l.created_at or datetime.now(timezone.utc)
         )
         for l in leads
     ]

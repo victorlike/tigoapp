@@ -29,6 +29,8 @@ class LeadCreate(BaseModel):
     modal: Optional[str] = None
     direccion: Optional[str] = None
     email: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     class Config:
         coerce_numbers_to_str = True
@@ -159,6 +161,8 @@ class SaleCreate(BaseModel):
     venta_equipo: Optional[str] = None
     venta_pago: Optional[str] = None
     vendedor_comentarios: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     
     # New fields for alignment
     tip_tipo: Optional[str] = None
