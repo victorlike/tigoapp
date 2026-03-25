@@ -81,7 +81,8 @@ def get_agent_init(email: str, login: bool = False):
     """
     Called on page load. Aggregates data needed for the Agent Portal.
     """
-    from utils.logic import get_setting, get_now
+    from utils.settings import get_setting
+    from utils.logic import get_now
     email = email.lower().strip()
     
     allowed_domain = get_setting("allowed_domain", "@xtendo-it.com").strip().lower()
