@@ -87,8 +87,14 @@ def get_agent_init(email: str, login: bool = False):
     if not email.endswith(allowed_domain):
         return {"success": False, "error": f"Dominio de correo no permitido. Debe terminar en {allowed_domain}"}
 
+    now = datetime.now(timezone.utc)
     agent = fetchone("SELECT * FROM agents WHERE email = %s", (email,))
     
+    # Update last_seen on every init/refresh
+    if agent:
+        execute("UPDATE agents SET last_seen = %s, updated_at = %s WHERE email = %s", (now, now, email))
+        agent["last_seen"] = now
+
     # Force OFFLINE if login=True is passed
     if agent and login:
         execute("UPDATE agents SET estado = 'OFFLINE', updated_at = now() WHERE email = %s", (email,))

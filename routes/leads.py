@@ -58,10 +58,13 @@ def create_lead(lead: LeadCreate):
     )
 
     # Try auto-assign immediately
-    res = auto_assign.run()
-    logger.info(f"Auto-assign result for {lead.message_id}: {res}")
+    try:
+        res = auto_assign.run()
+        logger.info(f"Auto-assign result for {lead.message_id}: {res}")
+    except Exception as ae:
+        logger.error(f"Auto-assign error during lead creation: {ae}")
 
-    return {"success": True, "message": "Lead created"}
+    return {"success": True, "message": "Lead created", "message_id": lead.message_id}
 
 
 # ─── GET /api/leads/mine?email=...  ────────────────────
