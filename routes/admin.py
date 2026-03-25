@@ -24,6 +24,13 @@ def migrate_admin_schema():
         execute("INSERT INTO settings (key, value) VALUES ('sla_min', '5') ON CONFLICT (key) DO NOTHING;")
         execute("INSERT INTO settings (key, value) VALUES ('stuck_min', '15') ON CONFLICT (key) DO NOTHING;")
         execute("INSERT INTO settings (key, value) VALUES ('auto_assign_enabled', 'true') ON CONFLICT (key) DO NOTHING;")
+        # Ensure sales table has UNIQUE message_id for UPSERT
+        try:
+            execute("DELETE FROM sales a USING sales b WHERE a.id > b.id AND a.message_id = b.message_id")
+            execute("ALTER TABLE sales ADD CONSTRAINT sales_message_id_key UNIQUE (message_id)")
+        except:
+            pass
+
         print("Admin schema migration completed.")
     except Exception as e:
         print(f"Error migrating admin schema: {e}")
