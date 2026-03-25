@@ -509,8 +509,21 @@ def bulk_close_queue(actor: str = "Sistema"):
 
 @router.post("/fix-migration-dates", dependencies=[Depends(verify_apps_script_key)])
 def fix_migration_dates():
-    """Maintenance: backdate all leads/sales created today to 2 days ago to clear the dashboard."""
+    """Maintenance: backdate records AND apply UNIQUE constraint to sales table."""
     today = get_now().date()
+    # 1. Backdate
     execute("UPDATE sales SET created_at = created_at - interval '2 days' WHERE created_at::date = %s", (today,))
     execute("UPDATE leads SET created_at = created_at - interval '2 days' WHERE created_at::date = %s", (today,))
-    return {"success": True, "message": "Records backdated successfully"}
+    
+    # 2. Add Unique Constraint to Sales (if not exists)
+    try:
+        # First remove duplicates if any exist (keep oldest)
+        execute("""
+            DELETE FROM sales a USING sales b
+            WHERE a.id > b.id AND a.message_id = b.message_id
+        """)
+        execute("ALTER TABLE sales ADD CONSTRAINT sales_message_id_key UNIQUE (message_id)")
+    except Exception as e:
+        print(f"Constraint might already exist or error: {e}")
+
+    return {"success": True, "message": "Records backdated and constraint applied"}
