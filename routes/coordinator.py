@@ -5,6 +5,7 @@ from database import execute, fetchone
 from auth import verify_apps_script_key
 from fastapi import APIRouter, Depends
 from utils.settings import get_int_setting
+from utils.logic import get_now
 from typing import List, Any
 from models import CatalogItemCreate, CatalogItemUpdate, ResponseOK
 
@@ -108,8 +109,8 @@ def get_dashboard():
     )
 
     # 5. KPIs
-    # Today's stats
-    kpi_queue = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at >= current_date")
+    # Today's performance stats vs Total backlog
+    kpi_queue = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO'")
     kpi_sales = fetchone("SELECT COUNT(*) as total FROM sales WHERE created_at::date = now()::date")
     kpi_approved = fetchone("SELECT COUNT(*) as total FROM sales WHERE backoffice_status = 'OK' AND backoffice_at::date = now()::date")
     
@@ -117,9 +118,9 @@ def get_dashboard():
     # Actually, better to check leads that were CLOSED today.
     kpi_nosale = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'CERRADO' AND (resultado IS NULL OR (resultado != 'Venta' AND resultado != 'VENTA')) AND updated_at::date = now()::date")
     
-    # SLA Breach (NUEVO > 5 min)
+    # SLA Breach (NUEVO > 5 min - Total Backlog)
     sla_min = get_int_setting("sla_min", 5)
-    kpi_sla = fetchone(f"SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '{sla_min} minutes' AND created_at >= current_date")
+    kpi_sla = fetchone(f"SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '{sla_min} minutes'")
 
     # 6. Sales by agent and product (Including SEGUIMIENTO breakdown)
     detailed_sales = execute(
@@ -159,13 +160,13 @@ def get_dashboard():
     conversion = round((total_sales / total_processed * 100), 1) if total_processed > 0 else 0
     total_new = kpi_queue["total"] if kpi_queue else 0
 
-    # Specific KPI for Pending in Backoffice (Today's only as per "current day" request)
-    kpi_pending_bo = fetchone("SELECT COUNT(*) as total FROM sales WHERE (backoffice_status IS NULL OR backoffice_status = 'Pendiente de carga') AND created_at::date = now()::date")
+    # Specific KPI for Pending in Backoffice (TOTAL pending backlog)
+    kpi_pending_bo = fetchone("SELECT COUNT(*) as total FROM sales WHERE (backoffice_status IS NULL OR backoffice_status = 'Pendiente de carga')")
     
     # Specific KPI for Followups Today (Due today + backlog)
     kpi_fu_today = fetchone("SELECT COUNT(*) as total FROM leads WHERE estado = 'SEGUIMIENTO' AND (rellamar_en::date <= now()::date OR rellamar_en IS NULL)")
 
-    from datetime import datetime
+
     return {
         "success": True,
         "agents": agents,
@@ -187,7 +188,7 @@ def get_dashboard():
             "followupsToday": kpi_fu_today["total"] if kpi_fu_today else 0,
             "pendingInBackoffice": kpi_pending_bo["total"] if kpi_pending_bo else 0
         },
-        "serverNow": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "serverNow": get_now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
 
