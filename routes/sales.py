@@ -314,7 +314,6 @@ def bulk_create_sales(sales: list[SaleCreate]):
         suptipo_reco = EXCLUDED.suptipo_reco,
         updated_at = EXCLUDED.updated_at
     """
-    """
     params = [
         (
             s.message_id, s.agente, s.producto, s.tipo_venta, s.tipo_venta_original,
