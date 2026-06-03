@@ -62,14 +62,27 @@ def set_agent_status(email: str, body: AgentStatusUpdate):
                 detail=f"No puedes desconectarte con {row['n']} lead(s) abierto(s)."
             )
     now = get_now()
-    execute(
-        "UPDATE agents SET estado = %s, last_seen = %s, updated_at = %s WHERE email = %s",
-        (body.estado, now, now, email)
-    )
 
-    # If going ACTIVO, try to assign pending leads
+    # Parity with apiSetAgentStatus: when going ACTIVO from another state,
+    # reset last_assigned so the agent doesn't get priority from a stale old assignment.
     if body.estado == "ACTIVO":
+        prev = fetchone("SELECT estado FROM agents WHERE email = %s", (email,))
+        if prev and prev["estado"] != "ACTIVO":
+            execute(
+                "UPDATE agents SET estado = %s, last_seen = %s, last_assigned = %s, updated_at = %s WHERE email = %s",
+                (body.estado, now, now, now, email)
+            )
+        else:
+            execute(
+                "UPDATE agents SET estado = %s, last_seen = %s, updated_at = %s WHERE email = %s",
+                (body.estado, now, now, email)
+            )
         auto_assign.run()
+    else:
+        execute(
+            "UPDATE agents SET estado = %s, last_seen = %s, updated_at = %s WHERE email = %s",
+            (body.estado, now, now, email)
+        )
 
     return {"success": True, "estado": body.estado}
 

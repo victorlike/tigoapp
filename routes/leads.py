@@ -182,34 +182,71 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate, background_tasks
         estado = "CERRADO"
         logger.info(f"Forcing closure of {message_id} due to 3 no-contact attempts")
 
-    execute(
-        """
-        UPDATE leads
-        SET estado = %s,
-            resultado = COALESCE(%s, resultado),
-            rellamar_en = %s, -- Overwrite if provided, null if clearing
-            reagendar_tipo = COALESCE(%s, reagendar_tipo),
-            nocontacto_intentos = %s,
-            tip_tipo = COALESCE(%s, tip_tipo),
-            tip_resultado = COALESCE(%s, tip_resultado),
-            tip_motivo = COALESCE(%s, tip_motivo),
-            tip_submotivo = COALESCE(%s, tip_submotivo),
-            updated_at = now()
-        WHERE message_id = %s
-        """,
-        (
-            estado,
-            body.resultado,
-            body.rellamar_en,
-            body.reagendar_tipo,
-            nocontacto,
-            body.tip_tipo,
-            body.tip_resultado,
-            body.tip_motivo,
-            body.tip_submotivo,
-            message_id
+    if estado == "SEGUIMIENTO":
+        # Parity with apiCloseLead (followup reschedule path):
+        # - Clear agente (lead goes back to unowned SEGUIMIENTO queue)
+        # - Set agente_original to whoever is rescheduling (so they see it in their followup list)
+        # - Clear fecha_asignacion
+        execute(
+            """
+            UPDATE leads
+            SET estado = %s,
+                resultado = COALESCE(%s, resultado),
+                rellamar_en = %s,
+                reagendar_tipo = COALESCE(%s, reagendar_tipo),
+                nocontacto_intentos = %s,
+                tip_tipo = COALESCE(%s, tip_tipo),
+                tip_resultado = COALESCE(%s, tip_resultado),
+                tip_motivo = COALESCE(%s, tip_motivo),
+                tip_submotivo = COALESCE(%s, tip_submotivo),
+                agente_original = COALESCE(agente, agente_original),
+                agente = NULL,
+                fecha_asignacion = NULL,
+                updated_at = now()
+            WHERE message_id = %s
+            """,
+            (
+                estado,
+                body.resultado,
+                body.rellamar_en,
+                body.reagendar_tipo,
+                nocontacto,
+                body.tip_tipo,
+                body.tip_resultado,
+                body.tip_motivo,
+                body.tip_submotivo,
+                message_id
+            )
         )
-    )
+    else:
+        execute(
+            """
+            UPDATE leads
+            SET estado = %s,
+                resultado = COALESCE(%s, resultado),
+                rellamar_en = %s,
+                reagendar_tipo = COALESCE(%s, reagendar_tipo),
+                nocontacto_intentos = %s,
+                tip_tipo = COALESCE(%s, tip_tipo),
+                tip_resultado = COALESCE(%s, tip_resultado),
+                tip_motivo = COALESCE(%s, tip_motivo),
+                tip_submotivo = COALESCE(%s, tip_submotivo),
+                updated_at = now()
+            WHERE message_id = %s
+            """,
+            (
+                estado,
+                body.resultado,
+                body.rellamar_en,
+                body.reagendar_tipo,
+                nocontacto,
+                body.tip_tipo,
+                body.tip_resultado,
+                body.tip_motivo,
+                body.tip_submotivo,
+                message_id
+            )
+        )
 
     # Handle Sale Data if provided
     if body.sale_data and (estado == "Venta" or body.tip_resultado == "Venta"):

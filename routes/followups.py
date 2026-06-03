@@ -32,15 +32,25 @@ def get_followups(email: str):
 
 @router.post("/take")
 def take_followup(message_id: str, email: str):
-    """Re-assign a SEGUIMIENTO lead back to the agent."""
+    """Re-assign a SEGUIMIENTO lead back to the agent (parity with apiTakeFollowup)."""
+    now = get_now()
     execute(
         """
         UPDATE leads
         SET estado = 'ASIGNADO',
             agente = %s,
+            agente_original = %s,
+            fecha_asignacion = %s,
+            seguimiento_tomado_por = %s,
+            seguimiento_tomado_en = %s,
             updated_at = now()
         WHERE message_id = %s AND estado = 'SEGUIMIENTO'
         """,
-        (email, message_id)
+        (email, email, now, email, now, message_id)
+    )
+    # Update agent's last_seen (not last_assigned, to preserve queue priority)
+    execute(
+        "UPDATE agents SET last_seen = %s, updated_at = %s WHERE email = %s",
+        (now, now, email)
     )
     return {"success": True}

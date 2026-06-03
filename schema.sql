@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS agents (
   last_seen     TIMESTAMPTZ,
   max_leads     INT NOT NULL DEFAULT 1,
   last_assigned TIMESTAMPTZ,
+  role          TEXT NOT NULL DEFAULT 'AGENT',
   updated_at    TIMESTAMPTZ DEFAULT now()
 );
 
