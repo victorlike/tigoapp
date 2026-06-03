@@ -15,23 +15,16 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-DEFAULT_BO_STATUS_LIST = ["Pendiente", "Procesado", "Cancelado"]
-
-DEFAULT_BO_SUBSTATUS_LIST = [
-    "Pendiente de carga",
-    "Pendiente de firma",
-    "Pendiente de pago",
-    "Enviada a plateran",
-    "Pendiente de retiro en pick up",
-    "Pendiente de control de documentación",
-    "Documentación rechazada",
-    "Venta cancelada falta retoma",
-    "Venta cancelada Cliente desiste de la venta",
-    "Venta cancelada finalizada",
-    "Venta cancelada Venta mal generada",
-    "Venta cancelada cliente con deuda",
-    "Falta de stock de equipos",
-    "Procesado"
+DEFAULT_BO_STATUS_LIST = [
+    'Pendiente de carga',
+    'Pendiente de firma',
+    'Pendiente de pago',
+    'Enviada a plateran',
+    'Pendiente de retiro en pick up',
+    'Pendiente de control de documentación',
+    'Documentación rechazada',
+    'Venta cancelada falta retoma',
+    'Venta cancelada finalizada'
 ]
 
 
@@ -188,18 +181,6 @@ def create_manual_sale(sale: SaleCreate, background_tasks: BackgroundTasks):
     
     return {"success": True, "message_id": sale.message_id}
 
-
-DEFAULT_BO_STATUS_LIST = [
-    'Pendiente de carga',
-    'Pendiente de firma',
-    'Pendiente de pago',
-    'Enviada a plateran',
-    'Pendiente de retiro en pick up',
-    'Pendiente de control de documentación',
-    'Documentación rechazada',
-    'Venta cancelada falta retoma',
-    'Venta cancelada finalizada'
-]
 
 
 @router.get("/backoffice")

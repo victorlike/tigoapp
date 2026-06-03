@@ -2,7 +2,7 @@
 routes/coordinator.py — Coordinator dashboard data
 """
 from database import execute, fetchone
-from auth import verify_apps_script_key
+from auth import verify_apps_script_key, verify_admin_pin
 from fastapi import APIRouter, Depends
 from utils.settings import get_int_setting
 from utils.logic import get_now
@@ -76,14 +76,15 @@ def get_dashboard():
     # 2. Stuck Leads (ASIGNADO > 15 min)
     stuck_min = get_int_setting("stuck_min", 15)
     stuck_leads = execute(
-        f"""
-        SELECT 
+        """
+        SELECT
             message_id, linea, nombre, agente,
             EXTRACT(EPOCH FROM (now() - fecha_asignacion))/60 as minutos_asignado
-        FROM leads 
-        WHERE estado = 'ASIGNADO' AND fecha_asignacion < now() - interval '{stuck_min} minutes'
+        FROM leads
+        WHERE estado = 'ASIGNADO' AND fecha_asignacion < now() - (%s * INTERVAL '1 minute')
         ORDER BY minutos_asignado DESC
         """,
+        (stuck_min,),
         fetch=True
     )
 
@@ -124,7 +125,10 @@ def get_dashboard():
     
     # SLA Breach (NUEVO > 5 min - Today only)
     sla_min = get_int_setting("sla_min", 5)
-    kpi_sla = fetchone(f"SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - interval '{sla_min} minutes' AND created_at::date = %s", (today,))
+    kpi_sla = fetchone(
+        "SELECT COUNT(*) as total FROM leads WHERE estado = 'NUEVO' AND created_at < now() - (%s * INTERVAL '1 minute') AND created_at::date = %s",
+        (sla_min, today)
+    )
 
     # 6. Sales by agent and product (Including SEGUIMIENTO breakdown)
     detailed_sales = execute(
@@ -477,7 +481,7 @@ def clean_database():
     for table in ["leads", "sales", "agents", "audit_logs"]:
         execute(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE")
     return {"success": True, "message": "Database cleaned and schema updated"}
-@router.post("/bulk-close-queue")
+@router.post("/bulk-close-queue", dependencies=[Depends(verify_admin_pin)])
 def bulk_close_queue(actor: str = "Sistema"):
     """Close all leads currently in the queue (NUEVO)."""
     # 1. Count them first for the audit log

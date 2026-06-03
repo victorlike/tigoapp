@@ -89,7 +89,6 @@ class LeadOut(BaseModel):
     origen: Optional[str] = None
     url: Optional[str] = None
     equipo: Optional[str] = None
-    plan: Optional[str] = None
     utm: Optional[str] = None
     horario: Optional[str] = None
     timestamp_sheet: Optional[str] = None
@@ -105,8 +104,6 @@ class LeadOut(BaseModel):
     minutos_asignacion: Optional[str] = None
     seguimiento_tomado_por: Optional[str] = None
     seguimiento_tomado_en: Optional[str] = None
-    liberado_por: Optional[str] = None
-    liberado_en: Optional[str] = None
     liberado_motivo: Optional[str] = None
     error: Optional[str] = None
 

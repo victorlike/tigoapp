@@ -2,9 +2,12 @@
 routes/admin.py — Administrator endpoints for role management and system settings
 """
 from database import execute, fetchone
-from auth import verify_apps_script_key
+from auth import verify_apps_script_key, verify_admin_pin
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -25,18 +28,21 @@ def migrate_admin_schema():
         execute("INSERT INTO settings (key, value) VALUES ('stuck_min', '15') ON CONFLICT (key) DO NOTHING;")
         execute("INSERT INTO settings (key, value) VALUES ('auto_assign_enabled', 'true') ON CONFLICT (key) DO NOTHING;")
         # Ensure sales table has Backoffice Expansion Fields
-        try:
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_fecha_preventa TIMESTAMPTZ;")
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_fecha_proceso TIMESTAMPTZ;")
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_procesado_cancelado TEXT;")
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_fecha_cancelado TIMESTAMPTZ;")
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_subtipo_venta TEXT;")
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_columna1 TEXT;")
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_fecha_generic TIMESTAMPTZ;")
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_seguimiento TEXT;")
-            execute("ALTER TABLE sales ADD COLUMN IF NOT EXISTS bo_seguimiento_interaccion TEXT;")
-        except:
-            pass
+        for col, coltype in [
+            ("bo_fecha_preventa", "TIMESTAMPTZ"),
+            ("bo_fecha_proceso", "TIMESTAMPTZ"),
+            ("bo_procesado_cancelado", "TEXT"),
+            ("bo_fecha_cancelado", "TIMESTAMPTZ"),
+            ("bo_subtipo_venta", "TEXT"),
+            ("bo_columna1", "TEXT"),
+            ("bo_fecha_generic", "TIMESTAMPTZ"),
+            ("bo_seguimiento", "TEXT"),
+            ("bo_seguimiento_interaccion", "TEXT"),
+        ]:
+            try:
+                execute(f"ALTER TABLE sales ADD COLUMN IF NOT EXISTS {col} {coltype};")
+            except Exception as col_err:
+                logger.warning(f"Could not add column {col}: {col_err}")
 
         print("Admin schema migration completed.")
     except Exception as e:
@@ -77,7 +83,7 @@ def get_users():
     """, fetch=True)
     return {"success": True, "items": users}
 
-@router.post("/users/update")
+@router.post("/users/update", dependencies=[Depends(verify_admin_pin)])
 def update_user(data: Dict[str, Any]):
     """Update role or max_leads for a user."""
     from database import log_audit
@@ -107,7 +113,7 @@ def get_settings():
     settings = {r['key']: r['value'] for r in rows}
     return {"success": True, "settings": settings}
 
-@router.post("/settings/update")
+@router.post("/settings/update", dependencies=[Depends(verify_admin_pin)])
 def update_settings(data: Dict[str, Any]):
     """Update global system settings."""
     from database import log_audit

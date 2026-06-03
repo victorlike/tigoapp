@@ -55,7 +55,7 @@ function migrateLeadsLiberados() {
  */
 function cleanDatabase() {
   Logger.log('🧹 Limpiando la base de datos...');
-  postBulk_('/api/coordinator/clean', {});
+  postBulk_('/api/admin/clean', {});
 }
 
 /** 
@@ -180,25 +180,25 @@ function migrateSales() {
       suptipo_reco: getValue_(row, map, 'Suptipo Reco', 59),
       tip_tipo: getValue_(row, map, 'Tip_Tipo'),
       tip_resultado: getValue_(row, map, 'Tip_Resultado'),
-      venta_equipo: getValue_(headers, row, ["Venta Reco", "Equipo"]),
-      vendedor_comentarios: getValue_(headers, row, ["COMENTARIOS", "OBSERVACIONES"]),
+      venta_equipo: getValue_(row, map, ["Venta Reco", "Equipo"]),
+      vendedor_comentarios: getValue_(row, map, ["COMENTARIOS", "OBSERVACIONES"]),
       
       // -- Backoffice Expansion Fields --
-      backoffice_status: getValue_(headers, row, ["Estado"]),
-      backoffice_sub_status: getValue_(headers, row, ["SubEstado"]),
-      bo_fecha_preventa: parseDate_(getValue_(headers, row, ["Fecha de Preventa", "fecha pre"])),
-      bo_fecha_proceso: parseDate_(getValue_(headers, row, ["fecha de proceso", "fecha pro"])),
-      bo_procesado_cancelado: getValue_(headers, row, ["Procesado cancelado"]),
-      bo_fecha_cancelado: parseDate_(getValue_(headers, row, ["Fecha de procesado cancelado"])),
-      bo_subtipo_venta: getValue_(headers, row, ["Subtipo de venta"]),
-      suptipo_reco: getValue_(headers, row, ["Suptipo Reco"]),
-      bo_columna1: getValue_(headers, row, ["Columna1"]),
-      backoffice_agent: getValue_(headers, row, ["BO"]),
-      bo_fecha_generic: parseDate_(getValue_(headers, row, ["FECHA"])),
-      bo_seguimiento: getValue_(headers, row, ["SEGUIMIENTO"]),
-      bo_seguimiento_interaccion: getValue_(headers, row, ["seguimiento interaccion"]),
+      backoffice_status: getValue_(row, map, ["Estado"]),
+      backoffice_sub_status: getValue_(row, map, ["SubEstado"]),
+      bo_fecha_preventa: parseDate_(getValue_(row, map, ["Fecha de Preventa", "fecha pre"])),
+      bo_fecha_proceso: parseDate_(getValue_(row, map, ["fecha de proceso", "fecha pro"])),
+      bo_procesado_cancelado: getValue_(row, map, ["Procesado cancelado"]),
+      bo_fecha_cancelado: parseDate_(getValue_(row, map, ["Fecha de procesado cancelado"])),
+      bo_subtipo_venta: getValue_(row, map, ["Subtipo de venta"]),
+      suptipo_reco: getValue_(row, map, ["Suptipo Reco"]),
+      bo_columna1: getValue_(row, map, ["Columna1"]),
+      backoffice_agent: getValue_(row, map, ["BO"]),
+      bo_fecha_generic: parseDate_(getValue_(row, map, ["FECHA"])),
+      bo_seguimiento: getValue_(row, map, ["SEGUIMIENTO"]),
+      bo_seguimiento_interaccion: getValue_(row, map, ["seguimiento interaccion"]),
 
-      created_at: parseDate_(getValue_(headers, row, ["Fecha", "FECHA CUADRO"])) || new Date(),
+      created_at: parseDate_(getValue_(row, map, ["Fecha", "FECHA CUADRO"])) || new Date(),
       updated_at: parseDate_(getValue_(row, map, 'FechaCierre', 117) || getValue_(row, map, 'Fecha', 0) || new Date())
     };
   }).filter(s => s.agente);
@@ -340,6 +340,15 @@ function getHeaderMapFromArray_(headers) {
 }
 
 function getValue_(row, map, key, indexFallback = null) {
+  // Support array of keys for multi-matching
+  if (Array.isArray(key)) {
+    for (let k of key) {
+      let v = getValue_(row, map, k);
+      if (v !== null) return v;
+    }
+    return (indexFallback !== null && row[indexFallback]) ? String(row[indexFallback]).trim() : null;
+  }
+
   const idx = map[key] ?? map[key.toLowerCase()] ?? map[key.toUpperCase()] ?? map[key.replace(/\s+/g, '_')];
   
   // Use index fallback if header not found

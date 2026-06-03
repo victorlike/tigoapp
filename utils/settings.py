@@ -16,7 +16,7 @@ def get_setting(key: str, default: str = None) -> str:
     if now - _last_fetch > CACHE_TTL:
         try:
             from database import execute
-            rows = execute("SELECT key, value FROM settings")
+            rows = execute("SELECT key, value FROM settings", fetch=True)
             _cache = {r['key']: r['value'] for r in rows}
             _last_fetch = now
         except Exception as e:
