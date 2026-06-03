@@ -8,826 +8,1239 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root {
       --bg0: #050814; --bg1: #0b1220; --bg2: #0f1a2e;
-      --card: rgba(15, 27, 51, .72); --card-solid: #0d1b33;
-      --line: rgba(148, 163, 184, .18); --muted: #93a4c7;
+      --card: rgba(15,27,51,.72); --card-solid: #0d1b33;
+      --line: rgba(148,163,184,.18); --muted: #93a4c7;
       --txt: #e2e8f0; --txt-dim: #64748b;
-      --accent: #00aef0; --accent-glow: rgba(0, 174, 240, .25);
-      --accent-dark: #0369a1; --ok: #34d399;
-      --ok-bg: rgba(52, 211, 153, .12); --warn: #fbbf24;
-      --warn-bg: rgba(251, 191, 36, .12); --danger: #fb7185;
-      --danger-bg: rgba(251, 113, 133, .12); --radius: 14px;
-      --radius-sm: 8px;
+      --accent: #00aef0; --accent-glow: rgba(0,174,240,.25);
+      --ok: #34d399; --ok-bg: rgba(52,211,153,.12);
+      --warn: #fbbf24; --warn-bg: rgba(251,191,36,.12);
+      --danger: #fb7185; --danger-bg: rgba(251,113,133,.12);
+      --radius: 14px; --radius-sm: 8px;
     }
-    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
     body {
-      font-family: 'Inter', sans-serif;
-      background: radial-gradient(1200px 600px at 20% 10%, rgba(0, 174, 240, .10), transparent 55%),
-                  radial-gradient(900px 500px at 90% 20%, rgba(52, 211, 153, .08), transparent 55%),
-                  linear-gradient(180deg, var(--bg0), var(--bg1));
-      color: var(--txt); padding: 16px; min-height: 100vh; overflow-x: hidden;
+      font-family:'Inter',-apple-system,sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%,rgba(0,174,240,.10),transparent 55%),
+                  radial-gradient(900px 500px at 90% 20%,rgba(52,211,153,.08),transparent 55%),
+                  linear-gradient(180deg,var(--bg0),var(--bg1));
+      color:var(--txt); padding:16px; min-height:100vh; height:100vh; overflow:hidden;
     }
-    .app-container { max-width: 1320px; margin: 0 auto; display: grid; grid-template-rows: auto 1fr; gap: 14px; }
-    .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); backdrop-filter: blur(16px); padding: 12px 20px; border-radius: var(--radius); border: 1px solid var(--line); }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), #0ea5e9); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; box-shadow: 0 4px 12px var(--accent-glow); }
-    .brand-text { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; }
-    .header-right { display: flex; gap: 10px; align-items: center; }
-    .agent-pill { background: rgba(148, 163, 184, .08); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-    .btn { padding: 7px 14px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: rgba(148, 163, 184, .08); color: var(--txt); cursor: pointer; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
-    .btn:hover { background: rgba(148, 163, 184, .16); }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), #0ea5e9); border: none; color: #fff; font-weight: 700; box-shadow: 0 4px 12px var(--accent-glow); }
-    .btn-status-active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; box-shadow: 0 0 10px var(--accent-glow); }
-    .grid { display: grid; grid-template-columns: 300px 1fr; gap: 14px; }
-    .card { background: var(--card); backdrop-filter: blur(12px); padding: 16px; border-radius: var(--radius); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
-    .card-head { font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
-    .stat-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding: 5px 0; border-bottom: 1px solid rgba(148, 163, 184, .06); }
-    .stat-val { font-weight: 700; color: var(--txt); }
-    .lead-list { display: flex; flex-direction: column; gap: 8px; }
-    .lead-item { border: 1px solid var(--line); padding: 12px 14px; border-radius: 12px; background: rgba(15, 27, 51, .5); display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; font-size: 12px; }
-    .lead-tag { padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-    .tag-asig { background: rgba(0, 174, 240, .15); color: var(--accent); border: 1px solid rgba(0, 174, 240, .3); }
-    .modal-overlay { position: fixed; inset: 0; background: rgba(5, 8, 20, .8); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 1000; }
-    .modal { background: var(--card-solid); border: 1px solid var(--line); width: 95%; max-width: 1020px; max-height: 92vh; border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; }
-    .modal-body { display: flex; flex-direction: column; overflow-y: auto; flex: 1; }
-    .modal-split { display: grid; grid-template-columns: 45% 55%; min-height: 0; }
-    .info-col { padding: 20px; border-right: 1px solid var(--line); background: rgba(5, 8, 20, .3); }
-    .action-col { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-    .typification-box { border: 1px solid rgba(251, 191, 36, .25); background: rgba(251, 191, 36, .05); padding: 14px; border-radius: 12px; }
-    input, select, textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: rgba(15, 27, 51, .6); color: var(--txt); font-size: 12px; }
-    .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); background: rgba(148, 163, 184, .07); font-size: 11px; color: var(--muted); }
-    .toast-wrap { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; }
-    .toast { padding: 11px 18px; border-radius: 10px; font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.3); background: var(--card-solid); border: 1px solid var(--line); color: #fff; }
-    .loader { position: fixed; inset: 0; background: rgba(5,8,20,.6); display: none; justify-content: center; align-items: center; z-index: 4000; }
-    .spinner { width: 44px; height: 44px; border: 3px solid transparent; border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    
-    /* Premium Form Styling */
-    .form-group { background: rgba(148, 163, 184, .04); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; transition: 0.3s; }
-    .form-group:focus-within { background: rgba(0, 174, 240, .05); border-color: var(--accent); }
-    .form-label { display: block; font-size: 10px; font-weight: 800; color: var(--txt-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .form-section-title { font-size: 12px; font-weight: 800; color: var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-input { width: 100%; border: none !important; background: transparent !important; padding: 0 !important; font-size: 13px !important; color: var(--txt); }
-    .form-input:focus { outline: none; }
-    .form-select { width: 100%; border: none !important; background: transparent !important; padding: 0 !important; font-size: 13px !important; color: var(--txt); cursor: pointer; }
-    .form-select option { background: var(--bg2); color: var(--txt); }
-    .form-select:focus { outline: none; }
-    .form-textarea { width: 100%; border: none !important; background: transparent !important; padding: 0 !important; font-size: 13px !important; color: var(--txt); resize: none; min-height: 40px; }
-    .form-textarea:focus { outline: none; }
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:rgba(148,163,184,.06); border-radius:999px; }
+    ::-webkit-scrollbar-thumb { background:rgba(148,163,184,.22); border-radius:999px; }
+    .app-container { max-width:1320px; margin:0 auto; height:100%; display:grid; grid-template-rows:auto 1fr; gap:14px; }
+    .header { display:flex; justify-content:space-between; align-items:center; background:var(--card); backdrop-filter:blur(16px); padding:12px 20px; border-radius:var(--radius); border:1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .brand-icon { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,var(--accent),#0ea5e9); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; color:#fff; box-shadow:0 4px 12px var(--accent-glow); }
+    .brand-text { font-size:17px; font-weight:800; letter-spacing:-.5px; }
+    .brand-sub { font-size:11px; color:var(--muted); margin-top:1px; }
+    .header-right { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .agent-pill { display:flex; align-items:center; gap:6px; background:rgba(148,163,184,.08); border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-size:12px; color:var(--muted); }
+    .agent-pill strong { color:var(--txt); font-size:12px; }
+    .btn { padding:7px 14px; border-radius:var(--radius-sm); border:1px solid var(--line); background:rgba(148,163,184,.08); color:var(--txt); cursor:pointer; font-size:12px; font-weight:500; font-family:inherit; transition:all .18s; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+    .btn:hover { background:rgba(148,163,184,.16); border-color:rgba(148,163,184,.35); }
+    .btn:active { transform:translateY(1px); }
+    .btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),#0ea5e9); border:none; color:#fff; font-weight:700; box-shadow:0 4px 12px var(--accent-glow); }
+    .btn-primary:hover { opacity:.92; transform:translateY(-1px); }
+    .btn-primary:disabled { background:rgba(148,163,184,.2); box-shadow:none; transform:none; opacity:.5; }
+    .btn-danger { background:var(--danger-bg); border-color:rgba(251,113,133,.3); color:var(--danger); }
+    .btn-danger:hover { background:rgba(251,113,133,.22); }
+    .btn-ok { background:var(--ok-bg); border-color:rgba(52,211,153,.3); color:var(--ok); }
+    .btn-ok:hover { background:rgba(52,211,153,.22); }
+    .btn-lg { padding:14px 20px; font-size:14px; font-weight:700; border-radius:12px; justify-content:center; }
+    .status-btn { min-width:90px; justify-content:center; gap:7px; }
+    .status-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+    .status-btn.active[data-status="ACTIVO"] { background:var(--ok-bg); border-color:rgba(52,211,153,.4); color:var(--ok); }
+    .status-btn.active[data-status="ACTIVO"] .status-dot { background:var(--ok); box-shadow:0 0 0 3px rgba(52,211,153,.25); animation:pulse-dot 2s infinite; }
+    .status-btn.active[data-status="PAUSA"] { background:var(--warn-bg); border-color:rgba(251,191,36,.4); color:var(--warn); }
+    .status-btn.active[data-status="PAUSA"] .status-dot { background:var(--warn); }
+    .status-btn.active[data-status="OFFLINE"] { background:var(--danger-bg); border-color:rgba(251,113,133,.4); color:var(--danger); }
+    .status-btn.active[data-status="OFFLINE"] .status-dot { background:var(--danger); }
+    @keyframes pulse-dot { 0%,100% { box-shadow:0 0 0 0 rgba(52,211,153,.4); } 50% { box-shadow:0 0 0 5px rgba(52,211,153,.0); } }
+    .tab-badge { margin-left:5px; padding:1px 6px; border-radius:999px; font-size:10px; background:rgba(148,163,184,.15); color:var(--muted); min-width:20px; text-align:center; }
+    .btn.tab-active { background:rgba(0,174,240,.18); border-color:rgba(0,174,240,.4); color:var(--accent); }
+    .btn.tab-active .tab-badge { background:rgba(0,174,240,.25); color:#fff; }
+    .grid { display:grid; grid-template-columns:300px 1fr; gap:14px; height:100%; overflow:hidden; }
+    @media(max-width:900px) { .grid { grid-template-columns:1fr; } }
+    .card { background:var(--card); backdrop-filter:blur(12px); padding:16px; border-radius:var(--radius); border:1px solid var(--line); display:flex; flex-direction:column; gap:12px; height:100%; overflow:hidden; }
+    .card-head { font-weight:700; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; border-bottom:1px solid var(--line); padding-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
+    .stat-row { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--muted); padding:5px 0; border-bottom:1px solid rgba(148,163,184,.06); }
+    .stat-row:last-child { border-bottom:none; }
+    .stat-val { font-weight:700; color:var(--txt); font-size:14px; }
+    .stat-val.red { color:var(--danger); }
+    .stat-val.ok { color:var(--ok); }
+    .lead-list { overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:8px; padding-right:2px; }
+    .lead-item { border:1px solid var(--line); padding:12px 14px; border-radius:12px; background:rgba(15,27,51,.5); display:grid; grid-template-columns:auto 1fr auto; gap:12px; align-items:center; font-size:12px; transition:border-color .2s,background .2s; }
+    .lead-item:hover { border-color:rgba(0,174,240,.3); background:rgba(0,174,240,.04); }
+    .lead-tag { padding:3px 8px; border-radius:6px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+    .tag-asig { background:rgba(0,174,240,.15); color:var(--accent); border:1px solid rgba(0,174,240,.3); }
+    .tag-seg { background:rgba(251,191,36,.12); color:var(--warn); border:1px solid rgba(251,191,36,.3); }
+    .tag-due { background:var(--danger-bg); color:var(--danger); border:1px solid rgba(251,113,133,.3); }
+    .lead-name { font-weight:700; font-size:13px; color:var(--txt); margin-top:3px; }
+    .lead-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+    .lead-phone { font-weight:600; color:var(--accent); font-size:12px; }
+    .pill { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; border:1px solid var(--line); background:rgba(148,163,184,.07); font-size:11px; color:var(--muted); white-space:nowrap; }
+    .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; padding:40px 20px; color:var(--muted); text-align:center; }
+    .empty-state svg { opacity:.35; }
+    .empty-state p { font-size:13px; }
+    .seller-controls { display:flex; flex-direction:column; gap:8px; min-width:220px; }
+    .bo-controls { display:flex; flex-direction:column; gap:8px; min-width:220px; }
+    select,input[type="text"],input[type="number"],input[type="date"],input[type="datetime-local"],textarea {
+      width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius-sm);
+      font-size:12px; font-family:inherit; background:rgba(15,27,51,.6); color:var(--txt); transition:border-color .2s;
+    }
+    select:focus,input:focus,textarea:focus { border-color:var(--accent); outline:none; box-shadow:0 0 0 3px var(--accent-glow); }
+    select option,option { background-color:#0b1220; color:var(--txt); }
+    textarea { resize:vertical; min-height:64px; }
+    .modal-overlay { position:fixed; inset:0; background:rgba(5,8,20,.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:1000; animation:fadeIn .18s ease; }
+    .modal-overlay.open { display:flex; }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .modal { background:var(--card-solid); border:1px solid var(--line); width:95%; max-width:1020px; height:92vh; border-radius:18px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 30px 60px rgba(0,0,0,.5); animation:slideUp .2s ease; }
+    @keyframes slideUp { from { transform:translateY(16px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    .modal-head { padding:16px 22px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; background:rgba(0,174,240,.04); }
+    .modal-title { font-size:16px; font-weight:700; color:var(--txt); }
+    .modal-subtitle { font-size:12px; color:var(--muted); margin-top:2px; }
+    .modal-body { padding:0; flex:1; display:flex; flex-direction:column; overflow:hidden; }
+    .modal-split { display:grid; grid-template-columns:45% 55%; min-height:0; flex:1; overflow:hidden; }
+    .info-col { padding:20px; border-right:1px solid var(--line); background:rgba(5,8,20,.3); overflow-y:auto; }
+    .action-col { padding:20px; background:rgba(15,27,51,.4); display:flex; flex-direction:column; gap:14px; overflow-y:auto; }
+    .modal-footer { padding:14px 22px; border-top:1px solid var(--line); background:rgba(5,8,20,.4); }
+    .info-group { margin-bottom:16px; }
+    .info-title { font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.8px; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid rgba(0,174,240,.2); }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .field-block { margin-bottom:4px; }
+    .lbl { font-size:10px; color:var(--muted); display:block; margin-bottom:3px; text-transform:uppercase; letter-spacing:.4px; }
+    .val { font-size:12px; font-weight:500; color:var(--txt); word-break:break-word; }
+    .typification-box { border:1px solid rgba(251,191,36,.25); background:rgba(251,191,36,.05); padding:14px; border-radius:12px; }
+    .typification-title { font-size:11px; font-weight:700; color:var(--warn); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+    .tip-steps { display:flex; gap:6px; margin-bottom:12px; align-items:center; }
+    .tip-step { width:22px; height:22px; border-radius:50%; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--muted); flex-shrink:0; }
+    .tip-step.done { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .tip-step-sep { flex:1; height:1px; background:var(--line); }
+    .form-row { display:flex; gap:10px; margin-bottom:8px; }
+    .form-row > div { flex:1; }
+    .sale-container { display:none; margin-top:12px; border-top:1px solid var(--line); padding-top:14px; }
+    .subform { background:rgba(0,174,240,.05); border:1px solid rgba(0,174,240,.15); padding:12px; border-radius:10px; margin-bottom:10px; }
+    .subform-title { font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+    .mini-note { margin-top:6px; border:1px solid var(--line); background:rgba(148,163,184,.05); border-radius:8px; padding:8px 10px; font-size:11px; color:var(--muted); line-height:1.4; }
+    .release-modal-overlay { position:fixed; inset:0; background:rgba(5,8,20,.8); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:2000; }
+    .release-modal-overlay.open { display:flex; }
+    .release-modal { background:var(--card-solid); border:1px solid var(--line); width:92%; max-width:440px; border-radius:16px; padding:24px; box-shadow:0 20px 50px rgba(0,0,0,.5); animation:slideUp .18s ease; }
+    .release-modal h3 { font-size:16px; font-weight:700; margin-bottom:6px; }
+    .release-modal p { font-size:12px; color:var(--muted); margin-bottom:14px; }
+    .toast-wrap { position:fixed; top:20px; right:20px; z-index:3000; display:flex; flex-direction:column; gap:8px; }
+    .toast { padding:11px 18px; border-radius:10px; font-size:12px; font-weight:500; font-family:inherit; animation:toastIn .25s ease; box-shadow:0 8px 24px rgba(0,0,0,.3); max-width:340px; }
+    .toast.ok { background:var(--ok-bg); border:1px solid rgba(52,211,153,.35); color:var(--ok); }
+    .toast.warn { background:var(--warn-bg); border:1px solid rgba(251,191,36,.35); color:var(--warn); }
+    .toast.err { background:var(--danger-bg); border:1px solid rgba(251,113,133,.35); color:var(--danger); }
+    .toast.info { background:rgba(0,174,240,.1); border:1px solid rgba(0,174,240,.35); color:var(--accent); }
+    @keyframes toastIn { from { transform:translateX(24px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+    .loader { position:fixed; inset:0; background:rgba(5,8,20,.6); backdrop-filter:blur(3px); display:none; justify-content:center; align-items:center; z-index:4000; }
+    .loader.show { display:flex; }
+    .spinner { width:44px; height:44px; border:3px solid transparent; border-top-color:var(--accent); border-bottom-color:var(--ok); border-radius:50%; animation:spin 1.2s cubic-bezier(.5,0,.5,1) infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .bo-textarea { width:100%; min-height:64px; resize:vertical; }
+    .seller-textarea { width:100%; min-height:58px; resize:vertical; }
+    .bo-select { width:100%; }
   </style>
 </head>
 <body>
   <div class="loader" id="loader"><div class="spinner"></div></div>
   <div class="toast-wrap" id="toast-root"></div>
 
-  <div class="app-container">
-    <div class="header">
-      <div class="brand"><div class="brand-icon">T</div><div><div class="brand-text">Tigo LeadDesk</div></div></div>
-      <div class="header-right">
-        <div class="agent-pill">Agente: <strong id="agent-name">...</strong></div>
-        <div id="status-btns" style="display:flex;gap:6px;">
-          <button class="btn" id="btn-ACTIVO" onclick="setStatus('ACTIVO')">Activo</button>
-          <button class="btn" id="btn-PAUSA" onclick="setStatus('PAUSA')">Pausa</button>
-          <button class="btn" id="btn-OFFLINE" onclick="setStatus('OFFLINE')">Offline</button>
-        </div>
-        <button class="btn" onclick="refresh()">Actualizar</button>
+  <!-- RELEASE MODAL -->
+  <div class="release-modal-overlay" id="release-modal-overlay">
+    <div class="release-modal">
+      <h3>Liberar Lead</h3>
+      <p id="release-modal-mid-label">El lead volverá a la cola sin agente asignado.</p>
+      <div class="field-block" style="margin-bottom:14px;">
+        <label class="lbl">Motivo de liberación</label>
+        <textarea id="release-reason" rows="2" placeholder="Ej: Terminó turno, llamada caída..."></textarea>
       </div>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <div class="card-head">Control</div>
-        <button class="btn btn-primary" id="btn-take" onclick="takeLead()">Tomar Lead</button>
-        <button class="btn" onclick="openManualSaleModal()">Venta Manual</button>
-        <div class="sidebar-stats">
-          <div class="stat-row"><span>Cola</span><span class="stat-val" id="q-count">0</span></div>
-          <div class="stat-row"><span>Mios</span><span class="stat-val" id="my-count">0</span></div>
-          <div class="stat-row"><span>Ventas</span><span class="stat-val" id="sales-count">0</span></div>
-        </div>
-        <button class="btn w-full mt-4 text-xs font-bold border-rose-500/30 text-rose-400 hover:bg-rose-500/10" id="btn-clean-queue" style="display:none;" onclick="cleanQueue()">Limpiar Cola</button>
-      </div>
-      <div class="card">
-        <div class="card-head">
-          <div style="display:flex;gap:6px;">
-            <button class="btn" onclick="setTab('my')">Mis Leads</button>
-            <button class="btn" onclick="setTab('fu')">Seguimientos</button>
-            <button class="btn" onclick="setTab('sales')">Mis Ventas</button>
-            <button class="btn" id="tab-bo" style="display:none;" onclick="setTab('bo')">Backoffice</button>
-          </div>
-        </div>
-        <div class="lead-list" id="tab-body"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn" onclick="closeReleaseModal_()">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmRelease_()">Liberar</button>
       </div>
     </div>
   </div>
 
+  <div class="app-container">
+    <!-- HEADER -->
+    <div class="header">
+      <div class="brand">
+        <div class="brand-icon">T</div>
+        <div><div class="brand-text">Tigo LeadDesk</div><div class="brand-sub">Vista Agente</div></div>
+      </div>
+      <div class="header-right">
+        <div class="agent-pill">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>
+          <span>Agente:</span> <strong id="agent-name">...</strong>
+        </div>
+        <div id="status-btns" style="display:flex;gap:6px;">
+          <button class="btn status-btn" data-status="ACTIVO" onclick="setStatus('ACTIVO')"><span class="status-dot"></span><span>Activo</span></button>
+          <button class="btn status-btn" data-status="PAUSA" onclick="setStatus('PAUSA')"><span class="status-dot"></span><span>Pausa</span></button>
+          <button class="btn status-btn" data-status="OFFLINE" onclick="setStatus('OFFLINE')"><span class="status-dot"></span><span>Offline</span></button>
+        </div>
+        <button class="btn" onclick="refresh(true)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          Actualizar
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid">
+      <!-- LEFT PANEL -->
+      <div class="card">
+        <div class="card-head">Panel de Control</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-lg" id="btn-take" onclick="takeLead()" style="flex:1;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Tomar Lead
+          </button>
+          <button class="btn btn-lg" onclick="openManualSaleModal()" style="flex:1;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Venta Manual
+          </button>
+        </div>
+        <div>
+          <div class="stat-row"><span>Leads en Cola</span><span class="stat-val" id="q-count">—</span></div>
+          <div class="stat-row"><span>Mis Pendientes</span><span class="stat-val" id="my-count">—</span></div>
+          <div class="stat-row"><span>Fuera de SLA</span><span class="stat-val red" id="sla-count">—</span></div>
+          <div class="stat-row"><span>Seguimientos hoy</span><span class="stat-val" id="fu-count">—</span></div>
+          <div class="stat-row"><span>Mis Ventas</span><span class="stat-val ok" id="sales-count">—</span></div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL (TABS) -->
+      <div class="card">
+        <div class="card-head">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn" id="tab-my" onclick="setTab('my')">Mis Leads <span class="tab-badge" id="tab-my-count">0</span></button>
+            <button class="btn" id="tab-fu" onclick="setTab('fu')">Seguimientos <span class="tab-badge" id="tab-fu-count">0</span></button>
+            <button class="btn" id="tab-sales" onclick="setTab('sales')">Mis Ventas <span class="tab-badge" id="tab-sales-count">0</span></button>
+            <button class="btn" id="tab-bo" onclick="setTab('bo')" style="display:none;">Backoffice <span class="tab-badge" id="tab-bo-count">0</span></button>
+          </div>
+        </div>
+        <div class="lead-list" id="tab-my-body"></div>
+        <div class="lead-list" id="tab-fu-body" style="display:none;"></div>
+        <div class="lead-list" id="tab-sales-body" style="display:none;"></div>
+        <div class="lead-list" id="tab-bo-body" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL PRINCIPAL -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
-      <div style="padding:16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between;">
-        <div class="modal-title">Gestión Cliente</div>
-        <button class="btn" onclick="closeModal()">✕</button>
+      <div class="modal-head">
+        <div>
+          <div class="modal-title">Gestionar Cliente</div>
+          <div class="modal-subtitle" id="modal-lead-subtitle">Cargando datos...</div>
+        </div>
+        <button class="btn" onclick="closeModal()">✕ Cerrar</button>
       </div>
-      <div class="modal-body p-0">
+      <div class="modal-body">
         <div class="modal-split">
-          <div class="info-col overflow-y-auto" id="info-container" style="max-height: 75vh;"></div>
-          <div class="action-col overflow-y-auto" style="max-height: 75vh;">
-            <div class="mb-6">
-              <div class="form-section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>Tipificación</div>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label class="form-label">1. Tipo Consulta</label>
-                  <select id="tip-type" class="form-select" onchange="updateResultTypes()"><option value="">- Seleccionar -</option></select>
+          <div class="info-col" id="info-container"></div>
+          <div class="action-col">
+            <div class="typification-box">
+              <div class="typification-title">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4l3 3"/></svg>
+                Tipificación Obligatoria
+              </div>
+              <div class="tip-steps" id="tip-steps-bar">
+                <div class="tip-step" id="ts1">1</div><div class="tip-step-sep"></div>
+                <div class="tip-step" id="ts2">2</div><div class="tip-step-sep"></div>
+                <div class="tip-step" id="ts3">3</div><div class="tip-step-sep"></div>
+                <div class="tip-step" id="ts4">4</div>
+              </div>
+              <div class="form-row">
+                <div class="field-block" style="flex:1">
+                  <label class="lbl">1. Consulta Inicial</label>
+                  <select id="tip-type" onchange="updateResultTypes()"><option value="">- Seleccionar -</option></select>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">2. Resultado</label>
-                  <select id="tip-result-type" class="form-select" onchange="updateResults()"><option value="">- Seleccionar -</option></select>
+                <div class="field-block" style="flex:1">
+                  <label class="lbl">2. Tipo Resultado</label>
+                  <select id="tip-result-type" onchange="updateResults()"><option value="">-</option></select>
                 </div>
               </div>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label class="form-label">3. Sub-Resultado</label>
-                  <select id="tip-res" class="form-select" onchange="updateMotives()"><option value="">- Seleccionar -</option></select>
+              <div class="form-row">
+                <div class="field-block" style="flex:1">
+                  <label class="lbl">3. Resultado</label>
+                  <select id="tip-res" onchange="updateMotives()"><option value="">-</option></select>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">4. Motivo Detallado</label>
-                  <select id="tip-motive" class="form-select" onchange="checkSale()"><option value="">- Seleccionar -</option></select>
+                <div class="field-block" style="flex:1">
+                  <label class="lbl">4. Motivo</label>
+                  <select id="tip-motive" onchange="checkSale()"><option value="">-</option></select>
                 </div>
               </div>
-              <div id="fu-wrap" style="display:none;" class="form-group">
-                <label class="form-label">Rellamar / Recordatorio</label>
-                <input type="datetime-local" id="fu-datetime" class="form-input">
+              <div class="field-block" id="fu-datetime-wrap" style="display:none;">
+                <label class="lbl">Hora de Rellamada</label>
+                <input type="datetime-local" id="fu-datetime">
+              </div>
+              <div class="field-block" id="fu-type-wrap" style="display:none;">
+                <label class="lbl">Motivo de reagendamiento</label>
+                <select id="fu-type">
+                  <option value="CLIENTE_PIDE">Cliente pidió que lo llamen después</option>
+                  <option value="FUERA_HORARIO">Asignado fuera del horario solicitado</option>
+                  <option value="NO_CONTACTO">No se logró contactar (máx 3)</option>
+                </select>
+                <div id="fu-attempt-hint" style="font-size:11px;color:var(--warn);margin-top:6px;display:none;"></div>
               </div>
             </div>
 
-            <div id="sale-container" style="display:none;" class="animate-in fade-in slide-in-from-top duration-300">
-               <div class="form-section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>Detalles de Venta</div>
-               <div class="form-group">
-                 <label class="form-label">Modelo de Venta</label>
-                 <select id="sale-form-selector" class="form-select" onchange="renderSaleForm(this.value)">
-                   <option value="">- Seleccionar Tipo Venta -</option>
-                   <option value="migracion">Migración</option>
-                   <option value="alta">Alta Nueva</option>
-                   <option value="porta">Portabilidad</option>
-                 </select>
-               </div>
-               <div class="form-group">
-                 <label class="form-label">Observaciones Vendedor</label>
-                 <textarea id="seller-comment" class="form-textarea" placeholder="Comentarios internos del vendedor..."></textarea>
-               </div>
-               <div id="dynamic-form"></div>
-            </div>
-            
-            <div class="mt-4">
-              <div class="form-section-title"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>Notas Adicionales</div>
-              <div class="form-group">
-                 <textarea id="notes" class="form-textarea" style="min-height: 80px;" placeholder="Escribe notas adicionales sobre la gestión..."></textarea>
+            <div id="sale-container" class="sale-container">
+              <div class="field-block">
+                <label class="lbl" style="color:var(--accent);font-weight:700;">Seleccionar Formulario de Venta</label>
+                <select id="sale-form-selector" onchange="renderSaleForm(this.value)">
+                  <option value="">-- Elegir --</option>
+                  <option value="migracion">⭐ MIGRACIONES (Prepago a Pospago)</option>
+                  <option value="alta">ALTAS (Línea Nueva)</option>
+                  <option value="porta">PORTABILIDAD</option>
+                  <option value="recontrato">RECONTRATO</option>
+                  <option value="upgrade">UPSELLING / UPGRADE</option>
+                </select>
               </div>
+              <div class="field-block">
+                <label class="lbl">Comentario del vendedor</label>
+                <textarea id="seller-comment" rows="2" placeholder="Ej: falta firma, falta pago, cliente pide retoma..."></textarea>
+              </div>
+              <div id="dynamic-form" style="margin-top:10px;"></div>
             </div>
           </div>
         </div>
-        <div style="padding:16px; border-top:1px solid var(--line); background: rgba(5,8,20,.3); display:flex; justify-content:flex-end; gap:12px;">
-          <button class="btn px-6" onclick="closeModal()">CERRAR</button>
-          <button class="btn btn-primary px-8 py-3 text-[14px]" onclick="save()">GUARDAR GESTIÓN</button>
+        <div class="modal-footer">
+          <label class="lbl">Notas Generales / Observaciones</label>
+          <textarea id="notes" rows="3" placeholder="Escribe aquí detalles importantes de la llamada..."></textarea>
+          <div style="margin-top:10px;display:flex;justify-content:flex-end;gap:10px;">
+            <button class="btn" onclick="closeModal()">Cancelar</button>
+            <button id="btn-save-management" class="btn btn-primary" onclick="save()">💾 GUARDAR GESTIÓN</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // --- FastAPI Adaptation ---
-    const agentEmail = new URLSearchParams(window.location.search).get('email');
-    if (!agentEmail) {
-      window.location.href = "/login.html";
-    }
+    /* ── CONFIG ── */
+    const agentEmail = new URLSearchParams(window.location.search).get('email') || '';
+    if (!agentEmail) window.location.href = '/';
 
-    // --- FastAPI Adaptation: Fixes race conditions and ensures loader cleanup ---
-    const google = {
-      script: {
-        run: {
-          _call: function(apiName, ...args) {
-            const runner = {
-              _success: null,
-              _failure: null,
-              withSuccessHandler: function(cb) { this._success = cb; return this; },
-              withFailureHandler: function(cb) { this._failure = cb; return this; }
-            };
+    const BASE = '';
 
-            // Execute the fetch immediately but wait for handlers to be attached if needed
-            // Actually, in Apps Script style, the handlers are attached BEFORE the call? 
-            // No, google.script.run.withSuccessHandler(cb).apiMethod()
-            // So we need to return the runner which has the methods.
-            return runner;
-          },
-          withSuccessHandler: function(cb) {
-            const runner = this._getRunner();
-            runner._success = cb;
-            return runner;
-          },
-          withFailureHandler: function(cb) {
-            const runner = this._getRunner();
-            runner._failure = cb;
-            return runner;
-          },
-          _getRunner: function() {
-            const runner = {
-              _success: null,
-              _failure: null,
-              withSuccessHandler: function(cb) { this._success = cb; return this; },
-              withFailureHandler: function(cb) { this._failure = cb; return this; }
-            };
+    /* ── TIPIFICACIÓN ── */
+    const RAW_TIP = `ConsultaInicial\tTipoResultado\tResultado\tMotivo
+Equipo libres\tVenta\tVenta\t-
+Equipo libres\tNo venta\tFalta de stock\t-
+Equipo libres\tNo venta\tNo cumple requisitos\tFinanciación en la factura
+Equipo libres\tNo venta\tNo cumple requisitos\tFalta disponibilidad en la tarjeta de crédito
+Equipo libres\tNo venta\tSolo consulto\t-
+Equipo libres\tNo venta\tYa se contactó anteriormente\t-
+Equipo libres\tRellamado\tSaliente Recoordinacion\t-
+Equipo libres\tPendiente de Decision\tPendiente de Decision\t-
+Equipo libres\tVenta Cancelada\tVenta Cancelada\t-
+Equipo libres\tNo venta\tYa realizo la compra\t-
+Linea nueva\tVenta\tVenta\t-
+Linea nueva\tNo venta\tFalta de stock\t-
+Linea nueva\tNo venta\tNo cumple requisitos\tPor financiación en la factura
+Linea nueva\tNo venta\tNo cumple requisitos\tPor deposito en garantia
+Linea nueva\tNo venta\tNo cumple requisitos\tMenor de edad
+Linea nueva\tNo venta\tNo cumple requisitos\tCliente deudor
+Linea nueva\tNo venta\tZona Roja\t-
+Linea nueva\tNo venta\tNo le parecio atractiva la oferta\tPor costos de plan
+Linea nueva\tNo venta\tNo le parecio atractiva la oferta\tPor costos de equipos
+Linea nueva\tNo venta\tNo le parecio atractiva la oferta\tPor gigas de plan
+Linea nueva\tNo venta\tNo le parecio atractiva la oferta\tNo da motivos
+Linea nueva\tNo venta\tPasa por el local\t-
+Linea nueva\tNo venta\tYa realizo la compra\t-
+Linea nueva\tRellamado\tSaliente Recoordinacion\t-
+Linea nueva\tPendiente de Decision\tPendiente de Decision\t-
+Linea nueva\tVenta Cancelada\tVenta Cancelada\t-
+Linea nueva\tNo venta\tDesea linea empresa\t-
+Linea nueva\tNo venta\tSolo consulto\t-
+Linea nueva\tNo venta\tNo Acepta Medio de Pago\t-
+Linea nueva\tVenta Cancelada\tPreventa Caída por No Pago\t-
+Linea nueva\tNo venta\tNo esta interesado\t-
+Linea nueva\tRegistro No Llame\tCliente dice estar en el Registro No Llame\t-
+Recontrato\tVenta\tVenta\t-
+Recontrato\tNo venta\tFalta de stock\t-
+Recontrato\tNo venta\tNo cumple requisitos\tPor financiación en la factura
+Recontrato\tNo venta\tNo cumple requisitos\tPor deposito en garantia
+Recontrato\tNo venta\tNo cumple requisitos\tCliente deudor
+Recontrato\tNo venta\tNo cumple requisitos\tContrato vigente
+Recontrato\tNo venta\tNo cumple requisitos\tMenor de edad
+Recontrato\tNo venta\tNo cumple requisitos\tNo es el titular
+Recontrato\tNo venta\tZona Roja\t-
+Recontrato\tNo venta\tNo le parecio atractiva la oferta\tPor costos de plan
+Recontrato\tNo venta\tNo le parecio atractiva la oferta\tPor costos de equipos
+Recontrato\tNo venta\tNo le parecio atractiva la oferta\tPor gigas de plan
+Recontrato\tNo venta\tNo le parecio atractiva la oferta\tNo da motivos
+Recontrato\tNo venta\tPasa por el local\t-
+Recontrato\tNo venta\tDesea linea empresa\t-
+Recontrato\tNo venta\tYa realizo la compra\t-
+Recontrato\tNo venta\tNo esta en fecha de renovar\t-
+Recontrato\tNo venta\tSolicita recontrato a la baja\t-
+Recontrato\tRellamado\tSaliente Recoordinacion\t-
+Recontrato\tPendiente de Decision\tPendiente de Decision\t-
+Recontrato\tVenta Cancelada\tVenta Cancelada\t-
+Recontrato\tNo venta\tSolo consulto\t-
+Recontrato\tNo venta\tNo Acepta Medio de Pago\t-
+Recontrato\tVenta Cancelada\tPreventa Caída por No Pago\t-
+Recontrato\tNo venta\tNo esta interesado\t-
+Recontrato\tRegistro No Llame\tCliente dice estar en el Registro No Llame\t-
+Migras\tVenta\tVenta\t-
+Migras\tNo venta\tFalta de stock\t-
+Migras\tNo venta\tNo cumple requisitos\tPor financiación en la factura
+Migras\tNo venta\tNo cumple requisitos\tPor deposito en garantia
+Migras\tNo venta\tNo cumple requisitos\tCliente deudor
+Migras\tNo venta\tNo cumple requisitos\tMenor de edad
+Migras\tNo venta\tNo cumple requisitos\tNo es el titular
+Migras\tNo venta\tZona Roja\t-
+Migras\tNo venta\tNo le parecio atractiva la oferta\tPor costos de plan
+Migras\tNo venta\tNo le parecio atractiva la oferta\tPor costos de equipos
+Migras\tNo venta\tNo le parecio atractiva la oferta\tPor gigas de plan
+Migras\tNo venta\tNo le parecio atractiva la oferta\tPor beneficios de prepago
+Migras\tNo venta\tNo le parecio atractiva la oferta\tNo da motivos
+Migras\tRellamado\tSaliente Recoordinacion\t-
+Migras\tPendiente de Decision\tPendiente de Decision\t-
+Migras\tVenta Cancelada\tVenta Cancelada\t-
+Migras\tNo venta\tSolo consulto\t-
+Migras\tNo venta\tYa realizo la gestion\t-
+Migras\tNo venta\tNo Acepta Medio de Pago\t-
+Migras\tVenta Cancelada\tPreventa Caída por No Pago\t-
+Migras\tNo venta\tNo esta interesado\t-
+Migras\tRegistro No Llame\tCliente dice estar en el Registro No Llame\t-
+Upselling\tVenta\tVenta\t-
+Upselling\tNo venta\tSolo consulto\t-
+Upselling\tNo venta\tNo cumple requisitos\tCliente deudor
+Upselling\tNo venta\tNo cumple requisitos\tNo es el titular
+Upselling\tNo venta\tPasa por el local\t-
+Upselling\tRellamado\tSaliente Recoordinacion\t-
+Upselling\tPendiente de Decision\tPendiente de Decision\t-
+Upselling\tVenta Cancelada\tVenta Cancelada\t-
+Upselling\tNo venta\tYa realizo la gestion\t-
+Upselling\tNo venta\tNo Acepta Medio de Pago\t-
+Upselling\tVenta Cancelada\tPreventa Caída por No Pago\t-
+Upselling\tNo venta\tNo esta interesado\t-
+Upselling\tRegistro No Llame\tCliente dice estar en el Registro No Llame\t-
+Portabilidad\tVenta\tVenta\t-
+Portabilidad\tNo venta\tFalta de stock\t-
+Portabilidad\tNo venta\tNo cumple requisitos\tNo aprobado ABD
+Portabilidad\tNo venta\tNo cumple requisitos\tContrato vigente
+Portabilidad\tNo venta\tNo cumple requisitos\tPor deposito en garantia
+Portabilidad\tNo venta\tNo cumple requisitos\tPor financiacion en la factura
+Portabilidad\tNo venta\tNo cumple requisitos\tCliente deudor Movistar
+Portabilidad\tNo venta\tNo cumple requisitos\tMenor de edad
+Portabilidad\tNo venta\tNo cumple requisitos\tNo es el titular
+Portabilidad\tNo venta\tSolo consulto\tPlanes y equipos
+Portabilidad\tNo venta\tSolo consulto\tRequisitos de portabilidad
+Portabilidad\tVenta Cancelada\tVenta Cancelada\t-
+Portabilidad\tPendiente de Decision\tPendiente de Decision\t-
+Portabilidad\tNo venta\tNo le parecio atractiva la oferta\tPor costos de plan
+Portabilidad\tNo venta\tNo le parecio atractiva la oferta\tPor costos de equipos
+Portabilidad\tNo venta\tNo le parecio atractiva la oferta\tPor gigas de plan
+Portabilidad\tNo venta\tNo le parecio atractiva la oferta\tPor beneficios de prepago
+Portabilidad\tNo venta\tNo le parecio atractiva la oferta\tNo da motivos
+Portabilidad\tNo venta\tPasa por el local\t-
+Portabilidad\tRellamado\tSaliente recoordinacion\tSolicita activación
+Portabilidad\tNo venta\tYa realizo la compra\t-
+Portabilidad\tNo venta\tNo esta interesado\t-
+Portabilidad\tRegistro No Llame\tCliente dice estar en el Registro No Llame\t-
+Multiasistencia\tVenta\tVenta\t-
+Multiasistencia\tNo venta\tSolo consulto\t-
+Multiasistencia\tNo venta\tNo cumple requisitos\tCliente deudor
+Multiasistencia\tRellamado\tSaliente Recoordinacion\t-
+Multiasistencia\tPendiente de Decision\tPendiente de Decision\t-
+Multiasistencia\tVenta Cancelada\tVenta Cancelada\t-
+Multiasistencia\tNo venta\tYa realizo la gestion\t-
+Multiasistencia\tNo venta\tNo Acepta Medio de Pago\t-
+Multiasistencia\tVenta Cancelada\tPreventa Caída por No Pago\t-
+Multiasistencia\tNo venta\tNo esta interesado\t-
+Multiasistencia\tRegistro No Llame\tCliente dice estar en el Registro No Llame\t-
+Consultas de atención al cliente\tConsultas de atención al cliente\tDerivada\t-
+Consultas de atención al cliente\tConsultas de atención al cliente\tAtendida\t-
+Consultas de atención al cliente\tNo venta\tNo esta interesado\t-`;
 
-            const apiMap = {
-              apiGetInitialData: (login) => fetch(`/api/agent/init?email=${encodeURIComponent(agentEmail)}${login ? '&login=true' : ''}`),
-              apiSetAgentStatus: (s) => fetch(`/api/agent/status?email=${encodeURIComponent(agentEmail)}`, {
-                method: 'PATCH', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({estado: s})
-              }),
-              apiTakeNextLead: () => fetch(`/api/agent/take?email=${encodeURIComponent(agentEmail)}`, {method: 'POST'}),
-              apiGetFollowups: () => fetch(`/api/leads/followups?email=${encodeURIComponent(agentEmail)}`),
-              apiListSalesForSeller: () => fetch(`/api/seller/sales?email=${encodeURIComponent(agentEmail)}`),
-              apiListSalesForBackoffice: (filter) => fetch(`/api/sales/backoffice?q=${encodeURIComponent(filter?.q || '')}`),
-              apiGetLeadDetails: (id) => fetch(`/api/leads/${id}`),
-              apiPhoneDupContext: (phone, mid) => fetch(`/api/leads/dup_check?phone=${phone}&message_id=${mid}`),
-              apiReleaseLead: (mid, reason) => fetch(`/api/leads/${mid}/release?email=${encodeURIComponent(agentEmail)}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({motivo: reason})
-              }),
-              apiCloseLead: (mid, status, notes, saleData, tip, resType, res, motive, fuWhen, fuType) => fetch(`/api/leads/${mid}/status`, {
-                method: 'PATCH', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                  estado: status, notas: notes, sale_data: saleData,
-                  tip_tipo: tip, tip_resultado: resType, tip_motivo: res, tip_submotivo: motive,
-                  rellamar_en: fuWhen, reagendar_tipo: fuType
-                })
-              }),
-              apiSaveManualSale: (saleData, notes, tip, resType, res, motive) => fetch(`/api/sales/manual`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                  ...saleData, agente: agentEmail, message_id: 'manual-' + Date.now(),
-                  producto: saleData.Producto || saleData.TipoVenta || 'VENTA',
-                  tipo_venta: saleData.TipoVenta || 'VENTA',
-                  vendedor_comentarios: saleData.VendedorComentarios,
-                  tip_tipo: tip, tip_resultado: resType, tip_motivo: res, tip_submotivo: motive
-                })
-              }),
-              apiSetSellerComment: (mid, txt) => fetch(`/api/seller/sales/${mid}/comment?email=${encodeURIComponent(agentEmail)}`, {
-                 method: 'PATCH', headers: {'Content-Type': 'application/json'},
-                 body: JSON.stringify({comentario: txt})
-              }),
-              apiMarkSaleReviewed: (mid, st, notas) => fetch(`/api/sales/${mid}/backoffice?status=${encodeURIComponent(st)}&notas=${encodeURIComponent(notas || '')}&agent=${encodeURIComponent(agentEmail)}`, {
-                method: 'PATCH'
-              }),
-              apiBulkCloseQueue: () => fetch('/api/coordinator/bulk-close-queue', {method: 'POST'})
-            };
-
-            Object.keys(apiMap).forEach(method => {
-              runner[method] = async (...args) => {
-                try {
-                  const response = await apiMap[method](...args);
-                  const data = await response.json();
-                  if (runner._success) runner._success(data);
-                } catch (err) {
-                  console.error(`API Error (${method}):`, err);
-                  if (runner._failure) runner._failure(err);
-                  // Ensure loader is hidden on error if it was shown
-                  const loader = document.getElementById('loader');
-                  if (loader) loader.style.display = 'none';
-                }
-              };
-            });
-
-            return runner;
-          }
-        }
-      }
-    };
-
-    // --- Typification Logic (User provided) ---
-    const RAW_TIP = `
-ConsultaInicial	TipoResultado	Resultado	Motivo
-Equipo libres	Venta	Venta	-
-Equipo libres	No venta	Falta de stock	-
-Equipo libres	No venta	No cumple requisitos	Financiación en la factura
-Equipo libres	No venta	No cumple requisitos	Falta disponibilidad en la tarjeta de crédito
-Equipo libres	No venta	Solo consulto	-
-Equipo libres	No venta	Ya se contactó anteriormente	-
-Equipo libres	Rellamado	Saliente Recoordinacion	-
-Equipo libres	Pendiente de Decision	Pendiente de Decision	-
-Equipo libres	Venta Cancelada	Venta Cancelada	-
-Equipo libres	No venta	Ya realizo la compra	-
-Linea nueva	Venta	Venta	-
-Linea nueva	No venta	Falta de stock	-
-Linea nueva	No venta	No cumple requisitos	Por financiación en la factura
-Linea nueva	No venta	No cumple requisitos	Por deposito en garantia
-Linea nueva	No venta	No cumple requisitos	Menor de edad
-Linea nueva	No venta	No cumple requisitos	Cliente deudor
-Linea nueva	No venta	Zona Roja	-
-Linea nueva	No venta	No le parecio atractiva la oferta	Por costos de plan
-Linea nueva	No venta	No le parecio atractiva la oferta	Por costos de equipos
-Linea nueva	No venta	No le parecio atractiva la oferta	Por gigas de plan
-Linea nueva	No venta	No le parecio atractiva la oferta	No da motivos
-Linea nueva	No venta	Pasa por el local	-
-Linea nueva	No venta	Ya realizo la compra	-
-Linea nueva	Rellamado	Saliente Recoordinacion	-
-Linea nueva	Pendiente de Decision	Pendiente de Decision	-
-Linea nueva	Venta Cancelada	Venta Cancelada	-
-Linea nueva	No venta	Desea linea empresa	
-Recontrato	Venta	Venta	-
-Recontrato	No venta	Falta de stock	-
-Recontrato	No venta	No cumple requisitos	Por financiación en la factura
-Recontrato	No venta	No cumple requisitos	Por deposito en garantia
-Recontrato	No venta	No cumple requisitos	Cliente deudor
-Recontrato	No venta	No cumple requisitos	Contrato vigente
-Recontrato	No venta	No cumple requisitos	Menor de edad
-Recontrato	No venta	No cumple requisitos	No es el titular
-Recontrato	No venta	Zona Roja	-
-Recontrato	No venta	No le parecio atractiva la oferta	Por costos de plan
-Recontrato	No venta	No le parecio atractiva la oferta	Por costos de equipos
-Recontrato	No venta	No le parecio atractiva la oferta	Por gigas de plan
-Recontrato	No venta	No le parecio atractiva la oferta	No da motivos
-Recontrato	No venta	Pasa por el local	-
-Recontrato	No venta	Desea linea empresa	
-Recontrato	No venta	Ya realizo la compra	-
-Recontrato	No venta	No esta en fecha de renovar	-
-Recontrato	No venta	Solicita recontrato a la baja	-
-Recontrato	Rellamado	Saliente Recoordinacion	-
-Recontrato	Pendiente de Decision	Pendiente de Decision	-
-Recontrato	Venta Cancelada	Venta Cancelada	-
-Migras	Venta	Venta	-
-Migras	No venta	Falta de stock	
-Migras	No venta	No cumple requisitos	Por financiación en la factura
-Migras	No venta	No cumple requisitos	Por deposito en garantia
-Migras	No venta	No cumple requisitos	Cliente deudor
-Migras	No venta	No cumple requisitos	Menor de edad
-Migras	No venta	No cumple requisitos	No es el titular
-Migras	No venta	Zona Roja	-
-Migras	No venta	No le parecio atractiva la oferta	Por costos de plan
-Migras	No venta	No le parecio atractiva la oferta	Por costos de equipos
-Migras	No venta	No le parecio atractiva la oferta	Por gigas de plan
-Migras	No venta	No le parecio atractiva la oferta	Por beneficios de prepago
-Migras	No venta	No le parecio atractiva la oferta	No da motivos
-Migras	Rellamado	Saliente Recoordinacion	-
-Migras	Pendiente de Decision	Pendiente de Decision	-
-Migras	Venta Cancelada	Venta Cancelada	-
-Upselling	Venta	Venta	-
-Upselling	No venta	Solo consulto	-
-Upselling	No venta	No cumple requisitos	Cliente deudor
-Upselling	No venta	No cumple requisitos	No es el titular
-Upselling	No venta	Pasa por el local	
-Upselling	Rellamado	Saliente Recoordinacion	-
-Upselling	Pendiente de Decision	Pendiente de Decision	-
-Upselling	Venta Cancelada	Venta Cancelada	-
-Consultas de atención al cliente	Consultas de atención al cliente	Derivada	-
-Consultas de atención al cliente	Consultas de atención al cliente	Atendida	-
-Linea nueva	No venta	Solo consulto	-
-Recontrato	No venta	Solo consulto	-
-Migras	No venta	Solo consulto	-
-Migras	No venta	Ya realizo la gestion	-
-Upselling	No venta	Ya realizo la gestion	-
-Linea nueva	No venta	No Acepta Medio de Pago	-
-Recontrato	No venta	No Acepta Medio de Pago	-
-Equipo libres	No venta	No Acepta Medio de Pago	-
-Migras	No venta	No Acepta Medio de Pago	-
-Upselling	No venta	No Acepta Medio de Pago	-
-Linea nueva	Venta Cancelada	Preventa Caída por No Pago	-
-Recontrato	Venta Cancelada	Preventa Caída por No Pago	-
-Equipo libres	Venta Cancelada	Preventa Caída por No Pago	-
-Migras	Venta Cancelada	Preventa Caída por No Pago	-
-Upselling	Venta Cancelada	Preventa Caída por No Pago	-
-Equipo libres	No venta	No esta interesado	-
-Linea nueva	No venta	No esta interesado	-
-Recontrato	No venta	No esta interesado	-
-Migras	No venta	No esta interesado	-
-Upselling	No venta	No esta interesado	-
-Consultas de atención al cliente	No venta	No esta interesado	-
-Portabilidad	No venta	No esta interesado	-
-Multiasistencia	No venta	No esta interesado	-
-Portabilidad	Venta	Venta	-
-Portabilidad	No venta	Falta de stock	
-Portabilidad	No venta	No cumple requisitos	No aprobado ABD
-Portabilidad	No venta	No cumple requisitos	Contrato vigente
-Portabilidad	No venta	No cumple requisitos	Por deposito en garantia
-Portabilidad	No venta	No cumple requisitos	Por financiacion en la factura
-Portabilidad	No venta	No cumple requisitos	Cliente deudor Movistar
-Portabilidad	No venta	No cumple requisitos	Menor de edad
-Portabilidad	No venta	No cumple requisitos	No es el titular
-Portabilidad	No venta	Solo consulto	Planes y equipos
-Portabilidad	No venta	Solo consulto	Requisitos de portabilidad
-Portabilidad	Venta Cancelada	Venta Cancelada	-
-Portabilidad	Pendiente de Decision	Pendiente de Decision	-
-Portabilidad	No venta	No le parecio atractiva la oferta	Por costos de plan
-Portabilidad	No venta	No le parecio atractiva la oferta	Por costos de equipos
-Portabilidad	No venta	No le parecio atractiva la oferta	Por gigas de plan
-Portabilidad	No venta	No le parecio atractiva la oferta	Por beneficios de prepago
-Portabilidad	No venta	No le parecio atractiva la oferta	No da motivos
-Portabilidad	No venta	Pasa por el local	
-Portabilidad	Rellamado	Saliente recoordinacion	Solicita activación
-Equipo libres	Registro No Llame	Cliente dice estar en el Registro No Llame	-
-Linea nueva	Registro No Llame	Cliente dice estar en el Registro No Llame	-
-Recontrato	Registro No Llame	Cliente dice estar en el Registro No Llame	-
-Migras	Registro No Llame	Cliente dice estar en el Registro No Llame	-
-Upselling	Registro No Llame	Cliente dice estar en el Registro No Llame	-
-Portabilidad	Registro No Llame	Cliente dice estar en el Registro No Llame	-
-Portabilidad	No venta	Ya realizo la compra	-
-Multiasistencia	Venta	Venta	-
-Multiasistencia	No venta	Solo consulto	-
-Multiasistencia	No venta	No cumple requisitos	Cliente deudor
-Multiasistencia	Rellamado	Saliente Recoordinacion	-
-Multiasistencia	Pendiente de Decision	Pendiente de Decision	-
-Multiasistencia	Venta Cancelada	Venta Cancelada	-
-Multiasistencia	No venta	Ya realizo la gestion	-
-Multiasistencia	No venta	No Acepta Medio de Pago	-
-Multiasistencia	Venta Cancelada	Preventa Caída por No Pago	-
-Multiasistencia	Registro No Llame	Cliente dice estar en el Registro No Llame	-
-`;
     const TYPES = {};
     RAW_TIP.split('\n').forEach(line => {
-      let [c1, c2, c3, c4] = (line || '').split('\t');
-      if (!c1 || c1.trim() === 'ConsultaInicial') return;
-      c1 = c1.trim(); c2 = (c2||'').trim(); c3 = (c3||'').trim(); c4 = (c4||'').trim();
-      if (!TYPES[c1]) TYPES[c1] = {};
-      if (!TYPES[c1][c2]) TYPES[c1][c2] = {};
-      if (!TYPES[c1][c2][c3]) TYPES[c1][c2][c3] = [];
-      if (c4 && c4 !== '-') TYPES[c1][c2][c3].push(c4);
+      let [c1,c2,c3,c4] = (line||'').split('\t');
+      if (!c1 || c1.trim()==='ConsultaInicial') return;
+      c1=c1.trim(); c2=(c2||'').trim(); c3=(c3||'').trim(); c4=(c4||'').trim();
+      if (!TYPES[c1]) TYPES[c1]={};
+      if (!TYPES[c1][c2]) TYPES[c1][c2]={};
+      if (!TYPES[c1][c2][c3]) TYPES[c1][c2][c3]=[];
+      if (c4 && c4!=='-' && !TYPES[c1][c2][c3].includes(c4)) TYPES[c1][c2][c3].push(c4);
+    });
+    // Asegurar "No contesta" y "Buzón de voz" en todas las consultas
+    Object.keys(TYPES).forEach(consulta => {
+      ['No contesta','Buzón de voz'].forEach(tRes => {
+        if (!TYPES[consulta][tRes]) TYPES[consulta][tRes]={};
+        if (!TYPES[consulta][tRes][tRes]) TYPES[consulta][tRes][tRes]=[];
+      });
     });
 
-    let ACTIVE_PLANS = [];
-    let ACTIVE_EQUIPMENT = [];
-    let CATALOG_DATA = [];
-
-    var app = { agent: agentEmail, myLeads: [], followups: [], mySales: [], isBO: false };
+    /* ── STATE ── */
+    var app = {
+      agent: agentEmail, status: 'OFFLINE',
+      myLeads: [], followups: [], mySales: [], backoffice: [],
+      current: null, isBO: false,
+      boStatusList: ['Pendiente de carga','Pendiente de firma','Pendiente de pago','Enviada a plateran','Pendiente de retiro en pick up','Pendiente de control de documentación','Documentación rechazada','Venta cancelada falta retoma','Venta cancelada finalizada'],
+      listas: { planes:[], equipos:[] }
+    };
     var currentTab = 'my';
+    var _releaseMid = '';
+    var _pendingInitialData = false;
+    var _pendingFollowups = false;
+    var _pendingSales = false;
 
+    /* ── HELPERS ── */
+    function esc_(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function _norm_(s) { return String(s||'').trim().toLowerCase(); }
+    function cleanPhone_(s) { return String(s||'').replace(/\D/g,''); }
+    function safeId_(mid) { return 'x'+String(mid||'').replace(/[^a-zA-Z0-9]/g,'_'); }
+    function fmtDate_(v) {
+      if (!v) return '-';
+      if (typeof v === 'string' && v.length > 10) v = v.substring(0,16).replace('T',' ');
+      return v || '-';
+    }
+
+    function showToast(msg, type='ok') {
+      const w = document.getElementById('toast-root');
+      const d = document.createElement('div');
+      d.className = 'toast ' + type;
+      d.textContent = msg;
+      w.appendChild(d);
+      setTimeout(() => d.remove(), 4000);
+    }
+
+    function copyText_(txt) {
+      txt = String(txt||'').trim();
+      if (!txt || txt==='-') return;
+      navigator.clipboard.writeText(txt).catch(()=>{});
+      showToast('Copiado: ' + txt, 'info');
+    }
+
+    function copyFromBtn_(btn) { copyText_(btn.dataset.phone || ''); }
+
+    /* ── RELEASE MODAL ── */
+    function openReleaseModal_(mid) {
+      _releaseMid = mid;
+      document.getElementById('release-modal-mid-label').textContent = 'Lead ' + mid + ' volverá a la cola sin agente.';
+      document.getElementById('release-reason').value = '';
+      document.getElementById('release-modal-overlay').classList.add('open');
+    }
+    function closeReleaseModal_() { document.getElementById('release-modal-overlay').classList.remove('open'); }
+    function confirmRelease_() {
+      const motivo = document.getElementById('release-reason').value.trim() || 'Sin motivo';
+      closeReleaseModal_();
+      fetch(`${BASE}/api/leads/${encodeURIComponent(_releaseMid)}/release?email=${encodeURIComponent(app.agent)}`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({motivo})
+      }).then(r=>r.json()).then(res=>{
+        if (res.success) { showToast('Lead liberado','ok'); refresh(true); }
+        else showToast(res.detail||res.message||'Error al liberar','err');
+      }).catch(()=>showToast('Error al liberar','err'));
+    }
+
+    /* ── API CALLS ── */
+    async function api(url, opts) {
+      const r = await fetch(BASE+url, opts||{});
+      return r.json();
+    }
+
+    /* ── INIT / REFRESH ── */
     function init() {
       const s = document.getElementById('tip-type');
-      Object.keys(TYPES).sort().forEach(k => s.add(new Option(k, k)));
-      
-      let isFirstLogin = false;
-      if (!sessionStorage.getItem('logged_in')) {
-        sessionStorage.setItem('logged_in', 'true');
-        isFirstLogin = true;
-      }
-      
-      refresh(isFirstLogin);
-      setInterval(() => softRefresh(), 5000); // 5s polling for instant auto-assignment
+      Object.keys(TYPES).sort().forEach(k=>s.add(new Option(k,k)));
+      setTab('my');
+      let isFirst = !sessionStorage.getItem('ld_init');
+      if (isFirst) sessionStorage.setItem('ld_init','1');
+      refresh(true, isFirst);
+      setInterval(softRefresh, 15000);
+      document.getElementById('fu-type').addEventListener('change', checkSale);
     }
 
-    function processInitData(res) {
-        app.agent = res.agentEmail;
-        app.isBO = res.isBO;
-        app.myLeads = res.myLeads || [];
-        
-        CATALOG_DATA = res.catalog || [];
-        ACTIVE_PLANS = CATALOG_DATA.filter(c => c.item_type === 'PLAN').map(c => c.name);
-        ACTIVE_EQUIPMENT = CATALOG_DATA.filter(c => c.item_type === 'EQUIPO').map(c => c.name);
-
-        document.getElementById('agent-name').innerText = app.agent;
-        document.getElementById('q-count').innerText = res.queueCount;
-        document.getElementById('my-count').innerText = app.myLeads.length;
-        if (app.isBO) {
-            document.getElementById('tab-bo').style.display = 'block';
-            document.getElementById('btn-clean-queue').style.display = 'block';
-        }
-        if (typeof renderActiveTab === 'function') renderActiveTab();
-        
-        handleStatusButtons(res.agentStatus);
-    }
-
-    function handleStatusButtons(status) {
-        document.querySelectorAll('#status-btns .btn').forEach(b => b.classList.remove('btn-status-active'));
-        const activeBtn = document.getElementById('btn-' + status);
-        if (activeBtn) activeBtn.classList.add('btn-status-active');
-    }
-
-    function refresh(isLogin = false) {
+    function refresh(force, isLogin) {
       document.getElementById('loader').style.display = 'flex';
-      google.script.run.withSuccessHandler(res => {
-        document.getElementById('loader').style.display = 'none';
-        processInitData(res);
-      }).apiGetInitialData(isLogin);
+      fetchInitialData_(isLogin);
+      if (currentTab==='fu') fetchFollowups_();
+      if (currentTab==='sales') fetchSales_();
     }
 
     function softRefresh() {
-      // Refresh without the full screen loader
-      google.script.run.withSuccessHandler(res => {
-        processInitData(res);
-      }).apiGetInitialData();
+      const modalOpen = document.getElementById('modal').classList.contains('open');
+      if (modalOpen) return;
+      fetchInitialData_();
+      if (currentTab==='fu') fetchFollowups_();
+      if (currentTab==='sales') fetchSales_();
     }
 
-    function setTab(t) { currentTab = t; renderActiveTab(); }
+    function fetchInitialData_(isLogin) {
+      if (_pendingInitialData) return;
+      _pendingInitialData = true;
+      const loginParam = isLogin ? '&login=true' : '';
+      fetch(`${BASE}/api/agent/init?email=${encodeURIComponent(app.agent)}${loginParam}`)
+        .then(r=>r.json())
+        .then(res => { _pendingInitialData=false; document.getElementById('loader').style.display='none'; onLoad(res); })
+        .catch(err => { _pendingInitialData=false; document.getElementById('loader').style.display='none'; showToast('Error de conexión','err'); });
+    }
 
-    function renderActiveTab() {
-      const c = document.getElementById('tab-body');
+    function fetchFollowups_() {
+      if (_pendingFollowups) return;
+      _pendingFollowups = true;
+      fetch(`${BASE}/api/followups?email=${encodeURIComponent(app.agent)}`)
+        .then(r=>r.json())
+        .then(res => { _pendingFollowups=false; onLoadFollowups(res); })
+        .catch(()=>{ _pendingFollowups=false; });
+    }
+
+    function fetchSales_() {
+      if (_pendingSales) return;
+      _pendingSales = true;
+      fetch(`${BASE}/api/seller/sales?email=${encodeURIComponent(app.agent)}`)
+        .then(r=>r.json())
+        .then(res => { _pendingSales=false; onLoadSales(res); })
+        .catch(()=>{ _pendingSales=false; });
+    }
+
+    function onLoad(res) {
+      if (!res || !res.success) return;
+      app.agent = res.agentEmail || app.agent;
+      app.status = res.agentStatus || 'OFFLINE';
+      app.myLeads = res.myLeads || [];
+      app.isBO = !!res.isBO;
+      app.boStatusList = (res.boStatusList && res.boStatusList.length) ? res.boStatusList : app.boStatusList;
+      const catalog = res.catalog || [];
+      app.listas.planes = catalog.filter(c=>c.item_type==='PLAN').map(c=>c.name);
+      app.listas.equipos = catalog.filter(c=>c.item_type==='EQUIPO').map(c=>c.name);
+
+      document.getElementById('agent-name').innerText = app.agent;
+      document.getElementById('q-count').innerText = res.queueCount || 0;
+      document.getElementById('my-count').innerText = app.myLeads.length;
+      document.getElementById('sla-count').innerText = res.slaBreachedCount || 0;
+      document.getElementById('tab-my-count').textContent = app.myLeads.length;
+      document.getElementById('btn-take').disabled = (app.status !== 'ACTIVO' || app.myLeads.length > 0);
+
+      document.querySelectorAll('#status-btns .status-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.status === app.status);
+      });
+      document.getElementById('tab-bo').style.display = app.isBO ? 'inline-flex' : 'none';
+      if (currentTab === 'my') renderMyLeads();
+    }
+
+    function onLoadFollowups(res) {
+      app.followups = (res && res.success) ? (res.items || []) : [];
+      document.getElementById('fu-count').innerText = app.followups.length;
+      document.getElementById('tab-fu-count').textContent = app.followups.length;
+      // Notificar seguimientos vencidos
+      const due = app.followups.find(x=>x.due_now);
+      if (due) showToast('🔔 Rellamada lista: ' + (due.nombre||due.linea||''), 'warn');
+      if (currentTab==='fu') renderFollowups();
+    }
+
+    function onLoadSales(res) {
+      app.mySales = (res && res.success) ? (res.items || []) : [];
+      document.getElementById('sales-count').innerText = app.mySales.length;
+      document.getElementById('tab-sales-count').textContent = app.mySales.length;
+      if (currentTab==='sales') renderMySales();
+    }
+
+    /* ── TABS ── */
+    function setTab(t) {
+      if (t==='bo' && !app.isBO) { showToast('Sin acceso a Backoffice','warn'); t='sales'; }
+      currentTab = t;
+      ['my','fu','sales','bo'].forEach(id => {
+        document.getElementById('tab-'+id+'-body').style.display = (id===t ? 'flex':'none');
+        const btn = document.getElementById('tab-'+id);
+        if (btn) btn.classList.toggle('tab-active', id===t);
+      });
+      if (t==='fu') { fetchFollowups_(); }
+      if (t==='sales') { fetchSales_(); }
+      if (t==='bo' && !app.backoffice.length) { fetchBackoffice_(); }
+    }
+
+    function fetchBackoffice_() {
+      fetch(`${BASE}/api/sales/backoffice`)
+        .then(r=>r.json())
+        .then(res => {
+          app.backoffice = (res && res.success) ? (res.items||[]) : [];
+          document.getElementById('tab-bo-count').textContent = app.backoffice.length;
+          renderBackoffice();
+        });
+    }
+
+    /* ── RENDER LISTAS ── */
+    function renderMyLeads() {
+      const c = document.getElementById('tab-my-body');
       c.innerHTML = '';
-      let list = [];
-      if (currentTab === 'my') list = app.myLeads;
-      if (currentTab === 'fu') list = app.followups;
-      if (currentTab === 'sales') list = app.mySales;
-      if (currentTab === 'bo') list = app.boSales;
-
-      if (!list.length) { c.innerHTML = '<div style="padding:40px; color:var(--txt-dim); font-size:13px; text-align:center;">No hay registros en esta sección</div>'; return; }
-
-      list.forEach(l => {
-        const mid = l.message_id || l.messageId;
-        const title = l.nombre || l.cliente_nombre || 'S/N';
-        const subtitle = l.linea || l.cliente_telefono || '-';
-        const st = l.estado || l.backoffice_status || 'ASIGNADO';
-        
+      if (!app.myLeads.length) {
+        c.innerHTML = `<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg><p>No tienes leads asignados.<br>Presioná <strong>Tomar Lead</strong> cuando estés listo.</p></div>`;
+        return;
+      }
+      app.myLeads.forEach(l => {
+        const mid = l.message_id || l.messageId || '';
+        const phone = cleanPhone_(l.linea);
         c.innerHTML += `
-          <div class="lead-item">
-            <div style="font-weight:700; color:var(--txt);">${title}</div>
-            <div style="color:var(--txt-dim); font-size:11px;">${subtitle}</div>
-            <div style="display:flex; justify-content:flex-end; gap:8px;">
-               <span class="pill" style="margin-right:8px;">${st}</span>
-               <button class="btn btn-primary" style="padding:5px 10px;" onclick="openModal('${mid}')">Gestionar</button>
-            </div>
+        <div class="lead-item">
+          <div>
+            <div class="lead-tag tag-asig">${esc_(l.estado||'ASIGNADO')}</div>
+            <div class="lead-name">${esc_(l.nombre||'(sin nombre)')}</div>
           </div>
-        `;
+          <div>
+            <div class="lead-phone">&#128222; ${esc_(l.linea||'-')}</div>
+            <div class="lead-sub">Plan: ${esc_(l.plan||'-')} · Equipo: ${esc_(l.equipo||'-')}</div>
+            <div class="lead-sub">Origen: ${esc_(l.origen||'-')} · ${esc_(fmtDate_(l.fecha_asignacion))}</div>
+            <button class="btn" style="margin-top:4px;font-size:11px;" data-phone="${phone}" onclick="copyFromBtn_(this)">📋 Copiar tel.</button>
+          </div>
+          <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end;">
+            <button class="btn btn-primary" style="font-size:12px;" onclick="openModal('${esc_(mid)}')">Gestionar</button>
+            <button class="btn btn-danger" style="font-size:11px;" onclick="openReleaseModal_('${esc_(mid)}')">Liberar</button>
+          </div>
+        </div>`;
       });
     }
 
+    function renderFollowups() {
+      const c = document.getElementById('tab-fu-body');
+      c.innerHTML = '';
+      if (!app.followups.length) {
+        c.innerHTML = `<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p>No hay seguimientos programados.</p></div>`;
+        return;
+      }
+      app.followups.forEach(l => {
+        const mid = l.message_id || '';
+        const rt = (l.reagendar_tipo||'').toUpperCase();
+        const isDue = !!l.due_now;
+        const tagRt = rt ? ` · ${rt}${rt==='NO_CONTACTO'?' ('+((l.nocontacto_intentos||0))+'/3)':''}` : '';
+        c.innerHTML += `
+        <div class="lead-item" style="border-color:${isDue?'rgba(251,113,133,.4)':''}">
+          <div>
+            <div class="lead-tag ${isDue?'tag-due':'tag-seg'}">${isDue?'VENCIDO':'SEGUIM.'}</div>
+            <div class="lead-name">${esc_(l.nombre||'-')}</div>
+            <div class="lead-sub">Tel: ${esc_(l.linea||'-')}</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--warn);">⏰ ${esc_(fmtDate_(l.rellamar_en))}</div>
+            <div class="lead-sub">Ag. original: ${esc_(l.agente_original||'-')}${tagRt}</div>
+            <div class="lead-sub">Plan: ${esc_(l.plan||'-')}</div>
+          </div>
+          <div style="display:flex;gap:6px;flex-direction:column;align-items:flex-end;">
+            <button class="btn btn-ok" style="font-size:11px;" onclick="takeFollowup('${esc_(mid)}')">Tomar ahora</button>
+            <button class="btn btn-primary" style="font-size:11px;" onclick="openModal('${esc_(mid)}')">Gestionar</button>
+          </div>
+        </div>`;
+      });
+    }
+
+    function renderMySales() {
+      const c = document.getElementById('tab-sales-body');
+      c.innerHTML = '';
+      if (!app.mySales.length) {
+        c.innerHTML = `<div class="empty-state"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p>Aún no tienes ventas registradas.</p></div>`;
+        return;
+      }
+      app.mySales.forEach(v => {
+        const mid = v.message_id || '';
+        const sid = safeId_(mid);
+        const st = v.backoffice_status || 'Pendiente de carga';
+        const sellerNote = (v.vendedor_comentarios||'').trim();
+        c.innerHTML += `
+        <div class="lead-item" style="grid-template-columns:1fr 1fr 260px;">
+          <div>
+            <div class="lead-tag tag-asig">${esc_(v.producto||'VENTA')}</div>
+            <div style="font-weight:700;margin-top:4px;">${esc_(v.cliente_nombre||'-')}</div>
+            <div class="lead-sub">Plan: ${esc_(v.venta_plan||'-')}</div>
+            <div style="margin-top:6px;"><span class="pill">🧾 BO: ${esc_(st)}</span></div>
+          </div>
+          <div>
+            <div class="lead-sub">ID: ${esc_(mid||'-')}</div>
+            <div class="lead-sub">${esc_(fmtDate_(v.created_at))}</div>
+            ${sellerNote ? `<div class="mini-note" style="margin-top:8px;"><b>💬</b> ${esc_(sellerNote)}</div>` : ''}
+          </div>
+          <div class="seller-controls">
+            <div>
+              <label class="lbl">Comentario vendedor</label>
+              <textarea class="seller-textarea" id="sn-${sid}" placeholder="Ej: falta firma, pago pendiente...">${esc_(sellerNote)}</textarea>
+            </div>
+            <button class="btn btn-primary" onclick="sellerSaveComment('${esc_(mid)}','${sid}')">💾 Guardar</button>
+          </div>
+        </div>`;
+      });
+    }
+
+    function renderBackoffice() {
+      const c = document.getElementById('tab-bo-body');
+      c.innerHTML = '';
+      if (!app.isBO) { c.innerHTML='<div class="empty-state"><p>⛔ Sin acceso a Backoffice.</p></div>'; return; }
+      if (!app.backoffice.length) { c.innerHTML='<div class="empty-state"><p>No hay ventas pendientes.</p></div>'; return; }
+      app.backoffice.forEach(v => {
+        const mid = v.message_id||'';
+        const sid = safeId_(mid);
+        const st = v.backoffice_status||'Pendiente de carga';
+        const boNote = (v.backoffice_notas||'').trim();
+        const sellerNote = (v.vendedor_comentarios||'').trim();
+        const opts = app.boStatusList.map(s=>`<option value="${esc_(s)}" ${s===st?'selected':''}>${esc_(s)}</option>`).join('');
+        c.innerHTML += `
+        <div class="lead-item" style="grid-template-columns:1fr 1fr 280px;">
+          <div>
+            <div class="lead-tag tag-asig">${esc_(v.producto||'VENTA')}</div>
+            <div style="font-weight:700;margin-top:4px;">${esc_(v.cliente_nombre||'-')}</div>
+            <div class="lead-sub">${esc_(v.cliente_cedula||'')} ${v.cliente_email?'· '+esc_(v.cliente_email):''}</div>
+            <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="pill">📦 ${esc_(v.venta_plan||'-')}</span>
+              <span class="pill">📱 ${esc_(v.venta_equipo||'-')}</span>
+            </div>
+            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="pill">👤 ${esc_(v.agente||'-')}</span>
+              <span class="pill">📅 ${esc_(fmtDate_(v.fecha||v.created_at))}</span>
+            </div>
+          </div>
+          <div>
+            ${sellerNote?`<div class="mini-note"><b>💬 Vendedor:</b> ${esc_(sellerNote)}</div>`:'<div class="mini-note"><b>💬 Vendedor:</b> (sin comentario)</div>'}
+            <div class="mini-note" style="margin-top:8px;"><b>🧾 Estado actual:</b> ${esc_(st)}</div>
+            ${boNote?`<div class="mini-note" style="margin-top:4px;"><b>📝 BO:</b> ${esc_(boNote)}</div>`:''}
+          </div>
+          <div class="bo-controls">
+            <div>
+              <label class="lbl">Estado BO</label>
+              <select class="bo-select" id="bost-${sid}">${opts}</select>
+            </div>
+            <div>
+              <label class="lbl">Notas BO</label>
+              <textarea class="bo-textarea" id="bon-${sid}" placeholder="Notas...">${esc_(boNote)}</textarea>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ok" style="flex:1" onclick="boSave('${esc_(mid)}','${sid}','OK')">✅ OK</button>
+              <button class="btn btn-primary" style="flex:1" onclick="boSave('${esc_(mid)}','${sid}')">💾 Guardar</button>
+            </div>
+          </div>
+        </div>`;
+      });
+    }
+
+    /* ── MODAL: ABRIR / CERRAR ── */
+    function openModal(mid) {
+      document.getElementById('loader').style.display = 'flex';
+      fetch(`${BASE}/api/leads/${encodeURIComponent(mid)}`)
+        .then(r=>r.json())
+        .then(res => {
+          document.getElementById('loader').style.display = 'none';
+          const l = res.lead || res.sale;
+          if (!l) { showToast('Lead no encontrado','err'); return; }
+          app.current = l;
+          renderModalInfo(l);
+          resetTypification_();
+          document.getElementById('modal').classList.add('open');
+          document.getElementById('modal-lead-subtitle').textContent = (l.nombre||l.linea||mid) + ' · ' + (l.estado||'');
+          // Check phone duplicates
+          if (l.linea) {
+            fetch(`${BASE}/api/leads/dup_check?phone=${encodeURIComponent(l.linea)}&message_id=${encodeURIComponent(mid)}`)
+              .then(r=>r.json()).then(d => {
+                if (d.today > 0) showToast(`⚠️ Teléfono repetido ${d.today}x hoy`,'warn');
+              });
+          }
+        })
+        .catch(()=>{ document.getElementById('loader').style.display='none'; showToast('Error al cargar lead','err'); });
+    }
+
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+    /* ── RENDER INFO MODAL (panel izquierdo) ── */
     function renderModalInfo(l) {
-      const h = (f, v) => v ? `
-        <div class="flex flex-col p-3 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
-          <span class="text-[9px] font-extrabold text-blue-400 uppercase tracking-widest mb-1">${f}</span>
-          <div class="text-[13px] font-medium text-slate-200 leading-tight">${v}</div>
-        </div>` : '';
-      
-      let html = `<div class="bg-slate-900/40 rounded-2xl border border-white/10 overflow-hidden backdrop-blur-md">`;
-      html += `<div class="p-4 border-b border-white/10 bg-white/[0.03] flex items-center gap-2">
-                 <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                 <span class="text-[11px] font-bold text-slate-400">DATOS DEL LEAD</span>
-               </div>`;
-      html += `<div class="grid grid-cols-1 md:grid-cols-2">`;
-      html += h('Nombre Completo', l.nombre || l.cliente_nombre);
-      html += h('Teléfono / Línea', l.linea || l.cliente_telefono);
-      html += h('Documento / CI', l.documento || l.cliente_cedula);
-      html += h('Modelo Interés', l.plan || l.venta_plan);
-      html += h('Canal Origen', l.origen);
-      html += h('Ingreso / Registro', l.fecha_gmail || l.created_at);
-      html += h('ID Google Ads', l.gaid);
-      html += h('Dirección Ref.', l.direccion);
-      html += `</div></div>`;
-      
-      if (l.url) html += `
-        <div class="mt-4">
-          <a href="${l.url}" target="_blank" class="flex items-center justify-center gap-2 w-full p-3 rounded-xl bg-slate-800 border border-white/10 text-[12px] font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+      const h = (lbl,val,full) => {
+        if (!val && val!==0) return '';
+        const cls = full ? 'style="grid-column:span 2"' : '';
+        return `<div class="field-block" ${cls}>
+          <span class="lbl">${lbl}</span>
+          <span class="val">${esc_(val)}</span>
+        </div>`;
+      };
+
+      let html = '';
+
+      // ── Datos de Contacto ──
+      html += `<div class="info-group">
+        <div class="info-title">Datos de Contacto</div>
+        <div style="margin-bottom:10px;">
+          <span class="lbl">Teléfono / Línea</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:3px;">
+            <span style="font-size:16px;font-weight:800;color:var(--accent);">&#128222; ${esc_(l.linea||'-')}</span>
+            <button class="btn" style="padding:4px 10px;font-size:11px;" onclick="copyText_('${cleanPhone_(l.linea)}')">📋 Copiar</button>
+          </div>
+        </div>
+        <div class="info-grid">
+          ${h('Nombre',l.nombre)}
+          ${h('Documento / CI',l.documento)}
+          ${h('Email',l.email)}
+          ${h('Empresa / Compañía',l.compania)}
+          ${h('Dirección',l.direccion,true)}
+        </div>
+      </div>`;
+
+      // ── Info del Lead ──
+      html += `<div class="info-group">
+        <div class="info-title">Info del Lead</div>
+        <div class="info-grid">
+          ${h('Plan / Modelo',l.plan)}
+          ${h('Equipo',l.equipo)}
+          ${h('Horario solicitado',l.horario)}
+          ${h('Origen',l.origen)}
+          ${h('Operación',l.operacion)}
+          ${h('Tipo Fuente',l.tsource)}
+          ${h('UTM',l.utm)}
+          ${h('Modal',l.modal)}
+          ${h('Fecha Gmail',fmtDate_(l.fecha_gmail))}
+          ${h('Google Ads ID',l.gaid)}
+          ${h('Tracking',l.tracking)}
+        </div>
+      </div>`;
+
+      // ── Estado CRM ──
+      html += `<div class="info-group">
+        <div class="info-title">Estado CRM</div>
+        <div class="info-grid">
+          ${h('Estado',l.estado)}
+          ${h('Agente',l.agente)}
+          ${h('Fecha Asignación',fmtDate_(l.fecha_asignacion))}
+          ${h('Resultado',l.resultado)}
+          ${h('Fecha Cierre',fmtDate_(l.fecha_cierre))}
+          ${h('SLA Asignación',l.sla_asignacion)}
+          ${h('Minutos Asignado',l.minutos_asignacion)}
+          ${h('Notas previas',l.notas,true)}
+        </div>
+      </div>`;
+
+      // ── Tipificación previa (si existe) ──
+      if (l.tip_tipo || l.tip_resultado || l.tip_motivo) {
+        html += `<div class="info-group">
+          <div class="info-title" style="color:var(--warn);">Tipificación Previa</div>
+          <div class="info-grid">
+            ${h('Tipo Consulta',l.tip_tipo)}
+            ${h('Tipo Resultado',l.tip_resultado)}
+            ${h('Resultado',l.tip_motivo)}
+            ${h('Motivo',l.tip_submotivo)}
+          </div>
+        </div>`;
+      }
+
+      // ── Seguimiento ──
+      if (l.rellamar_en || l.agente_original) {
+        html += `<div class="info-group">
+          <div class="info-title" style="color:var(--ok);">Seguimiento Programado</div>
+          <div class="info-grid">
+            ${h('Rellamar en',fmtDate_(l.rellamar_en))}
+            ${h('Tipo Reagendar',l.reagendar_tipo)}
+            ${h('Agente Original',l.agente_original)}
+            ${h('No Contacto (intentos)',l.nocontacto_intentos)}
+            ${h('Tomado por',l.seguimiento_tomado_por)}
+            ${h('Tomado en',fmtDate_(l.seguimiento_tomado_en))}
+          </div>
+        </div>`;
+      }
+
+      // ── Liberación (si existe) ──
+      if (l.liberado_por) {
+        html += `<div class="info-group">
+          <div class="info-title" style="color:var(--danger);">Liberación</div>
+          <div class="info-grid">
+            ${h('Liberado por',l.liberado_por)}
+            ${h('Liberado en',fmtDate_(l.liberado_en))}
+            ${h('Motivo',l.liberado_motivo,true)}
+          </div>
+        </div>`;
+      }
+
+      // ── URL correo original ──
+      if (l.url) {
+        html += `<div class="info-group">
+          <a href="${esc_(l.url)}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(0,174,240,.05);color:var(--accent);text-decoration:none;font-size:12px;font-weight:600;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             VER CORREO ORIGINAL
           </a>
         </div>`;
+      }
+
       document.getElementById('info-container').innerHTML = html;
     }
 
-    function openModal(id) {
-      document.getElementById('loader').style.display = 'flex';
-      google.script.run.withSuccessHandler(r => {
-        document.getElementById('loader').style.display = 'none';
-        app.current = r.lead || r.sale;
-        if (!app.current) { alert("Error al cargar detalles"); return; }
-        
-        renderModalInfo(app.current);
-        document.getElementById('modal').style.display = 'flex';
-        
-        // Reset tipification
-        document.getElementById('tip-type').value = '';
-        updateResultTypes();
-        document.getElementById('sale-container').style.display = 'none';
-        document.getElementById('fu-wrap').style.display = 'none';
-        document.getElementById('notes').value = '';
-        document.getElementById('dynamic-form').innerHTML = '';
-        document.getElementById('sale-form-selector').value = '';
-        document.getElementById('seller-comment').value = '';
-        
-        if (app.current.vendedor_comentarios) {
-           document.getElementById('seller-comment').value = app.current.vendedor_comentarios;
-        }
-      }).apiGetLeadDetails(id);
-    }
-
-    const UI = {
-      wrap: (content) => `<div class="form-group">${content}</div>`,
-      grid: (content) => `<div class="form-grid">${content}</div>`,
-      inp: (id, lbl, ph, req) => `<div class="form-group flex-1"><label class="form-label">${lbl} ${req?'<span class="text-rose-500">*</span>':''}</label><input type="text" id="f-${id}" class="form-input" placeholder="${ph||''}" ${req?'data-required="true"':''}></div>`,
-      date: (id, lbl, req) => `<div class="form-group flex-1"><label class="form-label">${lbl} ${req?'<span class="text-rose-500">*</span>':''}</label><input type="date" id="f-${id}" class="form-input" ${req?'data-required="true"':''}></div>`,
-      sel: (id, lbl, opts, req) => `<div class="form-group flex-1"><label class="form-label">${lbl} ${req?'<span class="text-rose-500">*</span>':''}</label><select id="f-${id}" class="form-select" ${req?'data-required="true"':''} onchange="if('${id}'==='venta_plan'||'${id}'==='venta_equipo') autoFillPrice('${id}', this.value);"><option value="">-</option>${opts.map(o=>`<option value="${o}">${o}</option>`).join('')}</select></div>`,
-      numb: (id, lbl, ph, req) => `<div class="form-group flex-1"><label class="form-label">${lbl} ${req?'<span class="text-rose-500">*</span>':''}</label><input type="number" id="f-${id}" class="form-input" placeholder="${ph||''}" ${req?'data-required="true"':''}></div>`,
-      title: (lbl) => `<div class="form-section-title mt-4">${lbl}</div>`
-    };
-
-    function autoFillPrice(sourceId, nameSelected) {
-      if (!nameSelected) return;
-      const match = CATALOG_DATA.find(c => c.name === nameSelected);
-      if (match && document.getElementById('f-venta_precio')) {
-         document.getElementById('f-venta_precio').value = match.price;
-      }
-    }
-
-    function renderSaleForm(type) {
-      if (!type) { document.getElementById('dynamic-form').innerHTML = ''; return; }
-      
-      const pPago = ['Contraentrega', 'Tarjeta de credito', 'Financiacion en la factura', 'Link de pago'];
-      let html = '';
-      
-      html += UI.title('Datos del Cliente');
-      html += UI.grid(UI.inp('cliente_cedula', 'Cédula', 'Obligatorio', true) + UI.inp('cliente_nombre', 'Nombre Completo', 'Obligatorio', true));
-      html += UI.grid(UI.inp('cliente_telefono', 'Teléfono Contacto', 'Obligatorio', true) + UI.inp('cliente_email', 'Email', 'Opcional', false));
-      html += UI.date('cliente_nacimiento', 'Fecha de Nacimiento', false);
-      
-      html += UI.title('Dirección y Envío');
-      html += UI.inp('direccion', 'Dirección Principal', 'Calle, Numero, Apto...', true);
-      html += UI.grid(UI.inp('departamento', 'Departamento', '', true) + UI.inp('ciudad', 'Ciudad', '', true));
-      
-      html += UI.title('Detalles Producto');
-      if (type === 'alta' || type === 'migracion' || type === 'porta') {
-          html += UI.grid(UI.sel('venta_plan', 'Plan Vendido', ACTIVE_PLANS, true) + UI.sel('venta_equipo', 'Equipo terminal', ACTIVE_EQUIPMENT, false));
-          html += UI.grid(UI.numb('venta_precio', 'Precio Final', '0', true) + UI.sel('venta_pago', 'Forma Pago', pPago, true));
-      }
-      
-      if (type === 'porta') {
-          html += UI.title('Datos Portabilidad');
-          html += UI.inp('porta_numero', 'Línea a Portar', 'Ej: 09...', true);
-          html += UI.grid(UI.sel('porta_operador', 'Operador Donante', ['Claro', 'Antel'], true) + UI.inp('porta_nip', 'NIP / PIN Portabilidad', '', true));
-      }
-
-      document.getElementById('dynamic-form').innerHTML = html;
-    }
-
-    function save() {
-      const tip = document.getElementById('tip-type').value;
-      const tr = document.getElementById('tip-result-type').value;
-      const r = document.getElementById('tip-res').value;
-      const m = document.getElementById('tip-motive').value;
-      if (!tip || !tr || !r) { alert("Debes completar la tipificación (Tipo, Resultado y Res)"); return; }
-
-      const notes = document.getElementById('notes').value;
-      const isManual = app.current?.message_id?.includes('manual-');
-      
-      const saleData = {};
-      const isSale = (tr.toLowerCase() === 'venta' || r.toLowerCase() === 'venta');
-      
-      if (isSale) {
-        const formType = document.getElementById('sale-form-selector').value;
-        if (!formType) { toast("Selecciona el Tipo de Venta", 'err'); return; }
-        
-        saleData.Producto = formType;
-        saleData.VendedorComentarios = document.getElementById('seller-comment').value;
-        
-        const inputs = document.querySelectorAll('#dynamic-form [id^="f-"]');
-        let missing = [];
-        inputs.forEach(i => {
-           const key = i.id.replace('f-', '');
-           saleData[key] = i.value;
-           if (i.dataset.required === 'true' && !i.value) {
-             const label = i.closest('.form-group')?.querySelector('.form-label')?.innerText.replace('*', '').trim();
-             missing.push(label || key);
-           }
-        });
-        
-        if (missing.length > 0) {
-           toast("Faltan campos obligatorios: " + missing.join(', '), 'err');
-           return;
-        }
-      }
-
-      document.getElementById('loader').style.display = 'flex';
-      const success = () => { document.getElementById('loader').style.display = 'none'; closeModal(); refresh(); };
-      
-      if (isManual) {
-        google.script.run.withSuccessHandler(success).apiSaveManualSale(saleData, notes, tip, tr, r, m);
-      } else {
-        const finalStatus = isSale ? 'Venta' : (tr === 'Rellamado' ? 'SEGUIMIENTO' : 'CERRADO');
-        google.script.run.withSuccessHandler(success).apiCloseLead(app.current.message_id, finalStatus, notes, saleData, tip, tr, r, m);
-      }
-    }
-
-    function openManualSaleModal() {
-      app.current = { message_id: 'manual-' + Date.now(), nombre: '', linea: '' };
-      document.getElementById('modal').style.display = 'flex';
-      
-      // Reset tipification
-      document.getElementById('tip-type').value = '';
+    /* ── TIPIFICACIÓN ── */
+    function resetTypification_() {
+      ['tip-type','tip-result-type','tip-res','tip-motive'].forEach(id=>document.getElementById(id).value='');
       updateResultTypes();
-      document.getElementById('sale-container').style.display = 'none';
-      document.getElementById('fu-wrap').style.display = 'none';
-      document.getElementById('notes').value = '';
-      document.getElementById('dynamic-form').innerHTML = '';
-      document.getElementById('sale-form-selector').value = '';
-      document.getElementById('seller-comment').value = '';
-    }
-
-    function setStatus(s) {
-      document.getElementById('loader').style.display = 'flex';
-      google.script.run.withSuccessHandler(res => {
-        document.getElementById('loader').style.display = 'none';
-        if (res.success || res.estado) {
-          app.agentStatus = s;
-          document.getElementById('agent-name').innerText = app.agent + ' (' + s + ')';
-          handleStatusButtons(s);
-          toast('Estado actualizado a ' + s, 'ok');
-        } else {
-          toast(res.detail || res.error || 'Error cambiando estado', 'err');
-        }
-      }).apiSetAgentStatus(s);
-    }
-
-    function toast(msg, type = 'ok') {
-      const container = document.getElementById('toast-container');
-      const t = document.createElement('div');
-      t.className = `pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl transition-all duration-300 translate-x-10 opacity-0 border ${
-        type === 'ok' ? 'bg-[#0f172a]/95 border-emerald-500/20 text-emerald-400' : 'bg-[#0f172a]/95 border-rose-500/20 text-rose-400'
-      }`;
-      const icon = type === 'ok' 
-        ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'
-        : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
-      
-      t.innerHTML = `${icon}<span class="text-[13px] font-semibold">${msg}</span>`;
-      container.appendChild(t);
-      setTimeout(() => t.classList.remove('translate-x-10', 'opacity-0'), 10);
-      setTimeout(() => {
-        t.classList.add('translate-x-10', 'opacity-0');
-        setTimeout(() => t.remove(), 400);
-      }, 4000);
-    }
-
-    function closeModal() {
-      document.getElementById('modal').style.display = 'none';
-    }
-
-    function takeLead() {
-      document.getElementById('loader').style.display = 'flex';
-      google.script.run.withSuccessHandler(res => {
-        document.getElementById('loader').style.display = 'none';
-        if (res.success) {
-          toast('Lead asignado exitosamente', 'ok');
-          refresh();
-        } else {
-          toast(res.detail || res.message || 'Error tomando lead', 'err');
-        }
-      }).apiTakeNextLead();
-    }
-
-    function cleanQueue() {
-      if (!confirm("¿Estás seguro de cerrar TODOS los leads en cola? Esta acción es irreversible.")) return;
-      document.getElementById('loader').style.display = 'flex';
-      google.script.run.withSuccessHandler(res => {
-        document.getElementById('loader').style.display = 'none';
-        if (res.success) {
-          toast(`Se cerraron ${res.closed} leads exitosamente`, 'ok');
-          refresh();
-        } else {
-          toast(res.detail || res.error || 'Error limpiando cola', 'err');
-        }
-      }).apiBulkCloseQueue();
+      document.getElementById('sale-container').style.display='none';
+      document.getElementById('fu-datetime-wrap').style.display='none';
+      document.getElementById('fu-type-wrap').style.display='none';
+      document.getElementById('fu-attempt-hint').style.display='none';
+      document.getElementById('notes').value='';
+      document.getElementById('dynamic-form').innerHTML='';
+      document.getElementById('sale-form-selector').value='';
+      document.getElementById('seller-comment').value=(app.current&&app.current.vendedor_comentarios)||'';
     }
 
     function updateResultTypes() {
       const t = document.getElementById('tip-type').value;
       const s = document.getElementById('tip-result-type');
       s.innerHTML = '<option value="">-</option>';
-      if (t && TYPES[t]) Object.keys(TYPES[t]).sort().forEach(k => s.add(new Option(k,k)));
+      if (t && TYPES[t]) Object.keys(TYPES[t]).sort().forEach(k=>s.add(new Option(k,k)));
       updateResults();
+      updateStepBar_();
     }
-    
+
     function updateResults() {
-      const t = document.getElementById('tip-type').value;
-      const r = document.getElementById('tip-result-type').value;
-      const s = document.getElementById('tip-res');
-      s.innerHTML = '<option value="">-</option>';
-      if (t && r && TYPES[t][r]) Object.keys(TYPES[t][r]).sort().forEach(k => s.add(new Option(k,k)));
+      const t=document.getElementById('tip-type').value;
+      const r=document.getElementById('tip-result-type').value;
+      const s=document.getElementById('tip-res');
+      s.innerHTML='<option value="">-</option>';
+      if (t&&r&&TYPES[t]&&TYPES[t][r]) Object.keys(TYPES[t][r]).sort().forEach(k=>s.add(new Option(k,k)));
       updateMotives();
+      updateStepBar_();
     }
-    
+
     function updateMotives() {
-      const t = document.getElementById('tip-type').value;
-      const r = document.getElementById('tip-result-type').value;
-      const c = document.getElementById('tip-res').value;
-      const s = document.getElementById('tip-motive');
-      s.innerHTML = '<option value="">-</option>';
-      if (t && r && c && TYPES[t][r][c]) {
-        TYPES[t][r][c].forEach(m => s.add(new Option(m,m)));
-      }
+      const t=document.getElementById('tip-type').value;
+      const r=document.getElementById('tip-result-type').value;
+      const c=document.getElementById('tip-res').value;
+      const s=document.getElementById('tip-motive');
+      s.innerHTML='<option value="">-</option>';
+      if (t&&r&&c&&TYPES[t]&&TYPES[t][r]&&TYPES[t][r][c]) TYPES[t][r][c].forEach(m=>s.add(new Option(m,m)));
       checkSale();
+      updateStepBar_();
     }
-    
+
+    function updateStepBar_() {
+      const v=[document.getElementById('tip-type').value,document.getElementById('tip-result-type').value,document.getElementById('tip-res').value,document.getElementById('tip-motive').value];
+      [1,2,3,4].forEach(i=>document.getElementById('ts'+i).classList.toggle('done',!!v[i-1]));
+    }
+
     function checkSale() {
-      const tr = document.getElementById('tip-result-type').value.toLowerCase();
-      const r = document.getElementById('tip-res').value.toLowerCase();
-      
-      const isSale = (tr.includes('venta') && !tr.includes('cancelada') && !tr.includes('no venta')) || 
-                     (r.includes('venta') && !r.includes('cancelada') && !r.includes('no venta'));
-                     
-      document.getElementById('sale-container').style.display = isSale ? 'block' : 'none';
-      
-      const isRellamado = (tr.includes('rellamado') || r.includes('rellamado'));
-      document.getElementById('fu-wrap').style.display = isRellamado ? 'block' : 'none';
+      const tr=_norm_(document.getElementById('tip-result-type').value);
+      const r=_norm_(document.getElementById('tip-res').value);
+      const isSale=(tr==='venta'||r==='venta');
+      const isRellamado=(tr==='rellamado');
+
+      document.getElementById('sale-container').style.display=isSale?'block':'none';
+      document.getElementById('fu-datetime-wrap').style.display=isRellamado?'block':'none';
+      document.getElementById('fu-type-wrap').style.display=isRellamado?'block':'none';
+
+      // Mostrar contador NO_CONTACTO
+      if (isRellamado && app.current) {
+        const ft=document.getElementById('fu-type').value;
+        const hint=document.getElementById('fu-attempt-hint');
+        if (ft==='NO_CONTACTO') {
+          const intentos=parseInt(app.current.nocontacto_intentos||0);
+          hint.textContent=`Intento ${intentos+1}/3 de NO CONTACTO.`;
+          hint.style.display='block';
+        } else {
+          hint.style.display='none';
+        }
+      }
+      updateStepBar_();
+    }
+
+    /* ── GUARDAR GESTIÓN ── */
+    function save() {
+      const tip=document.getElementById('tip-type').value;
+      const tr=document.getElementById('tip-result-type').value;
+      const res=document.getElementById('tip-res').value;
+      const mot=document.getElementById('tip-motive').value;
+      if (!tip||!tr||!res) { showToast('Completá la tipificación (Tipo, Resultado y Sub-resultado)','err'); return; }
+
+      const notes=document.getElementById('notes').value;
+      const isRellamado=_norm_(tr)==='rellamado';
+      const isSale=(_norm_(tr)==='venta'||_norm_(res)==='venta');
+
+      let saleData = null;
+      let fuWhen = null;
+      let fuType = null;
+
+      if (isRellamado) {
+        fuWhen=document.getElementById('fu-datetime').value;
+        fuType=document.getElementById('fu-type').value;
+        if (!fuWhen) { showToast('Seleccioná fecha/hora de rellamada','err'); return; }
+        const intentos=parseInt((app.current&&app.current.nocontacto_intentos)||0);
+        if (fuType==='NO_CONTACTO' && intentos>=3) { showToast('Límite de 3 intentos NO CONTACTO alcanzado. Cerrá como No Venta.','err'); return; }
+      }
+
+      if (isSale) {
+        const formType=document.getElementById('sale-form-selector').value;
+        if (!formType) { showToast('Seleccioná el tipo de venta','err'); return; }
+        saleData = { Producto:formType, VendedorComentarios:document.getElementById('seller-comment').value };
+        const inputs=document.querySelectorAll('#dynamic-form [id^="f-"]');
+        let missing=[];
+        inputs.forEach(i=>{
+          const key=i.id.replace('f-','');
+          saleData[key]=i.value;
+          if (i.dataset.required==='true'&&!i.value) {
+            missing.push(i.closest('.subform')?.querySelector('.lbl')?.textContent||key);
+          }
+        });
+        if (missing.length) { showToast('Faltan: '+missing.join(', '),'err'); return; }
+      }
+
+      const mid=app.current&&app.current.message_id;
+      if (!mid) { showToast('Error: sin ID de lead','err'); return; }
+
+      const finalEstado = isSale ? 'Venta' : isRellamado ? 'SEGUIMIENTO' : 'CERRADO';
+
+      document.getElementById('loader').style.display='flex';
+      fetch(`${BASE}/api/leads/${encodeURIComponent(mid)}/status`, {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          estado: finalEstado,
+          resultado: isSale?'Venta':isRellamado?'Seguimiento':'No Venta',
+          tip_tipo: tip, tip_resultado: tr, tip_motivo: res, tip_submotivo: mot,
+          rellamar_en: fuWhen||null, reagendar_tipo: fuType||null,
+          nocontacto_intentos: isRellamado&&fuType==='NO_CONTACTO' ? ((parseInt(app.current.nocontacto_intentos||0))+1) : null,
+          sale_data: saleData
+        })
+      }).then(r=>r.json()).then(res=>{
+        document.getElementById('loader').style.display='none';
+        if (res.success||res.detail===undefined) {
+          showToast(isSale?'¡Venta registrada!':'Gestión guardada','ok');
+          closeModal(); refresh(true);
+        } else {
+          showToast(res.detail||res.message||'Error al guardar','err');
+        }
+      }).catch(()=>{ document.getElementById('loader').style.display='none'; showToast('Error de red','err'); });
+    }
+
+    /* ── ACCIONES ── */
+    function takeLead() {
+      document.getElementById('loader').style.display='flex';
+      fetch(`${BASE}/api/agent/take?email=${encodeURIComponent(app.agent)}`,{method:'POST'})
+        .then(r=>r.json()).then(res=>{
+          document.getElementById('loader').style.display='none';
+          if (res.success) { showToast('Lead asignado','ok'); refresh(true); }
+          else showToast(res.message||res.detail||'Sin leads en cola','warn');
+        }).catch(()=>{ document.getElementById('loader').style.display='none'; showToast('Error','err'); });
+    }
+
+    function takeFollowup(mid) {
+      fetch(`${BASE}/api/followups/take?message_id=${encodeURIComponent(mid)}&email=${encodeURIComponent(app.agent)}`,{method:'POST'})
+        .then(r=>r.json()).then(res=>{
+          if (res.success) { showToast('Seguimiento tomado','ok'); refresh(true); }
+          else showToast(res.detail||'Error','err');
+        });
+    }
+
+    function setStatus(s) {
+      document.getElementById('loader').style.display='flex';
+      fetch(`${BASE}/api/agent/status?email=${encodeURIComponent(app.agent)}`,{
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({estado:s})
+      }).then(r=>r.json()).then(res=>{
+        document.getElementById('loader').style.display='none';
+        if (res.success||res.estado) {
+          app.status=s;
+          document.querySelectorAll('#status-btns .status-btn').forEach(b=>b.classList.toggle('active',b.dataset.status===s));
+          showToast('Estado: '+s,'ok');
+          if (s==='ACTIVO') refresh(true);
+        } else {
+          showToast(res.detail||res.error||'Error cambiando estado','err');
+        }
+      }).catch(()=>{ document.getElementById('loader').style.display='none'; showToast('Error','err'); });
+    }
+
+    function sellerSaveComment(mid, sid) {
+      const txt = document.getElementById('sn-'+sid)?.value||'';
+      fetch(`${BASE}/api/seller/sales/${encodeURIComponent(mid)}/comment?email=${encodeURIComponent(app.agent)}`,{
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({comentario:txt})
+      }).then(r=>r.json()).then(res=>{
+        if (res.success) showToast('Comentario guardado','ok');
+        else showToast(res.detail||'Error','err');
+      });
+    }
+
+    function boSave(mid, sid, forceStatus) {
+      const st = forceStatus || document.getElementById('bost-'+sid)?.value;
+      const notas = document.getElementById('bon-'+sid)?.value||'';
+      fetch(`${BASE}/api/sales/${encodeURIComponent(mid)}/backoffice`,{
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({backoffice_status:st, backoffice_notas:notas, backoffice_agent:app.agent})
+      }).then(r=>r.json()).then(res=>{
+        if (res.success) { showToast('Estado BO actualizado','ok'); fetchBackoffice_(); }
+        else showToast(res.detail||'Error','err');
+      });
+    }
+
+    function openManualSaleModal() {
+      app.current = { message_id:'manual-'+Date.now(), nombre:'', linea:'' };
+      document.getElementById('modal-lead-subtitle').textContent = 'Venta Manual';
+      document.getElementById('info-container').innerHTML = `
+        <div class="info-group">
+          <div class="info-title">Venta Manual / Referido</div>
+          <p style="font-size:12px;color:var(--muted);">Completá el formulario de venta en el panel derecho. Esta gestión creará un lead y una venta registrada a tu nombre.</p>
+        </div>`;
+      resetTypification_();
+      document.getElementById('modal').classList.add('open');
+    }
+
+    /* ── FORM BUILDER ── */
+    const UI = {
+      inp: (id,lbl,ph,req) => `<div class="field-block"><label class="lbl">${lbl}${req?' *':''}</label><input type="text" id="f-${id}" placeholder="${ph||''}" ${req?'data-required="true"':''}></div>`,
+      date: (id,lbl,req) => `<div class="field-block"><label class="lbl">${lbl}${req?' *':''}</label><input type="date" id="f-${id}" ${req?'data-required="true"':''}></div>`,
+      num: (id,lbl,ph) => `<div class="field-block"><label class="lbl">${lbl}</label><input type="number" id="f-${id}" placeholder="${ph||''}"></div>`,
+      sel: (id,lbl,opts,req) => {
+        const os = opts.map(o=>`<option value="${esc_(o)}">${esc_(o)}</option>`).join('');
+        return `<div class="field-block"><label class="lbl">${lbl}${req?' *':''}</label><select id="f-${id}" ${req?'data-required="true"':''}><option value="">-</option>${os}</select></div>`;
+      },
+      row: (...items) => `<div class="form-row">${items.map(i=>`<div>${i}</div>`).join('')}</div>`,
+      sec: (lbl) => `<div class="subform-title">── ${lbl}</div>`
+    };
+
+    function renderSaleForm(type) {
+      if (!type) { document.getElementById('dynamic-form').innerHTML=''; return; }
+      const pPago=['Contraentrega','Tarjeta de credito','Financiacion en la factura','Link de pago'];
+      const dTipos=['Casa','Apartamento','Local'];
+      let html = '';
+
+      html += `<div class="subform">`;
+      html += UI.sec('Cliente');
+      html += UI.row(UI.inp('cliente_nombre','Nombre Completo','',true), UI.inp('cliente_cedula','Cédula / Doc','',true));
+      html += UI.row(UI.inp('cliente_telefono','Teléfono','',true), UI.inp('cliente_email','Email','',false));
+      html += UI.row(UI.date('cliente_nacimiento','Fecha Nacimiento',false), UI.inp('cliente_vendedor','Vendedor Comercial','',false));
+      html += `</div>`;
+
+      html += `<div class="subform">`;
+      html += UI.sec('Dirección');
+      html += UI.inp('dir_calle','Calle / Dirección principal','',true);
+      html += UI.row(UI.inp('dir_depto','Departamento','',true), UI.inp('dir_ciudad','Ciudad','',false));
+      html += UI.row(UI.inp('dir_barrio','Barrio','',false), UI.sel('dir_tipo','Tipo',dTipos,false));
+      html += UI.row(UI.inp('dir_loc','Localidad','',false), UI.inp('dir_puerta','Nro. Puerta','',false));
+      html += UI.row(UI.inp('dir_apto','Apto','',false), UI.inp('dir_esq1','Esquina 1','',false), UI.inp('dir_esq2','Esquina 2','',false));
+      html += `</div>`;
+
+      html += `<div class="subform">`;
+      html += UI.sec('Producto');
+      html += UI.row(UI.sel('venta_plan','Plan Vendido',app.listas.planes,true), UI.sel('venta_equipo','Equipo / Terminal',app.listas.equipos,false));
+      html += UI.row(UI.num('venta_precio','Precio Final'), UI.sel('venta_pago','Forma Pago',pPago,true));
+      html += UI.row(UI.inp('venta_vigencia','Vigencia','',false), UI.inp('venta_clc','CLC','',false));
+      if (type==='recontrato') html += UI.inp('suptipo_reco','Sub-tipo Recontrato','Ej: Simple, Combo...',true);
+      if (type==='porta') {
+        html += `<div class="subform">`;
+        html += UI.sec('Portabilidad');
+        html += UI.row(UI.inp('porta_nip','NIP Portabilidad','',true), UI.inp('porta_numero','Nro. a portar','',false));
+        html += `</div>`;
+      }
+      html += `</div>`;
+
+      html += `<div class="subform">`;
+      html += UI.sec('Envío y Cobro');
+      html += UI.row(UI.sel('envio_tipo','Tipo Envío',['Domicilio','Pick Up','Sucursal'],false), UI.inp('envio_detalles','Detalles Envío','',false));
+      html += UI.row(UI.num('cobro_importe','Importe a Cobrar'), UI.inp('cobro_motivo','Motivo Cobro','',false));
+      html += UI.row(UI.inp('dg_solicita','DG Solicita','',false), UI.num('dg_importe','DG Importe'), UI.inp('dg_corresponde','DG Corresponde','',false));
+      html += `</div>`;
+
+      document.getElementById('dynamic-form').innerHTML = html;
     }
 
     init();
   </script>
-  <div id="toast-container" class="fixed top-6 right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
 </body>
 </html>
