@@ -10,6 +10,12 @@ from utils.logic import get_phone_suffix, get_now
 import auto_assign
 import logging
 
+def _run_auto_assign():
+    try:
+        auto_assign.run()
+    except Exception as e:
+        logging.getLogger(__name__).error(f"Background auto-assign error: {e}")
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
@@ -19,7 +25,7 @@ OPEN_STATES = {"ASIGNADO", "SEGUIMIENTO"}
 
 # ─── POST /api/leads  (called by Apps Script) ──────────
 @router.post("", dependencies=[Depends(verify_apps_script_key)])
-def create_lead(lead: LeadCreate):
+def create_lead(lead: LeadCreate, background_tasks: BackgroundTasks):
     """Create a new lead from Gmail. Called by Apps Script."""
 
     # 1. Duplicate Check by message_id
@@ -70,14 +76,7 @@ def create_lead(lead: LeadCreate):
         log_audit("system", "ingestion_error", lead.message_id, str(e))
         raise HTTPException(status_code=500, detail="Error saving lead to database")
 
-    # Try auto-assign immediately
-    try:
-        logger.info(f"Ingestion: Triggering auto-assign for {lead.message_id}")
-        res = auto_assign.run()
-        logger.info(f"Ingestion: Auto-assign result for {lead.message_id}: {res}")
-    except Exception as ae:
-        logger.error(f"Ingestion: Auto-assign error during lead creation: {ae}")
-
+    background_tasks.add_task(_run_auto_assign)
     return {"success": True, "message": "Lead created", "message_id": lead.message_id}
 
 
@@ -148,6 +147,35 @@ def get_queue():
         "SELECT COUNT(*) AS total FROM leads WHERE estado = 'NUEVO' AND agente IS NULL"
     )
     return {"success": True, "count": row["total"] if row else 0}
+
+
+# ─── GET /api/leads/stats  ────────────────────────────
+@router.get("/stats")
+def get_agent_stats(email: str):
+    """Return sidebar stats for the given agent."""
+    queue = fetchone("SELECT COUNT(*) AS total FROM leads WHERE estado = 'NUEVO' AND agente IS NULL")
+    mine = fetchone("SELECT COUNT(*) AS total FROM leads WHERE agente = %s AND estado = 'ASIGNADO'", (email,))
+    sla = fetchone(
+        """
+        SELECT COUNT(*) AS total FROM leads
+        WHERE (estado = 'NUEVO' AND created_at < now() - interval '5 minutes' AND created_at >= current_date)
+           OR (estado = 'ASIGNADO' AND agente = %s AND updated_at < now() - interval '15 minutes' AND updated_at >= current_date)
+        """,
+        (email,)
+    )
+    followups = fetchone(
+        "SELECT COUNT(*) AS total FROM leads WHERE agente = %s AND estado = 'SEGUIMIENTO' AND (rellamar_en::date = now()::date OR rellamar_en IS NULL)",
+        (email,)
+    )
+    sales = fetchone("SELECT COUNT(*) AS total FROM sales WHERE agente = %s AND created_at::date = now()::date", (email,))
+    return {
+        "success": True,
+        "queue": queue["total"] if queue else 0,
+        "pendientes": mine["total"] if mine else 0,
+        "sla": sla["total"] if sla else 0,
+        "followups": followups["total"] if followups else 0,
+        "sales_today": sales["total"] if sales else 0
+    }
 
 
 # ─── GET /api/leads/{message_id}  ──────────────────────
@@ -270,13 +298,7 @@ def update_lead_status(message_id: str, body: LeadStatusUpdate, background_tasks
         except Exception as e:
             logger.error(f"Error creating sale from lead status update: {e}")
 
-    # Try auto-assign immediately after status update in case an agent became free
-    try:
-        from auto_assign import run as run_auto_assign
-        run_auto_assign()
-    except Exception as ae:
-        logger.error(f"Auto-assign error after status update of {message_id}: {ae}")
-
+    background_tasks.add_task(_run_auto_assign)
     return {"success": True}
 
 
@@ -354,10 +376,7 @@ def bulk_create_leads(leads: list[LeadOut]):
         fecha_cierre, notas, minutos_asignacion, seguimiento_tomado_por,
         seguimiento_tomado_en, liberado_por, liberado_en, liberado_motivo, error,
         created_at, updated_at
-    ) VALUES (
-        %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-        %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s
-    )
+    ) VALUES %s
     ON CONFLICT (message_id) DO UPDATE SET
         nombre = EXCLUDED.nombre,
         linea = EXCLUDED.linea,
@@ -416,45 +435,9 @@ def bulk_create_leads(leads: list[LeadOut]):
         for l in leads
     ]
     
-    from database import bulk_execute
-    bulk_execute(query, params)
-    
+    from database import bulk_insert
+    bulk_insert(query, params)
+
     return {"success": True, "count": len(leads)}
 
 
-@router.get("/stats")
-def get_agent_stats(email: str):
-    """Return sidebar stats for the given agent."""
-    # 1. Leads en cola
-    queue = fetchone("SELECT COUNT(*) AS total FROM leads WHERE estado = 'NUEVO' AND agente IS NULL")
-    
-    # 2. Mis pendientes (Activos)
-    mine = fetchone("SELECT COUNT(*) AS total FROM leads WHERE agente = %s AND estado = 'ASIGNADO'", (email,))
-    
-    # 3. Fuera de SLA (> 5 min en cola o > 15 min sin gestión)
-    sla = fetchone(
-        """
-        SELECT COUNT(*) AS total FROM leads 
-        WHERE (estado = 'NUEVO' AND created_at < now() - interval '5 minutes' AND created_at >= current_date)
-           OR (estado = 'ASIGNADO' AND agente = %s AND updated_at < now() - interval '15 minutes' AND updated_at >= current_date)
-        """, 
-        (email,)
-    )
-    
-    # 4. Seguimientos hoy
-    followups = fetchone(
-        "SELECT COUNT(*) AS total FROM leads WHERE agente = %s AND estado = 'SEGUIMIENTO' AND (rellamar_en::date = now()::date OR rellamar_en IS NULL)",
-        (email,)
-    )
-    
-    # 5. Mis ventas hoy
-    sales = fetchone("SELECT COUNT(*) AS total FROM sales WHERE agente = %s AND created_at::date = now()::date", (email,))
-
-    return {
-        "success": True,
-        "queue": queue["total"] if queue else 0,
-        "pendientes": mine["total"] if mine else 0,
-        "sla": sla["total"] if sla else 0,
-        "followups": followups["total"] if followups else 0,
-        "sales_today": sales["total"] if sales else 0
-    }

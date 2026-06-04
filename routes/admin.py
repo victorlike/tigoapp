@@ -60,12 +60,24 @@ class PinRequest(BaseModel):
 
 @router.post("/verify-pin")
 def verify_pin(data: PinRequest):
-    """Verify the admin PIN to unlock the dashboard."""
+    """Verify the admin PIN. Auto-migrates plain-text PINs to bcrypt on first use."""
     from utils.settings import get_setting
-    correct_pin = get_setting("admin_pin", "2777")
-    if data.pin == correct_pin:
-        return {"success": True}
-    return {"success": False, "error": "PIN incorrecto"}
+    from auth import check_pin, hash_pin
+    stored = get_setting("admin_pin", "2777")
+    if not check_pin(data.pin, stored):
+        return {"success": False, "error": "PIN incorrecto"}
+    # Auto-migrate plain-text PIN to bcrypt hash
+    if not stored.startswith("$2"):
+        hashed = hash_pin(data.pin)
+        execute(
+            "INSERT INTO settings (key, value, updated_at) VALUES ('admin_pin', %s, now()) "
+            "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()",
+            (hashed,)
+        )
+        from utils import settings as _s
+        with _s._lock:
+            _s._cache["admin_pin"] = hashed
+    return {"success": True}
 
 @router.get("/users")
 def get_users():

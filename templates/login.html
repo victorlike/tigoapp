@@ -168,6 +168,13 @@
         localStorage.setItem('agent_email', email);
         const role = (agent.role || 'AGENT').toUpperCase();
 
+        // Issue session cookie before redirecting
+        await fetch('/api/auth/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, role })
+        });
+
         if (role === 'AGENT') {
           location.href = `/leaddesk?email=${encodeURIComponent(email)}`;
           return;
@@ -177,7 +184,7 @@
         document.getElementById('loginBox').classList.add('hidden');
         document.getElementById('roleBox').classList.remove('hidden');
         document.getElementById('welcomeTitle').textContent = `Hola, ${email.split('@')[0]}`;
-        
+
         const btnBox = document.getElementById('roleButtons');
         btnBox.innerHTML = '';
 

@@ -1,7 +1,7 @@
 import logging
 from utils.settings import get_setting
 from utils.logic import get_now
-from database import execute, fetchone, log_audit
+from database import execute, fetchone, log_audit, bulk_execute
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,10 @@ def run():
 
     logger.info(f"Auto-assign: Starting assignment of {len(free_leads)} leads to {len(agents)} agents")
 
-    assigned = 0
+    # Build assignment plan first, then batch-execute (reduces N×2 queries to 2)
+    lead_updates = []   # (email, email, now, lead_id)
+    agent_times = {}    # email -> now (deduped)
+    audit_rows = []     # (actor, action, target, details)
     agent_idx = 0
 
     for lead in free_leads:
@@ -73,29 +76,30 @@ def run():
             break
 
         agent = agents[agent_idx]
-        execute(
-            """
-            UPDATE leads
-            SET estado = 'ASIGNADO',
-                agente = %s,
-                agente_original = COALESCE(agente_original, %s),
-                fecha_asignacion = %s,
-                updated_at = now()
-            WHERE id = %s
-            """,
-            (agent["email"], agent["email"], now, lead["id"])
-        )
-        execute(
-            "UPDATE agents SET last_assigned = %s, updated_at = %s WHERE email = %s",
-            (now, now, agent["email"])
-        )
-        
-        log_audit("system", "auto_assign_success", lead["message_id"], f"Assigned to {agent['email']}")
+        lead_updates.append((agent["email"], agent["email"], now, lead["id"]))
+        agent_times[agent["email"]] = now
+        audit_rows.append(("system", "auto_assign_success", lead["message_id"], f"Assigned to {agent['email']}"))
 
-        assigned += 1
         agent["open_leads"] += 1
-
         if agent["open_leads"] >= agent["max_leads"]:
             agent_idx += 1
+
+    assigned = len(lead_updates)
+
+    if lead_updates:
+        bulk_execute(
+            """UPDATE leads SET estado = 'ASIGNADO', agente = %s,
+               agente_original = COALESCE(agente_original, %s),
+               fecha_asignacion = %s, updated_at = now() WHERE id = %s""",
+            lead_updates
+        )
+        bulk_execute(
+            "UPDATE agents SET last_assigned = %s, updated_at = %s WHERE email = %s",
+            [(t, t, email) for email, t in agent_times.items()]
+        )
+        bulk_execute(
+            "INSERT INTO audit_logs (actor, action, target, details) VALUES (%s, %s, %s, %s)",
+            audit_rows
+        )
 
     return {"assigned": assigned}

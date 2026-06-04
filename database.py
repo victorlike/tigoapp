@@ -118,7 +118,7 @@ def fetchone(query: str, params=None):
 
 
 def bulk_execute(query: str, params_list: list):
-    """Run a bulk insert/update operation."""
+    """Run a bulk UPDATE/DELETE via executemany (one statement per row, one roundtrip)."""
     conn = None
     try:
         conn = get_conn()
@@ -130,6 +130,29 @@ def bulk_execute(query: str, params_list: list):
         if conn:
             conn.rollback()
         logger.error(f"Database bulk_execute error: {e}")
+        raise
+    finally:
+        if conn:
+            release_conn(conn)
+
+
+def bulk_insert(query: str, params_list: list, page_size: int = 500):
+    """Run a bulk INSERT using execute_values — query must use VALUES %s (not VALUES (%s,...)).
+    ~10-50x faster than executemany for large inserts."""
+    if not params_list:
+        return True
+    conn = None
+    try:
+        conn = get_conn()
+        with conn.cursor() as cur:
+            from psycopg2.extras import execute_values
+            execute_values(cur, query, params_list, page_size=page_size)
+            conn.commit()
+        return True
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        logger.error(f"Database bulk_insert error: {e}")
         raise
     finally:
         if conn:

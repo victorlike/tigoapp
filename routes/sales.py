@@ -269,7 +269,7 @@ def bulk_create_sales(sales: list[SaleCreate]):
         bo_fecha_preventa, bo_fecha_proceso, bo_procesado_cancelado, 
         bo_fecha_cancelado, bo_subtipo_venta, bo_columna1, 
         bo_fecha_generic, bo_seguimiento, bo_seguimiento_interaccion
-    ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    ) VALUES %s
     ON CONFLICT (message_id) DO UPDATE SET
         agente = EXCLUDED.agente,
         producto = EXCLUDED.producto,
@@ -371,9 +371,9 @@ def bulk_create_sales(sales: list[SaleCreate]):
         for s in sales
     ]
     
-    from database import bulk_execute
-    bulk_execute(query, params)
-    
+    from database import bulk_insert
+    bulk_insert(query, params)
+
     return {"success": True, "count": len(sales)}
 
 

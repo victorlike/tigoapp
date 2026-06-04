@@ -1,7 +1,7 @@
 """
 routes/agents.py — Agent presence and status management
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from models import AgentStatusUpdate, AgentOut
 from database import execute, fetchone
 from auth import verify_apps_script_key
@@ -10,6 +10,13 @@ import auto_assign
 from typing import Dict, Any
 from utils.settings import get_setting
 from utils.logic import get_now
+import logging
+
+def _run_auto_assign():
+    try:
+        auto_assign.run()
+    except Exception as e:
+        logging.getLogger(__name__).error(f"Background auto-assign error: {e}")
 
 router = APIRouter()
 
@@ -48,7 +55,7 @@ def touch_agent(email: str):
 
 # ─── PATCH /api/agent/status  ──────────────────────────
 @router.patch("/status")
-def set_agent_status(email: str, body: AgentStatusUpdate):
+def set_agent_status(email: str, body: AgentStatusUpdate, background_tasks: BackgroundTasks):
     """Change agent status: ACTIVO or OFFLINE."""
     if body.estado == "OFFLINE":
         # Block OFFLINE if agent has open leads
@@ -77,7 +84,7 @@ def set_agent_status(email: str, body: AgentStatusUpdate):
                 "UPDATE agents SET estado = %s, last_seen = %s, updated_at = %s WHERE email = %s",
                 (body.estado, now, now, email)
             )
-        auto_assign.run()
+        background_tasks.add_task(_run_auto_assign)
     else:
         execute(
             "UPDATE agents SET estado = %s, last_seen = %s, updated_at = %s WHERE email = %s",
@@ -191,7 +198,7 @@ def bulk_create_agents(agents: list[AgentOut]):
     
     query = """
     INSERT INTO agents (email, estado, last_seen, max_leads, last_assigned, updated_at)
-    VALUES (%s, %s, %s, %s, %s, %s)
+    VALUES %s
     ON CONFLICT (email) DO UPDATE SET
         estado = EXCLUDED.estado,
         last_seen = EXCLUDED.last_seen,
@@ -203,9 +210,9 @@ def bulk_create_agents(agents: list[AgentOut]):
         (a.email, a.estado, a.last_seen, a.max_leads, a.last_assigned, a.updated_at or get_now())
         for a in agents
     ]
-    
-    from database import bulk_execute
-    bulk_execute(query, params)
+
+    from database import bulk_insert
+    bulk_insert(query, params)
     
     return {"success": True, "count": len(agents)}
 
